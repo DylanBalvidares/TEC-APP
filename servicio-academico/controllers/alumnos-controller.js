@@ -64,17 +64,21 @@ async function eliminarAlumno(id) {
   }
 }
 
-async function modificarNombre(id, nombre) {
+async function modificarAlumno(alumno) {
   try {
+    const { id, nombre, apellido, dni, curso } = alumno;
     const data = await Alumno.update(
       {
-        nombre_alumno: nombre,
+        nombre: nombre,
+        apellido: apellido,
+        dni: dni,
+        id_curso: curso,
       },
       {
         where: {
           id_alumno: id,
         },
-      },
+      }, 
     );
 
     if (!data) {
@@ -88,79 +92,10 @@ async function modificarNombre(id, nombre) {
   }
 }
 
-async function modificarApellido(id, apellido) {
-  try {
-    const data = await Alumno.update(
-      {
-        apellido_alumno: apellido,
-      },
-      {
-        where: {
-          id_alumno: id,
-        },
-      },
-    );
-
-    if (!data) {
-      throw new Error("Error en modificarApellido(id,apellido)");
-    }
-
-    return data;
-  } catch (error) {
-    console.error("Error en modificarApellido(id,apellido)");
-    return "Error en modificarApellido(id,apellido)";
-  }
-}
-
-async function modificarDni(id, dni) {
-  try {
-    const data = await Alumno.update(
-      {
-        dni_alumno: apellido,
-      },
-      {
-        where: {
-          id_alumno: id,
-        },
-      },
-    );
-
-    if (!data) {
-      throw new Error("Error en modificarDni(id,dni)");
-    }
-
-    return data;
-  } catch (error) {
-    console.error("Error en modificarDni(id,dni)");
-    return "Error en modificarDni(id,dni)";
-  }
-}
-
-async function modificarCursoAlumno(id, curso_id) {
-  try {
-    const alumno = await Alumno.update(
-      {
-        id_curso: curso_id,
-      },
-      {
-        where: {
-          id_alumno: id,
-        },
-      },
-    );
-  } catch (error) {}
-}
-
-async function modificarAlumno(alumno) {}
-
 export {
   obtenerTodosAlumnos,
   obtenerAlumno,
   crearAlumno,
   eliminarAlumno,
-  modificarNombre,
-  modificarApellido,
-  modificarDni,
-  modificarCursoAlumno,
   modificarAlumno,
 };

@@ -4,9 +4,7 @@ import {
   obtenerAlumno,
   obtenerTodosAlumnos,
   eliminarAlumno,
-  modificarApellido,
-  modificarNombre,
-  modificarDni,
+  modificarAlumno,
 } from "../controllers/alumnos-controller.js";
 
 const alumnosRouter = Router();
@@ -17,16 +15,16 @@ alumnosRouter.get("/alumnos/:id", async (req, res) => {
   try {
     const alumno = await obtenerAlumno(id);
 
-    return res.statusCode(200).json(alumno);
+    return res.json(alumno).statusCode(200);
   } catch (error) {
-    return res.statusCode(404).json(error);
+    return res.json(error).statusCode(404);
   }
 });
 
 alumnosRouter.get("/alumnos", async (req, res) => {
   try {
     const alumnos = await obtenerTodosAlumnos();
-    return res.statusCode(200).json(alumnos);
+    return res.json(alumnos).statusCode(200);
   } catch (error) {
     return res.json(error).statusCode(404);
   }
@@ -47,41 +45,26 @@ alumnosRouter.delete("/alumnos/:id", async (req, res) => {
   const id = req.params.id;
   try {
     const resultado = await eliminarAlumno(id);
-    return res.status(200).json(resultado);
-  } catch (error) {
-    return res.statusCode(400).json(error); //400?
-  }
-});
-
-//========== MODIFICAR RESPONSES Y METODOS
-
-alumnosRouter.patch("/alumnos/:nombre", async (req, res) => {
-  const nombre = req.params.nombre;
-  try {
-    const resultado = await modificarNombre(nombre);
-    return res.json(resultado).statusCode(200); //200->OK,put/patch
+    return res.json(resultado).status(200);
   } catch (error) {
     return res.json(error).statusCode(400); //400?
   }
 });
 
-alumnosRouter.patch(
-  "/alumnos/modificarApellido/:apellido",
-  async (req, res) => {
-    const apellido = req.params.apellido;
-    try {
-      const resultado = await modificarApellido(apellido);
-      return res.json(resultado).statusCode(200); //200->OK,put/patch
-    } catch (error) {
-      return res.json(error).statusCode(400); //400?
-    }
-  },
-);
+//========== MODIFICAR RESPONSES Y METODOS
 
-alumnosRouter.patch("/alumnos/modificarDni/:dni", async (req, res) => {
-  const dni = req.params.dni;
+alumnosRouter.patch("/alumnos/:alumno", async (req, res) => {
+  const { id, nombre, apellido, dni, curso } = req.body;
   try {
-    const resultado = await modificarDni(dni);
+    const alumno = {
+      id: id,
+      nombre: nombre,
+      apellido: apellido,
+      dni: dni,
+      curso: curso,
+    };
+
+    const resultado = await modificarAlumno(alumno);
     return res.json(resultado).statusCode(200); //200->OK,put/patch
   } catch (error) {
     return res.json(error).statusCode(400); //400?

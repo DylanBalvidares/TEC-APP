@@ -15,35 +15,35 @@ services:
 
     #variables de entorno
     environment:
-      MYSQL_ROOT_PASSWORD: "root"  # Te recomiendo poner una aunque sea simple
-      MYSQL_DATABASE: "gestion_tecnica2"
-      MYSQL_USER: "root"
-      MYSQL_PASSWORD: 
-    
-    #mapea el puerto local(izq) al del contenedor(der)
+      - MYSQL_ROOT_PASSWORD=root_pass
+      - MYSQL_DATABASE=gestion_tecnica2 
+      #mapea el puerto local(izq) al del contenedor(der)
     ports:
       - "3306:3306"
 
     #persistir datos(volumenes)
     volumes:
-      - db_data:/var/lib/mysql 
+      - ./db/gestion_tecnica2.sql:/docker-entrypoint-initdb.d/init.sql
 
   servicio-academico:
     #se busca un Dockerfile en la carpeta especificada y se "cocina" el codigo
-    build: 
+    build:
       context: .
       dockerfile: ./servicio-academico/Dockerfile
+
     container_name: servicio-academico
-  
+
     #mapea puerto local 3307 al mismo del contenedor
     ports:
       - "3307:3307"
 
-    environment: 
+    environment:
       # Usamos las credenciales definidas arriba
-      DATABASE_URL: "mysql://root@mysql-db:3306/gestion_tecnica2"
+
+      DATABASE_URL: "mysql://root:root@mysql-db:3306/gestion_tecnica2"
 
     #el servicio no arranca hasta que el servicio especificado(mysql) este prendido
+
     depends_on:
       - mysql-db
 
