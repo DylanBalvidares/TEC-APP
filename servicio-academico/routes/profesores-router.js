@@ -72,4 +72,4 @@ profesoresRouter.patch("/profesores/:profesor", async (req, res) => {
     }
 });
 
-export default cursosRouter;
+export default profesoresRouter;
