@@ -1,4 +1,4 @@
-import Profesor from "../models/profesor-model.js";
+import Profesor from "../models/profesores-model.js";
 
 // Obtener todos
 async function obtenerTodosProfesores() {

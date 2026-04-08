@@ -1,7 +1,7 @@
 import { DataTypes } from "sequelize";
-import { con } from "../database/db.js";
+import sequelize from "../db/conexionDB.js";
 
-const Profesor = con.define("profesores", {
+const Profesor = sequelize.define("profesores", {
     id_profesor: {
         type: DataTypes.INTEGER,
         primaryKey: true,
