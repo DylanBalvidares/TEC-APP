@@ -2,13 +2,13 @@ import Alumno from "../models/alumnos-model.js";
 
 async function obtenerTodosAlumnos() {
   try {
-    const alumno = await Alumno.findAll();
+    const alumnos = await Alumno.findAll();
 
-    if (alumno.length === 0) {
+    if (alumnos.length === 0) {
       throw new Error("No se encontraron alumnos");
     }
 
-    return alumno;
+    return alumnos;
   } catch (error) {
     console.error("Error en obtenerTodosAlumnos", error);
     return "Error en obtenerTodosAlumnos";
@@ -78,17 +78,17 @@ async function modificarAlumno(alumno) {
         where: {
           id_alumno: id,
         },
-      }, 
+      },
     );
 
     if (!data) {
-      throw new Error("Error en modificarNombre(id,nombre)");
+      throw new Error("Error en modificarNombre(alumno)");
     }
 
     return data;
   } catch (error) {
     console.error("Error en modificarNombre(id,nombre)");
-    return "Error en modificarNombre(id,nombre)";
+    return "Error en modificarAlumno(alumno)";
   }
 }
 

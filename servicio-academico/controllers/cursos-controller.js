@@ -1,5 +1,36 @@
 import Curso from "../models/cursos-model.js";
 
+async function obtenerTodosCursos() {
+  try {
+    const cursos = await Curso.findAll();
+
+    if (cursos.length === 0) {
+      throw new Error("No se encontraron cursos");
+    }
+
+    return cursos;
+
+  } catch (error) {
+    console.error("Error en obtenerTodosCursos", error);
+    return "Error en obtenerTodosCursos";
+  }
+}
+
+async function obtenerCurso(id) {
+  try {
+    const curso = await Curso.findByPk(id);
+
+    if (!curso) {
+      throw new Error("Error en obtenerCurso(id)");
+    }
+
+    return curso;
+  } catch (error) {
+    console.error("Error en obtenerAlumno(id):", error);
+    return ("Error en obtenerAlumno(id):", error);
+  }
+}
+
 async function crearCurso(curso) {
   try {
     const data = await Curso.create(curso); //<--create:build & save
@@ -30,17 +61,14 @@ async function eliminarCurso(id) {
   }
 }
 
-async function modificarCurso(id, _curso) {
-  if ((!_curso) instanceof Curso) {
-    throw new Error("Error en modificarCurso(id,curso)");
-  }
-
-  const curso = Curso.build(_curso);
-
+async function modificarCurso(curso) {
   try {
+    const { id, nombre, turno, aula } = curso;
     const data = await Curso.update(
       {
-        nombre_curso: curso.get.
+        nombre: nombre,
+        turno: turno,
+        aula: aula,
       },
       {
         where: {
@@ -48,5 +76,23 @@ async function modificarCurso(id, _curso) {
         },
       },
     );
-  } catch (error) {}
+
+    if (!data) {
+      throw new Error("Error en modificarCurso(curso)");
+    }
+
+    return data;
+
+  } catch (error) {
+    console.error("Error en modificarCurso(curso)");
+    return "Error en modificarCurso(curso)";
+  }
 }
+
+export {
+  obtenerTodosCursos,
+  obtenerCurso,
+  crearCurso,
+  eliminarCurso,
+  modificarCurso
+};

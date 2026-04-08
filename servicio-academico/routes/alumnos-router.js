@@ -51,8 +51,6 @@ alumnosRouter.delete("/alumnos/:id", async (req, res) => {
   }
 });
 
-//========== MODIFICAR RESPONSES Y METODOS
-
 alumnosRouter.patch("/alumnos/:alumno", async (req, res) => {
   const { id, nombre, apellido, dni, curso } = req.body;
   try {
@@ -71,5 +69,4 @@ alumnosRouter.patch("/alumnos/:alumno", async (req, res) => {
   }
 });
 
-// =============
 export default alumnosRouter;
