@@ -2,7 +2,7 @@ import sequelize from "../db/conexionDB.js";
 import { DataTypes } from "sequelize";
 import Alumno from "./alumnos-model.js";
 
-const Asistencia = sequelize.define("Asistencia", {
+const Asistencia = sequelize.define("asistencias", {
   id_asistencia: {
     type: DataTypes.INTEGER,
     autoIncrement: true,

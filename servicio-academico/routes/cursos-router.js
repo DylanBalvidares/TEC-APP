@@ -56,7 +56,6 @@ cursosRouter.patch("/cursos/:curso", async (req, res) => {
     const { id, nombre, turno, aula } = req.body;
     try {
         const curso = {
-            id: id,
             nombre: nombre,
             turno: turno,
             aula: aula,
