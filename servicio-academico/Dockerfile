@@ -10,8 +10,6 @@ COPY ./servicio-academico/package*.json ./
 #instala librerias dentro del contenedor
 RUN npm install 
 
-#crea carpeta db en raiz
-
 #copiar carpeta db en el contenedor
 COPY ./db ./db
 
@@ -21,4 +19,4 @@ COPY ./servicio-academico ./
 #define el puerto en el que se escuchan conexiones
 EXPOSE 3307
 
-CMD [ "node","server.js" ]
+CMD [ "node","main.js" ]

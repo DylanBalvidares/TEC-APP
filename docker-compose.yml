@@ -16,7 +16,7 @@ services:
     #variables de entorno
     environment:
       - MYSQL_ROOT_PASSWORD=root_pass
-      - MYSQL_DATABASE=gestion_tecnica2 
+      - MYSQL_DATABASE=gestion_tecnica2
       #mapea el puerto local(izq) al del contenedor(der)
     ports:
       - "3306:3306"
@@ -43,6 +43,22 @@ services:
       DATABASE_URL: "mysql://root:root@mysql-db:3306/gestion_tecnica2"
 
     #el servicio no arranca hasta que el servicio especificado(mysql) este prendido
+
+    depends_on:
+      - mysql-db
+
+  servicio-auth:
+    build:
+      context: .
+      dockerfile: ./servicio-auth/Dockerfile
+
+    container_name: servicio-auth
+
+    ports:
+      - "3308:3308"
+
+    environment:
+      DATABASE_URL: "mysql://root:root@mysql-db:3306/gestion_tecnica2"
 
     depends_on:
       - mysql-db

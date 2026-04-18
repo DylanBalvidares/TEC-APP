@@ -1,4 +1,4 @@
-import { sequelize } from "../../db/conexionDB.js";
+import sequelize from "../db/conexionDB.js";
 import { DataTypes } from "sequelize";
 import Alumno from "./alumnos-model.js";
 
