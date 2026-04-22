@@ -1,5 +1,7 @@
-import { DataTypes } from "sequelize";
+import { DataTypes, ForeignKeyConstraintError } from "sequelize";
 import { sequelize } from "../db/conexionDB.js";
+import Biblioteca from "./biblioteca-model.js";
+import Prestamo from "./prestamos-model.js";
 
 const Recurso = sequelize.define(
   "recurso",
@@ -35,5 +37,13 @@ const Recurso = sequelize.define(
     timestamps: false,
   },
 );
+
+Recurso.hasOne(Biblioteca, {
+  foreignKey: "id_biblioteca",
+});
+
+Recurso.hasMany(Prestamo, {
+  foreignKey: "id_prestamo"
+});
 
 export default Recurso;

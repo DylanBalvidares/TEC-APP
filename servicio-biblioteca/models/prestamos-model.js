@@ -1,5 +1,7 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../db/conexionDB.js";
+import Recurso from "./recursos-model.js";
+import Biblioteca from "./biblioteca-model.js";
 
 const Prestamo = sequelize.define(
   "prestamo",
@@ -36,4 +38,7 @@ const Prestamo = sequelize.define(
   },
 );
 
+Prestamo.belongsTo(Recurso, {
+  foreignKey: "id_recurso",
+});
 export default Prestamo;

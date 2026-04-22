@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../db/conexionDB.js";
+import Prestamo from "./prestamos-model.js";
 
 const Biblioteca = sequelize.define(
   "biblioteca",
@@ -27,5 +28,9 @@ const Biblioteca = sequelize.define(
     timestamps: false,
   },
 );
+
+Biblioteca.hasMany(Prestamo, {
+  foreignKey: "id_recurso",
+});
 
 export default Biblioteca;
