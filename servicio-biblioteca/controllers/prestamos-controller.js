@@ -13,80 +13,81 @@ async function obtenerTodosPrestamos() {
 
 async function obtenerPrestamo(id) {
   try {
-    const recurso = Recurso.findByPk(id);
+    const prestamo = Prestamo.findByPk(id);
 
-    if (!recurso) {
-      throw new Error("Error en obtenerRecurso(id)");
+    if (!prestamo) {
+      throw new Error("Error en obtenerPrestamo(id)");
     }
 
-    return recurso;
+    return prestamo;
   } catch (error) {
-    console.log("Error en obtenerRecurso(id)", error);
-    return "Error en obtenerRecurso(id)";
+    console.log("Error en obtenerPrestamo(id)", error);
+    return "Error en obtenerPrestamo(id)";
   }
 }
 
-async function crearRecurso(recurso) {
+async function crearPrestamo(prestamo) {
   try {
-    const data = Recurso.create(recurso);
+    const data = Prestamo.create(prestamo);
 
     return data;
   } catch (error) {
-    console.log("Error en crearRecurso(recurso)", error);
-    return ("Error en crearRecurso(recurso)", error);
+    console.log("Error en crearPrestamo(prestamo)", error);
+    return ("Error en crearPrestamo(prestamo)", error);
   }
 }
 
-async function eliminarRecurso(id) {
+async function eliminarPrestamo(id) {
   try {
-    const data = await Recurso.destroy({
+    const data = await Prestamo.destroy({
       where: {
-        id_recurso: id,
+        id_prestamo: id,
       },
     });
 
     if (data === 0) {
-      throw new Error("Error en eliminarBiblioteca(id)");
+      throw new Error("Error en eliminarPrestamo(id)");
     }
 
     return data;
   } catch (error) {
-    return ("Error en eliminarBiblioteca(id)", error);
+    return ("Error en eliminarPrestamo(id)", error);
   }
 }
 
-async function modificarRecurso(recurso) {
+async function modificarPrestamo(prestamo) {
   try {
-    const { id, nombre, tipo, descripcion, estado, id_biblioteca } = biblioteca;
-    const data = await Biblioteca.update(
+    const { id_prestamo, id_recurso, id_usuario, fecha, fecha_devolucion, estado } = prestamo;
+    const data = await Prestamo.update(
       {
-        nombre: nombre,
-        tipo: tipo,
-        descripcion: descripcion,
-        estado: estado,
-        id_biblioteca: id_biblioteca,
+        id_prestamo: id_prestamo,
+        id_recurso: id_recurso,
+        id_usuario: id_usuario,
+        fecha: fecha,
+        fecha_devolucion: fecha_devolucion,
+        estado: estado
       },
       {
         where: {
-          id_recurso: id,
+          id_prestamo: id_prestamo,
         },
       },
     );
     if (!data) {
-      throw new Error("Error en modificarRecurso(recurso)");
+      throw new Error("Error en modificarPrestamo(prestamo)");
     }
 
     return data;
   } catch (error) {
-    console.log("Error en modificarRecurso(recurso)", error);
-    return "Error en modificarRecurso(recurso)";
+    console.log("Error en modificarPrestamo(prestamo)", error);
+    return "Error en modificarPrestamo(prestamo)";
   }
 }
 
 export {
-  obtenerTodosRecursos,
-  obtenerRecurso,
-  crearRecurso,
-  eliminarRecurso,
-  modificarRecurso,
+  obtenerTodosPrestamos,
+  obtenerPrestamo,
+  crearPrestamo,
+  eliminarPrestamo,
+  modificarPrestamo
 };

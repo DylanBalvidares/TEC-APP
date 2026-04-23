@@ -1,73 +1,73 @@
 import { Router } from "express";
 
 import {
-  obtenerTodosRecursos,
-  obtenerRecurso,
-  crearRecurso,
-  eliminarRecurso,
-  modificarRecurso,
-} from "../controllers/recursos-controller.js";
+  obtenerTodosPrestamos,
+  obtenerPrestamo,
+  crearPrestamo,
+  eliminarPrestamo,
+  modificarPrestamo
+} from "../controllers/prestamos-controller.js"
 
-const recursosRouter = Router();
+const prestamosRouter = Router();
 
-recursosRouter.get("/recursos/:id", async (req, res) => {
+prestamosRouter.get("/prestamos/:id", async (req, res) => {
   const id = req.params.id;
 
   try {
-    const recurso = await obtenerRecurso(id);
-    return res.json(recurso).statusCode(200);
+    const prestamo = await obtenerPrestamo(id);
+    return res.json(prestamo).statusCode(200);
   } catch (error) {
     return res.json(error).statusCode(404);
   }
 });
 
-recursosRouter.get("/recursos", async (req, res) => {
+prestamosRouter.get("/prestamos", async (req, res) => {
   try {
-    const recursos = await obtenerTodosRecursos();
-    return res.json(recursos).statusCode(200);
+    const prestamos = await obtenerTodosPrestamos();
+    return res.json(prestamos).statusCode(200);
   } catch (error) {
     return res.json(error).statusCode(201); //400?
   }
 });
 
-recursosRouter.post("/recursos/:recurso", async (req, res) => {
-  console.log("== RECURSOS REQUEST:", req.body); //DEBUG
+prestamosRouter.post("/prestamos/:prestamo", async (req, res) => {
+  console.log("== PRESTAMOS REQUEST:", req.body); //DEBUG
   try {
-    const recurso = await crearRecurso(req.body);
-    return res.json(recurso).statusCode(201);
+    const prestamo = await crearPrestamo(req.body);
+    return res.json(prestamo).statusCode(201);
   } catch (error) {
     return res.json(error).statusCode(400); //400?
   }
 });
 
-recursosRouter.delete("/recursos/:id", async (req, res) => {
+prestamosRouter.delete("/prestamos/:id", async (req, res) => {
   const id = req.params.id;
 
   try {
-    const resultado = await eliminarRecurso(id);
+    const resultado = await eliminarPrestamo(id);
     return res.json(resultado).statusCode(200);
   } catch (error) {
     return res.json(error).statusCode(400); //400?
   }
 });
 
-recursosRouter.patch("/recursos/:recurso", async (req, res) => {
-  const { id, nombre, tipo, descripcion, estado, id_biblioteca } = req.body;
+prestamosRouter.patch("/prestamos/:prestamo", async (req, res) => {
+  const { idPrestamo, idRecurso, idUsuario, fechaPrestamo, fechaDevolucion, estado } = req.body;
   try {
-    const recurso = {
-      id: id,
-      nombre: nombre,
-      tipo: tipo,
-      descripcion: descripcion,
-      estado: estado,
-      id_biblioteca: id_biblioteca,
+    const prestamo = {
+      id_prestamo: idPrestamo,
+      id_recurso: idRecurso,
+      id_usuario: idUsuario,
+      fecha_prestamo: fechaPrestamo,
+      fecha_devolucion: fechaDevolucion,
+      estado: estado
     };
 
-    const resultado = await modificarRecurso(recurso);
+    const resultado = await modificarPrestamo(prestamo);
     return res.json(resultado).statusCode(200); //200->>OK,put/patch
   } catch (error) {
     return res.json(error).statusCode(400); //400?
   }
 });
 
-export default recursosRouter;
+export default prestamosRouter;

@@ -17,7 +17,7 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=root_pass
       - MYSQL_DATABASE=gestion_tecnica2
-      #mapea el puerto local(izq) al del contenedor(der)
+    #mapea el puerto local(izq) al del contenedor(der)
     ports:
       - "3306:3306"
 
@@ -56,6 +56,22 @@ services:
 
     ports:
       - "3308:3308"
+
+    environment:
+      DATABASE_URL: "mysql://root:root@mysql-db:3306/gestion_tecnica2"
+
+    depends_on:
+      - mysql-db
+
+  servicio-biblioteca:
+    build:
+      context: .
+      dockerfile: ./servicio-biblioteca/Dockerfile
+
+    container_name: servicio-biblioteca
+
+    ports:
+      - "3309:3309"
 
     environment:
       DATABASE_URL: "mysql://root:root@mysql-db:3306/gestion_tecnica2"

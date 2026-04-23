@@ -1,5 +1,5 @@
 import { DataTypes } from "sequelize";
-import { sequelize } from "../db/conexionDB.js";
+import sequelize from "../db/conexionDB.js";
 import Prestamo from "./prestamos-model.js";
 
 const Biblioteca = sequelize.define(
