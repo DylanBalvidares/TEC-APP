@@ -3,7 +3,7 @@ import Alumno from "../models/alumnos-model.js";
 async function obtenerTodosAlumnos() {
   try {
     const alumnos = await Alumno.findAll();
-
+    
     if (alumnos.length === 0) {
       throw new Error("No se encontraron alumnos");
     }

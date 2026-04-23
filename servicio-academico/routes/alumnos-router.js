@@ -14,7 +14,6 @@ alumnosRouter.get("/alumnos/:id", async (req, res) => {
 
   try {
     const alumno = await obtenerAlumno(id);
-
     return res.json(alumno).statusCode(200);
   } catch (error) {
     return res.json(error).statusCode(404);
