@@ -1,27 +1,51 @@
+import { Sequelize } from "sequelize";
 import Curso from "../models/cursos-model.js";
 
 async function obtenerTodosCursos() {
   try {
     const cursos = await Curso.findAll();
 
-    if (cursos.length === 0) {
-      throw new Error("No se encontraron cursos");
+    if (!cursos.length) {
+      throw {
+        ok: true,
+        status: 204,
+        error: "No se encontraron cursos",
+      }
+      return;
     }
 
     return cursos;
-
   } catch (error) {
-    console.error("Error en obtenerTodosCursos", error);
-    return "Error en obtenerTodosCursos";
+    throw {
+      status: 500,
+      error: "Error interno del servidor"
+    }
   }
+
 }
 
 async function obtenerCurso(id) {
+
   try {
+
+    if (id < 0) {
+      throw {
+        ok: false,
+        status: 400,
+        error: "id invalida"
+      }
+
+      return;
+    }
+
     const curso = await Curso.findByPk(id);
 
     if (!curso) {
-      throw new Error("Error en obtenerCurso(id)");
+      throw {
+        ok: true,
+        status: 204,
+        error: "No se encontro el curso especificado"
+      }
     }
 
     return curso;
@@ -37,8 +61,39 @@ async function crearCurso(curso) {
 
     return data;
   } catch (error) {
-    console.error("Error en crearCurso(curso):", error);
-    return ("Error en crearCurso(curso):", error);
+    if (!error.status) {
+      throw {
+        status: 500,
+        error: "Error interno del servidor"
+      }
+
+      return;
+    }
+
+    if (error instanceof Sequelize.UniqueConstraintError) {
+      throw {
+        ok: false,
+        status: 500,
+        error: "El curso especificado ya existe"
+      }
+      return;
+    }
+
+    if (error instanceof Sequelize.DatabaseError) {
+      throw {
+        ok: false,
+        status: 500,
+        error: "Error de BD"
+      }
+    }
+
+    if (error instanceof Sequelize.ConnectionError) {
+      throw {
+        ok: false,
+        status: 500,
+        error: "Error conexion BD"
+      }
+    }
   }
 }
 
