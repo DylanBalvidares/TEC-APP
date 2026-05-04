@@ -6,6 +6,7 @@ import alumnosRouter from "./routes/alumnos-router.js";
 import cursosRouter from "./routes/cursos-router.js";
 import profesoresRouter from "./routes/profesores-router.js";
 import asistenciasRouter from "./routes/asistencias-router.js";
+import middleware from "./routes/middleware.js";
 
 const app = express();
 
@@ -19,6 +20,8 @@ app.use("/apiAlumnos", alumnosRouter);
 app.use("/apiCursos", cursosRouter);
 app.use("/apiProfesores", profesoresRouter);
 app.use("/apiAsistencias", asistenciasRouter);
+
+//app.use(middleware(error, req, res, next)); //middleware
 
 app.listen(PORT, () => {
   console.log(`== SERVICIO ACADEMICO CORRIENDO EN ${PORT} ==`);

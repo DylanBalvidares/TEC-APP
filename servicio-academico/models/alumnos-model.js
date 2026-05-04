@@ -1,6 +1,5 @@
 import sequelize from "../db/conexionDB.js";
 import { DataTypes } from "sequelize";
-import Curso from "./cursos-model.js";
 
 const Alumno = sequelize.define("alumnos", {
   id_alumno: {
@@ -10,30 +9,27 @@ const Alumno = sequelize.define("alumnos", {
   },
   nombre: {
     type: DataTypes.STRING,
-    allowNull: true,
+    allowNull: false,
   },
   apellido: {
     type: DataTypes.STRING,
-    allowNull: true,
+    allowNull: false,
   },
   dni: {
     type: DataTypes.STRING,
-    allowNull: true,
+    allowNull: false,
+    unique: true,
   },
 
   //FOREIGN KEY
   id_curso: {
     type: DataTypes.INTEGER,
-    allowNull: true,
+    allowNull: false,
     references: {
       model: "cursos",
       key: "id_curso",
     },
   },
-});
-
-Alumno.hasOne(Curso, {
-  foreignKey: "id_curso",
 });
 
 export default Alumno;

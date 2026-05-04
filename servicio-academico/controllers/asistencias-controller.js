@@ -1,106 +1,130 @@
-import Asistencia from "../models/asistencias-model.js";
+import ErrorHandler from "../ErrorHandler.js";
+import { Asistencia } from "../models/index.js";
 
-// Obtener todos
 async function obtenerTodosAsistencias() {
-    try {
-        const asistencias = await Asistencia.findAll();
+  try {
+    const asistencias = await Asistencia.findAll();
 
-        if (asistencias.length === 0) {
-            throw new Error("No se encontraron asistencias");
-        }
-
-        return asistencias;
-    } catch (error) {
-        console.error("Error en obtenerTodosAsistencias", error);
-        return "Error en obtenerTodosAsistencias";
+    if (!asistencias.length) {
+      throw new ErrorHandler(404, "No se encontraron asistencias");
     }
+
+    return asistencias;
+  } catch (error) {
+    if (error instanceof ErrorHandler) {
+      throw error;
+    }
+    console.error("Error en obtenerTodosAsistencias:", error);
+    throw new ErrorHandler(500, "Error interno al obtener asistencias");
+  }
 }
 
-// Obtener uno por ID
 async function obtenerAsistencia(id) {
-    try {
-        const asistencia = await Asistencia.findByPk(id);
-
-        if (!asistencia) {
-            throw new Error("Asistencia no encontrada");
-        }
-
-        return asistencia;
-    } catch (error) {
-        console.error("Error en obtenerAsistencia(id):", error);
-        return "Error en obtenerAsistencia(id)";
+  try {
+    if (!id || id < 0) {
+      throw new ErrorHandler(400, "ID de asistencia inválida");
     }
+
+    const asistencia = await Asistencia.findByPk(id);
+
+    if (!asistencia) {
+      throw new ErrorHandler(404, "La asistencia especificada no existe");
+    }
+
+    return asistencia;
+  } catch (error) {
+    if (error instanceof ErrorHandler) {
+      throw error;
+    }
+    console.error("Error en obtenerAsistencia:", error);
+    throw new ErrorHandler(500, "Error interno al buscar la asistencia");
+  }
 }
 
-// Crear asistencia
 async function crearAsistencia(asistencia) {
-    try {
-        const data = await Asistencia.create(asistencia);
+  try {
+    const data = await Asistencia.create(asistencia);
+    return data;
+  } catch (error) {
+    console.error("Error en crearAsistencia:", error);
 
-        if (!data) {
-            throw new Error("Error en crearAsistencia");
-        }
-
-        return data;
-    } catch (error) {
-        console.error("Error en crearAsistencia:", error);
-        return "Error en crearAsistencia";
+    if (error.name === "SequelizeForeignKeyConstraintError") {
+      throw new ErrorHandler(400, "El ID de alumno especificado no existe");
     }
+
+    throw new ErrorHandler(500, "Error interno al crear asistencia");
+  }
 }
 
-// Eliminar asistencia
 async function eliminarAsistencia(id) {
-    try {
-        const data = await Asistencia.destroy({
-            where: {
-                id_asistencia: id,
-            },
-        });
+  try {
+    const filasBorradas = await Asistencia.destroy({
+      where: {
+        id_asistencia: id,
+      },
+    });
 
-        if (data === 0) {
-            throw new Error("Asistencia no encontrada");
-        }
-
-        return data;
-    } catch (error) {
-        console.error("Error en eliminarAsistencia:", error);
-        return "Error en eliminarAsistencia";
+    if (filasBorradas === 0) {
+      throw new ErrorHandler(404, "No se encontro la asistencia especificada");
     }
+
+    return filasBorradas;
+  } catch (error) {
+    if (error instanceof ErrorHandler) {
+      throw error;
+    }
+    console.error("Error en eliminarAsistencia:", error);
+    throw new ErrorHandler(500, "Error interno al eliminar la asistencia");
+  }
 }
 
-// Modificar todo el profesor
 async function modificarAsistencia(asistencia) {
-    const { id_asistencia, fecha, estado, id_alumno } = asistencia;
-    try {
-        const data = await Asistencia.update(
-            {
-                fecha: fecha,
-                estado: estado,
-                id_alumno: id_alumno,
-            },
-            {
-                where: {
-                    id_asistencia: id_asistencia,
-                },
-            }
-        );
-
-        if (data[0] === 0) {
-            throw new Error("No se actualizó la asistencia");
-        }
-
-        return data;
-    } catch (error) {
-        console.error("Error en modificarAsistencia:", error);
-        return "Error en modificarAsistencia(asistencia)";
+  const { id_asistencia, fecha, estado, id_alumno } = asistencia;
+  console.log("ASISTENCIAS-CONTROLLER:", asistencia);
+  try {
+    if (!id_asistencia || id_asistencia < 0) {
+      throw new ErrorHandler(400, "ID invalida");
     }
+
+    const filasAfectadas = await Asistencia.update(
+      {
+        fecha: fecha,
+        estado: estado,
+        id__alumno: id_alumno,
+      },
+      {
+        where: {
+          id_asistencia: id_asistencia,
+        },
+      },
+    );
+
+    if (filasAfectadas[0] === 0) {
+      throw new ErrorHandler(404, "No se encontro la asistencia especificada");
+    }
+
+    return filasAfectadas;
+  } catch (error) {
+    console.error("Error en modificarAsistencia:", error);
+    if (error instanceof ErrorHandler) {
+      throw error;
+    }
+
+    if (error.name === "SequelizeForeignKeyConstraintError") {
+      throw new ErrorHandler(
+        400,
+        "El alumno de la asistencia especificada no existe",
+      );
+    }
+
+    throw new ErrorHandler(500, "Error interno al modificar la asistencia");
+  }
 }
 
 export {
-    obtenerTodosAsistencias,
-    obtenerAsistencia,
-    crearAsistencia,
-    eliminarAsistencia,
-    modificarAsistencia,
+  obtenerTodosAsistencias,
+  obtenerAsistencia,
+  crearAsistencia,
+  eliminarAsistencia,
+  modificarAsistencia,
 };
-

@@ -10,7 +10,7 @@ const Asistencia = sequelize.define("asistencias", {
   },
 
   fecha: {
-    type: DataTypes.DATE,
+    type: DataTypes.DATEONLY,//DATEONLY->ej:"2026-05-04"
     allowNull: false,
   },
 
@@ -29,7 +29,4 @@ const Asistencia = sequelize.define("asistencias", {
   },
 });
 
-Asistencia.hasOne(Alumno, {
-  foreignKey: "id_alumno",
-});
 export default Asistencia;

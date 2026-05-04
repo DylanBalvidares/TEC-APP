@@ -1,94 +1,125 @@
-import Alumno from "../models/alumnos-model.js";
+import ErrorHandler from "../ErrorHandler.js";
+import { Alumno } from "../models/index.js";
 
 async function obtenerTodosAlumnos() {
   try {
     const alumnos = await Alumno.findAll();
-    
-    if (alumnos.length === 0) {
-      throw new Error("No se encontraron alumnos");
+
+    if (!alumnos.length) {
+      throw new ErrorHandler(404, "No se encontraron alumnos");
     }
 
     return alumnos;
   } catch (error) {
-    console.error("Error en obtenerTodosAlumnos", error);
-    return "Error en obtenerTodosAlumnos";
+    if (error instanceof ErrorHandler) {
+      throw error;
+    }
+    console.error("Error en obtenerTodosAlumnos:", error);
+    throw new ErrorHandler(500, "Error interno al obtener alumnos");
   }
 }
 
 async function obtenerAlumno(id) {
   try {
+    if (!id || id < 0) {
+      throw new ErrorHandler(400, "ID de alumno inválida");
+    }
+
     const alumno = await Alumno.findByPk(id);
 
     if (!alumno) {
-      throw new Error("Error en obtenerAlumno(id)");
+      throw new ErrorHandler(404, "No se encontro el alumno especificado");
     }
 
     return alumno;
   } catch (error) {
-    console.error("Error en obtenerAlumno(id):", error);
-    return ("Error en obtenerAlumno(id):", error);
+    if (error instanceof ErrorHandler) {
+      throw error;
+    }
+    console.error("Error en obtenerAlumno:", error);
+    throw new ErrorHandler(500, "Error interno al obtener alumno");
   }
 }
 
 async function crearAlumno(alumno) {
   try {
     const data = await Alumno.create(alumno);
-
-    if (!data) {
-      return new Error("Error en crearAlumno");
-    }
-
     return data;
   } catch (error) {
-    console.error("Error en crearAlumno(alumno):", error);
-    return ("Error en crearAlumno(alumno):", error);
+    console.error("Error en crearAlumno:", error);
+
+    if (error.name === "SequelizeUniqueConstraintError") {
+      throw new ErrorHandler(400, "El DNI ingresado ya existe");
+    }
+
+    if (error.name === "SequelizeForeignKeyConstraintError") {
+      throw ErrorHandler(400, "El curso del alumno especificado no existe");
+    }
+
+    throw new ErrorHandler(500, "Error interno al crear alumno");
   }
 }
 
 async function eliminarAlumno(id) {
   try {
-    const data = await Alumno.destroy({
+    const filasBorradas = await Alumno.destroy({
       where: {
         id_alumno: id,
       },
     });
 
-    if (data === 0) {
-      throw new Error("Error en eliminarAlumno(id)");
+    if (filasBorradas === 0) {
+      throw new ErrorHandler(404, "No se encontro el alumno especificado");
     }
 
-    return data;
+    return filasBorradas;
   } catch (error) {
-    console.error("Error en eliminarAlumno(id)");
-    return "Error en eliminarAlumno(id)";
+    if (error instanceof ErrorHandler) {
+      throw error;
+    }
+    console.error("Error en eliminarAlumno:", error);
+    throw new ErrorHandler(500, "Error interno del servidor");
   }
 }
 
 async function modificarAlumno(alumno) {
+  const { id_alumno, nombre, apellido, dni, id_curso } = alumno;
+  console.log("ALUMNOS-CONTROLLER:", alumno);
   try {
-    const { id, nombre, apellido, dni, curso } = alumno;
-    const data = await Alumno.update(
+    if (id_curso < 0 || !id_curso) {
+      throw new ErrorHandler(400, "ID invalida");
+    }
+
+    const filasAfectadas = await Alumno.update(
+      //retorna un array[],donde "[0]"" es la cantidad de filas afectadas
       {
         nombre: nombre,
         apellido: apellido,
         dni: dni,
-        id_curso: curso,
       },
       {
         where: {
-          id_alumno: id,
+          id_alumno: id_alumno,
         },
       },
     );
 
-    if (!data) {
-      throw new Error("Error en modificarNombre(alumno)");
+    if (filasAfectadas[0] === 0) {
+      throw new ErrorHandler(404, "No se encontro el alumno especificado");
     }
 
-    return data;
+    return filasAfectadas;
   } catch (error) {
-    console.error("Error en modificarNombre(id,nombre)");
-    return "Error en modificarAlumno(alumno)";
+    console.error("Error en modificarAlumno:", error);
+    if (error instanceof ErrorHandler) {
+      throw error;
+    }
+
+    if (error.name === "SequelizeForeignKeyConstraintError") {
+      throw new ErrorHandler(400, "El curso del alumno especificado no existe");
+    }
+
+    throw new ErrorHandler(500, "Error interno al modificar alumno");
   }
 }
 

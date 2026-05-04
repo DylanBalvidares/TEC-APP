@@ -1,75 +1,70 @@
-import { Router } from 'express'
+import { Router } from "express";
 
 import {
-    obtenerTodosProfesores,
-    obtenerProfesor,
-    eliminarProfesor,
-    modificarProfesor,
-    crearProfesor,
-} from "../controllers/profesores-controller.js"
+  obtenerTodosProfesores,
+  obtenerProfesor,
+  eliminarProfesor,
+  modificarProfesor,
+  crearProfesor,
+} from "../controllers/profesores-controller.js";
 
 const profesoresRouter = Router();
 
-
 profesoresRouter.get("/profesores/:id", async (req, res) => {
-    const id = req.params.id;
+  try {
+    const profesor = await obtenerProfesor(req.params.id);
 
-    try {
-        const profesor = await obtenerProfesor(id);
-
-        return res.json(profesor).statusCode(200);
-    } catch (error) {
-        return res.json(profesor).statusCode(404);
-    }
+    return res.status(200).json(profesor);
+  } catch (error) {
+    return res.status(error.status).json(error.message);
+  }
 });
 
 profesoresRouter.get("/profesores", async (req, res) => {
-    try {
-        const profesores = await obtenerTodosProfesores();
-        return res.json(profesores).statusCode(200);
-
-    } catch (error) {
-        return res.json(profesores).statusCode(201); //400?
-    }
+  try {
+    const profesores = await obtenerTodosProfesores();
+    return res.status(200).json(profesores);
+  } catch (error) {
+    return res.status(error.status).json(error.message);
+  }
 });
 
 profesoresRouter.post("/profesores/:profesor", async (req, res) => {
-    console.log("== PROFESOR REQUEST:", req.body); //DEBUG
-    try {
-        const curso = await crearProfesor(req.body);
-        return res.json(req.body).statusCode(201);
-    } catch (error) {
-        return res.json(error).statusCode(400); //400?
-    }
+  console.log("== PROFESOR REQUEST:", req.body); //DEBUG
+  try {
+    const curso = await crearProfesor(req.body);
+    return res.status(200).json(curso);
+  } catch (error) {
+    return res.status(error.status).json(error.message);
+  }
 });
 
 profesoresRouter.delete("/profesores/:id", async (req, res) => {
-    const id = req.params.id;
-
-    try {
-        const resultado = await eliminarProfesor(id);
-        return res.json(resultado).statusCode(200);
-    } catch (error) {
-        return res.json(error).statusCode(400); //400?
-    }
+  try {
+    const resultado = await eliminarProfesor(req.params.id);
+    return res.status(200).json(resultado);
+  } catch (error) {
+    return res.status(error.status).json(error.message);
+  }
 });
 
 profesoresRouter.patch("/profesores/:profesor", async (req, res) => {
-    const { id, nombre, apellido, materia, email } = req.body;
-    try {
-        const profesor = {
-            id: id,
-            nombre: nombre,
-            apellido: nombre,
-            materia: materia,
-            email: email,
-        };
+  const { id_profesor, nombre, apellido, materia, email } = req.body;
 
-        const resultado = await modificarProfesor(profesor);
-        return res.json(resultado).statusCode(200);//200->>OK,put/patch
-    } catch (error) {
-        return res.json(error).statusCode(400);//400?
-    }
+  try {
+    const profesor = {
+      id_profesor: id_profesor,
+      nombre: nombre,
+      apellido: nombre,
+      materia: materia,
+      email: email,
+    };
+
+    const resultado = await modificarProfesor(profesor);
+    return res.status(200).json(resultado);
+  } catch (error) {
+    return res.status(error.status).json(error.message);
+  }
 });
 
 export default profesoresRouter;
