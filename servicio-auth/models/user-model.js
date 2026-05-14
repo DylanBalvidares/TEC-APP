@@ -1,5 +1,5 @@
 import { DataTypes } from "sequelize";
-import sequelize from "../../db/conexionDB.js";
+import sequelize from "../db/conexionDB.js";
 
 const Usuario = sequelize.define("usuarios", {
   id_usuario: {
@@ -8,17 +8,17 @@ const Usuario = sequelize.define("usuarios", {
     primaryKey: true,
   },
   nombre: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(100),
     allowNull: false,
     unique: true,
   },
   email: {
-    type: DataTypes.STRING(50),
+    type: DataTypes.STRING(100),
     allowNull: false,
     unique: true,
   },
-  password: {
-    type: DataTypes.STRING,
+  contrasena: {
+    type: DataTypes.STRING(255),
     allowNull: false,
   },
   id_rol: {

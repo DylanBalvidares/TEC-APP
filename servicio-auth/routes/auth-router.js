@@ -38,8 +38,11 @@ authRouter.delete("/auth/:id", async (req, res) => {
   }
 });
 
-authRouter.post("/auth/:usuario", async (req, res) => {
+authRouter.post("/auth/", async (req, res) => {
   try {
+    console.log("==== POST ====");
+    console.log("-USUARIO:", req.body);
+    console.log("==============");
     const usuario = await crearUsuario(req.body);
 
     return res.status(200).json(usuario);
@@ -48,7 +51,7 @@ authRouter.post("/auth/:usuario", async (req, res) => {
   }
 });
 
-authRouter.patch("/auth/:usuario", async (req, res) => {
+authRouter.patch("/auth/", async (req, res) => {
   try {
     const usuario = await modificarUsuario(req.body);
 

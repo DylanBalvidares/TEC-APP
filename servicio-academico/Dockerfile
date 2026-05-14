@@ -2,7 +2,7 @@
 FROM node:20-alpine
 
 #se crea una carpeta(/app/servicio-academico/) dentro del contenedor,y se coloca dentro de ella
-WORKDIR /app
+WORKDIR /servicio-academico
 
 #copia las dependencias al contenedor
 COPY ./servicio-academico/package*.json ./

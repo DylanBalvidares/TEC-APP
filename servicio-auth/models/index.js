@@ -1,5 +1,5 @@
-import Usuario from "./user-model";
-import Roles from "./roles-model";
+import Usuario from "./user-model.js";
+import Roles from "./roles-model.js";
 
 Usuario.belongsTo(Roles, {
   foreignKey: "id_rol",
