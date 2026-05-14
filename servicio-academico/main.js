@@ -7,6 +7,7 @@ import cursosRouter from "./routes/cursos-router.js";
 import profesoresRouter from "./routes/profesores-router.js";
 import asistenciasRouter from "./routes/asistencias-router.js";
 import middleware from "./routes/middleware.js";
+import autoridadesRouter from "./routes/autoridades-router.js";
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use("/apiAlumnos", alumnosRouter);
 app.use("/apiCursos", cursosRouter);
 app.use("/apiProfesores", profesoresRouter);
 app.use("/apiAsistencias", asistenciasRouter);
+app.use("/apiAutoridades", autoridadesRouter);
 
 //app.use(middleware(error, req, res, next)); //middleware
 

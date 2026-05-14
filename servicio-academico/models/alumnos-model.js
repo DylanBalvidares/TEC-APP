@@ -8,20 +8,20 @@ const Alumno = sequelize.define("alumnos", {
     primaryKey: true,
   },
   nombre: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(100),
     allowNull: false,
   },
   apellido: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(100),
     allowNull: false,
   },
   dni: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(20),
     allowNull: false,
     unique: true,
   },
 
-  //FOREIGN KEY
+  //FK
   id_curso: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -30,6 +30,30 @@ const Alumno = sequelize.define("alumnos", {
       key: "id_curso",
     },
   },
+
+  //FK
+  id_usuario: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: "usuarios",
+      key: "id_usuario",
+    },
+  },
+
+  indexes: [
+    {
+      name: "dni_unico",
+      unique: true,
+      fields: ["dni"],
+    },
+
+    {
+      name: "uq_alumnos_usuario",
+      unique: true,
+      fields: ["id_usuario"],
+    },
+  ],
 });
 
 export default Alumno;

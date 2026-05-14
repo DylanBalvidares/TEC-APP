@@ -2,6 +2,7 @@ import Alumno from "./alumnos-model.js";
 import Curso from "./cursos-model.js";
 import Asistencia from "./asistencias-model.js";
 import Profesor from "./profesores-model.js";
+import Autoridad from "./autoridades-model.js";
 
 Curso.hasMany(Alumno, {
   foreignKey: "id_curso",
@@ -24,4 +25,12 @@ Curso.belongsTo(Profesor, {
   foreignKey: "id_profesor",
 });
 
-export { Curso, Alumno, Asistencia, Profesor };
+Curso.hasMany(Asistencia, {
+  foreignKey: "id_asistencia",
+});
+
+Asistencia.belongsTo(Curso, {
+  foreignKey: "id_curso",
+});
+
+export { Curso, Alumno, Asistencia, Profesor, Autoridad };

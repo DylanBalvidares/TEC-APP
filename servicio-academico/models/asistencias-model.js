@@ -10,23 +10,50 @@ const Asistencia = sequelize.define("asistencias", {
   },
 
   fecha: {
-    type: DataTypes.DATEONLY,//DATEONLY->ej:"2026-05-04"
+    type: DataTypes.DATEONLY, //DATEONLY->ej:"2026-05-04"
     allowNull: false,
   },
 
   estado: {
-    type: DataTypes.STRING,
+    type: DataTypes.ENUM("presente", "ausente", "justificado", "tardanza"),
     allowNull: false,
   },
 
+  //FK
   id_alumno: {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: "Alumno",
+      model: "alumnos",
       key: "id_alumno",
     },
   },
+
+  //FK
+  id_curso: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: "cursos",
+      key: "id_curso",
+    },
+  },
+
+  indexes: [
+    {
+      name: "uq_asis_dia",
+      unique: true,
+      fields: ["id_alumno", "fecha"], // Aquí implementas la UNIQUE KEY compuesta
+    },
+    {
+      name: "id_alumno_idx",
+      fields: ["id_alumno"],
+    },
+    {
+      name: "id_curso_idx",
+      fields: ["id_curso"],
+    },
+  ],
 });
 
 export default Asistencia;
