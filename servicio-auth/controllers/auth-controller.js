@@ -1,17 +1,41 @@
 import ErrorHandler from "../ErrorHandler.js";
-import Usuario from "../models/index.js";
+import { Usuario } from "../models/index.js";
+import jwt from "jsonwebtoken";
+
+console.log("=== USUARIO REAL ===", Usuario);
+
+function generarToken(usuario) {
+  const payload = {
+    id_usuario: usuario.id_usuario,
+    email: usuario.email,
+    id_rol: usuario.id_rol,
+  };
+
+  const secretKey = process.env.JWT_SECRET || "clave_secreta_super_segura";
+  console.log(`=== JWT_SECRET ${secretKey}===`);
+
+  const opciones = {
+    expiresIn: "2h",
+  };
+
+  //aca se genera el JWT, obviamente utiliza el payload,
+  //  la secretKey y opciones para generar el token
+  return jwt.sign(payload, secretKey, opciones);
+}
 
 async function obtenerTodosUsuarios() {
   try {
     const usuarios = await Usuario.findAll({
       attributes: {
-        exclude: ["password"], //excluye password por motivos obvios
+        exclude: ["contrasena"], //excluye password por motivos obvios
       },
     });
 
     if (!usuarios.length) {
       throw new ErrorHandler(404, "No se encontraron usuarios");
     }
+
+    console.log(`=== ObtenerTodosUsuarios->${usuarios}`);
 
     return usuarios;
   } catch (error) {
@@ -31,7 +55,7 @@ async function obtenerUsuario(id) {
 
     const usuario = await Usuario.findByPk(id, {
       attributes: {
-        exclude: ["password"],
+        exclude: ["contrasena"],
       },
     });
 
@@ -54,16 +78,19 @@ async function crearUsuario(usuario) {
     //================= HASHEAR PWD ANTES DE CREAR EL USUARIO(SIN IMPLEMENTAR) =================
     const nuevoUsuario = await Usuario.create(usuario);
 
-    const { id_usuario, nombre, email, password, id_rol } =
+    const { id_usuario, nombre, apellido, email, contrasena, id_rol } =
       nuevoUsuario.toJSON();
 
-    //retornamos objeto sin pwd, por obvias razones
-    return (usuarioSinPassword = {
+    const usuarioSinContrasena = {
       id_usuario: id_usuario,
       nombre: nombre,
+      apellido: apellido,
       email: email,
       id_rol: id_rol,
-    });
+    };
+
+    //retornamos objeto sin pwd, por obvias razones
+    return usuarioSinContrasena;
   } catch (error) {
     console.error("Error en crearUsuario:", error);
 
@@ -98,7 +125,7 @@ async function eliminarUsuario(id) {
 }
 
 async function modificarUsuario(usuario) {
-  const { id_usuario, nombre, email, password, id_rol } = usuario;
+  const { id_usuario, nombre, apellido, email, contrasena, id_rol } = usuario;
 
   try {
     if (!id_usuario) {
@@ -108,8 +135,9 @@ async function modificarUsuario(usuario) {
     const resultado = await Usuario.update(
       {
         nombre: nombre,
+        apellido: apellido,
         email: email,
-        password: password,
+        contrasena: contrasena,
         id_rol: id_rol,
       },
       {
@@ -139,6 +167,7 @@ async function modificarUsuario(usuario) {
 }
 
 export {
+  generarToken,
   obtenerTodosUsuarios,
   obtenerUsuario,
   crearUsuario,

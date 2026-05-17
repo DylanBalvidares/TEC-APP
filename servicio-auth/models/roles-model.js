@@ -1,5 +1,5 @@
 import { DataTypes } from "sequelize";
-import sequelize from "../../db/conexionDB";
+import sequelize from "../db/conexionDB.js";
 
 const Roles = sequelize.define("roles", {
   id_rol: {

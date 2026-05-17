@@ -1,6 +1,7 @@
 import { Router } from "express";
 const authRouter = Router();
 import {
+  generarToken,
   obtenerTodosUsuarios,
   obtenerUsuario,
   crearUsuario,
@@ -10,10 +11,11 @@ import {
 
 authRouter.get("/auth", async (req, res) => {
   try {
-    const usuarios = await obtenerUsuarios();
+    const usuarios = await obtenerTodosUsuarios();
 
     return res.status(200).json(usuarios);
   } catch (error) {
+    console.log(`=== ERROR AUTH(GET) ${error} ===`);
     return res.status(error.status).json(error.message);
   }
 });
@@ -45,7 +47,9 @@ authRouter.post("/auth/", async (req, res) => {
     console.log("==============");
     const usuario = await crearUsuario(req.body);
 
-    return res.status(200).json(usuario);
+    const infoUsuario = generarToken(usuario);
+
+    return res.status(200).json(infoUsuario);
   } catch (error) {
     return res.status(error.status).json(error.message);
   }

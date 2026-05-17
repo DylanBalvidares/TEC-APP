@@ -2,6 +2,8 @@ FROM node:alpine
 
 WORKDIR /app
 
+COPY ./db ./db
+
 COPY ./servicio-auth/package*.json ./
 
 RUN npm install

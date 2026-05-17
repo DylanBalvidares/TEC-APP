@@ -14,7 +14,7 @@ async function obtenerTodosCursos() {
     if (error instanceof ErrorHandler) {
       throw error;
     }
-
+    console.log("=== ERROR->", error);
     throw new ErrorHandler(500, "Error interno del servidor");
   }
 }

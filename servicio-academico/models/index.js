@@ -18,12 +18,14 @@ Asistencia.belongsTo(Alumno, {
   foreignKey: "id_alumno",
 });
 
+/*
 Profesor.hasMany(Curso, {
   foreignKey: "id_profesor",
 });
 Curso.belongsTo(Profesor, {
   foreignKey: "id_profesor",
 });
+*/
 
 Curso.hasMany(Asistencia, {
   foreignKey: "id_asistencia",
