@@ -81,7 +81,22 @@ services:
     depends_on:
       - mysql-db
 
+  servicio-usuarios:
+    env_file:
+      - ./servicio-auth/.env
+
+    build:
+      context: .
+      dockerfile: ./servicio-usuarios/Dockerfile
+
+    container_name: servicio-usuarios
+
+    ports:
+      - "3310:3310"
+
   api-gateway:
+    env_file:
+      - ./servicio-auth/.env
     build:
       context: .
       dockerfile: ./api-gateway/Dockerfile

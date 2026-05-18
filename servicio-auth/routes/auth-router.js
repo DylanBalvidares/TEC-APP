@@ -1,46 +1,29 @@
 import { Router } from "express";
+import { generarToken, login } from "../controllers/auth-controller.js";
+import ErrorHandler from "../ErrorHandler.js";
+
 const authRouter = Router();
-import {
-  generarToken,
-  obtenerTodosUsuarios,
-  obtenerUsuario,
-  crearUsuario,
-  eliminarUsuario,
-  modificarUsuario,
-} from "../controllers/auth-controller.js";
+//// ============== LOGIN ==============
+authRouter.post("/auth/login", async (req, res) => {
+  //{"email":"email@gmail.com","contrasena":"ejemplo_contrasena"}
 
-authRouter.get("/auth", async (req, res) => {
+  const { email } = req.body;
   try {
-    const usuarios = await obtenerTodosUsuarios();
+    console.log("==== LOGIN POST ====");
+    console.log("-USUARIO:", req.body);
+    console.log("==============");
 
-    return res.status(200).json(usuarios);
+    const response = await login(req.body);
+
+    return res.status(200).json(response);
   } catch (error) {
-    console.log(`=== ERROR AUTH(GET) ${error} ===`);
+    console.log("=== ERROR->", error);
     return res.status(error.status).json(error.message);
   }
 });
 
-authRouter.get("/auth/:id", async (req, res) => {
-  try {
-    const usuario = await obtenerUsuario(req.params.id);
-
-    return res.status(200).json(usuario);
-  } catch (error) {
-    return res.status(error.status).json(error.message);
-  }
-});
-
-authRouter.delete("/auth/:id", async (req, res) => {
-  try {
-    const usuario = await eliminarUsuario(req.params.id);
-
-    return res.status(200).json(usuario);
-  } catch (error) {
-    return res.status(error.status).json(error.message);
-  }
-});
-
-authRouter.post("/auth/", async (req, res) => {
+//// ============== REGISTRO ==============
+authRouter.post("/auth/registro", async (req, res) => {
   try {
     console.log("==== POST ====");
     console.log("-USUARIO:", req.body);
@@ -51,10 +34,12 @@ authRouter.post("/auth/", async (req, res) => {
 
     return res.status(200).json(infoUsuario);
   } catch (error) {
+    console.log("=== ERROR->", error);
     return res.status(error.status).json(error.message);
   }
 });
 
+//// ============== MODIFICAR USUARIO? ==============
 authRouter.patch("/auth/", async (req, res) => {
   try {
     const usuario = await modificarUsuario(req.body);

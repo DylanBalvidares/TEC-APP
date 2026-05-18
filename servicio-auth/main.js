@@ -1,5 +1,4 @@
 import express from "express";
-import cors from "cors";
 
 import authRouter from "./routes/auth-router.js";
 
