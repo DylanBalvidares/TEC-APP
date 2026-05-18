@@ -1,7 +1,7 @@
 import { Router } from "express";
 const usuariosRouter = Router();
 import {
-  buscarUsuario,
+  buscarUsuarioPorEmail,
   obtenerTodosUsuarios,
   obtenerUsuario,
   crearUsuario,
@@ -32,9 +32,11 @@ usuariosRouter.get("/usuarios/:id", async (req, res) => {
 });
 */
 
-usuariosRouter.get("/usuarios/:email", async (req, res) => {
+usuariosRouter.get("/usuarios/buscar", async (req, res) => {
+  const { email } = req.query;
   try {
-    const usuario = await buscarUsuario(req.params.email);
+    const usuario = await buscarUsuarioPorEmail(email);
+    return res.status(200).json(usuario);
   } catch (error) {
     return res.status(error.status).json(error.message);
   }

@@ -28,14 +28,17 @@ async function login(usuario) {
   try {
     // PETICION PARA BUSCAR EL USUARIO ESPECIFICADO A SERVICIO USUARIOS?
     const response = await axios.get(
-      `http://servicio-usuarios:3310/apiUsuarios/usuarios/${email}`,
+      `http://servicio-usuarios:3310/apiUsuarios/usuarios/buscar`,
+      {
+        params: { email },
+      },
     );
 
-    if (!response) {
+    if (!response.data) {
       throw new ErrorHandler(401, "Credenciales invalidas");
     }
 
-    return response;
+    return response.data;
   } catch (error) {
     if (error instanceof ErrorHandler) {
       throw error;
@@ -55,11 +58,11 @@ async function registrar(usuario) {
       "http://servicio-usuarios:3310/apiUsuarios/usuarios/buscar",
     );
 
-    if (!registrado) {
+    if (!registrado.data) {
       throw new ErrorHandler(401, "Credenciales invalidas");
     }
 
-    return registrado;
+    return registrado.data;
   } catch (error) {
     if (error instanceof ErrorHandler) {
       throw error;

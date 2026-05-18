@@ -2,9 +2,7 @@ import { where } from "sequelize";
 import ErrorHandler from "../ErrorHandler.js";
 import { Usuario } from "../models/index.js";
 
-async function buscarUsuario(usuario) {
-  const { id_usuario, nombre, apellido, email, contrasena, id_rol } = usuario;
-
+async function buscarUsuarioPorEmail(email) {
   if (!email) {
     throw new ErrorHandler(400, "Email invalido");
   }
@@ -175,7 +173,7 @@ async function modificarUsuario(usuario) {
 }
 
 export {
-  buscarUsuario,
+  buscarUsuarioPorEmail,
   obtenerTodosUsuarios,
   obtenerUsuario,
   crearUsuario,
