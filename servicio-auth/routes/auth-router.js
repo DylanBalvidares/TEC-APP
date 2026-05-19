@@ -1,13 +1,15 @@
 import { Router } from "express";
-import { generarToken, login } from "../controllers/auth-controller.js";
+// BUG FIX: Se agregaron las importaciones faltantes de 'crearUsuario' y 'modificarUsuario'
+import { generarToken, login, crearUsuario, modificarUsuario } from "../controllers/auth-controller.js";
 import ErrorHandler from "../ErrorHandler.js";
 
 const authRouter = Router();
+
 //// ============== LOGIN ==============
 authRouter.post("/auth/login", async (req, res) => {
-  //{"email":"email@gmail.com","contrasena":"ejemplo_contrasena"}
-
+  // Espera recibir: {"email":"email@gmail.com","contrasena":"ejemplo_contrasena"}
   const { email, contrasena } = req.body;
+  
   try {
     console.log("==== LOGIN POST ====");
     console.log("-USUARIO:", req.body);
@@ -18,35 +20,54 @@ authRouter.post("/auth/login", async (req, res) => {
     return res.status(200).json(response);
   } catch (error) {
     console.log("=== ERROR->", error);
-    return res.status(error.status).json(error.message);
+    
+    // BUG FIX: Si error.status es undefined (error nativo), responde con un código 400 o 500 para evitar que se caiga Express
+    const statusCode = error.status || 400;
+    const message = error.message || "Ocurrió un error al intentar iniciar sesión.";
+    
+    return res.status(statusCode).json({ ok: false, error: message });
   }
 });
 
 //// ============== REGISTRO ==============
 authRouter.post("/auth/registro", async (req, res) => {
   try {
-    console.log("==== POST ====");
-    console.log("-USUARIO:", req.body);
+    console.log("==== POST REGISTRO ====");
+    console.log("-USUARIO REGISTRANDO:", req.body);
     console.log("==============");
+    
+    // Ahora funciona correctamente gracias a la importación superior
     const usuario = await crearUsuario(req.body);
 
     const infoUsuario = generarToken(usuario);
 
     return res.status(200).json(infoUsuario);
   } catch (error) {
-    console.log("=== ERROR->", error);
-    return res.status(error.status).json(error.message);
+    console.log("=== ERROR REGISTRO ->", error);
+    
+    // BUG FIX: Validación segura del código de estado del error
+    const statusCode = error.status || 400;
+    const message = error.message || "Ocurrió un error al procesar el registro.";
+    
+    return res.status(statusCode).json({ ok: false, error: message });
   }
 });
 
-//// ============== MODIFICAR USUARIO? ==============
+//// ============== MODIFICAR USUARIO ==============
 authRouter.patch("/auth/", async (req, res) => {
   try {
+    // Ahora funciona correctamente gracias a la importación superior
     const usuario = await modificarUsuario(req.body);
 
     return res.status(200).json(usuario);
   } catch (error) {
-    return res.status(error.status).json(error.message);
+    console.log("=== ERROR AL MODIFICAR ->", error);
+    
+    // BUG FIX: Validación segura del código de estado del error
+    const statusCode = error.status || 400;
+    const message = error.message || "No se pudo modificar el usuario.";
+    
+    return res.status(statusCode).json({ ok: false, error: message });
   }
 });
 
