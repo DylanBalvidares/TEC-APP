@@ -15,7 +15,7 @@ async function buscarUsuarioPorEmail(email) {
     });
 
     if (!login) {
-      throw new ErrorHandler(401, "Credenciales invalidas");
+      throw new ErrorHandler(404, "Usuario no encontrado");
     }
 
     return login;
@@ -26,6 +26,36 @@ async function buscarUsuarioPorEmail(email) {
 
     console.error("Error en login:", error);
     throw new ErrorHandler(500, "Error interno al logear usuario");
+  }
+}
+
+async function comprobarContrasenaUsuario(email, contrasena) {
+  if (!contrasena) {
+    console.log("=== CONTRASEÑA->", contrasena);
+    console.log("=== EMAIL->", email);
+    throw new ErrorHandler(400, "Contrasena invalida");
+  }
+
+  try {
+    const usuario = Usuario.findOne({
+      where: {
+        email: email,
+        contrasena: contrasena,
+      },
+    });
+
+    if (!usuario) {
+      throw new ErrorHandler(404, "Usuario no encontrado");
+    }
+
+    return usuario;
+  } catch (error) {
+    if (error instanceof ErrorHandler) {
+      throw error;
+    }
+
+    console.error("Error en comprobarContrasenaUsuario:", error);
+    throw new ErrorHandler(500, "Error interno al comprobarContrasenaUsuario");
   }
 }
 
@@ -174,6 +204,7 @@ async function modificarUsuario(usuario) {
 
 export {
   buscarUsuarioPorEmail,
+  comprobarContrasenaUsuario,
   obtenerTodosUsuarios,
   obtenerUsuario,
   crearUsuario,

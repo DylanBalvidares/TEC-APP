@@ -7,6 +7,7 @@ import {
   crearUsuario,
   eliminarUsuario,
   modificarUsuario,
+  comprobarContrasenaUsuario,
 } from "../controllers/usuarios-controller.js";
 
 usuariosRouter.get("/usuarios", async (req, res) => {
@@ -36,6 +37,19 @@ usuariosRouter.get("/usuarios/buscar", async (req, res) => {
   const { email } = req.query;
   try {
     const usuario = await buscarUsuarioPorEmail(email);
+    return res.status(200).json(usuario);
+  } catch (error) {
+    return res.status(error.status).json(error.message);
+  }
+});
+
+usuariosRouter.post("/usuarios/login", async (req, res) => {
+  const { email, contrasena } = req.body;
+  console.log("=== CONTRASEÑA->", contrasena);
+  console.log("=== EMAIL->", email);
+  console.log(`=== BODY->${req.body}`);
+  try {
+    const usuario = await comprobarContrasenaUsuario(email, contrasena);
     return res.status(200).json(usuario);
   } catch (error) {
     return res.status(error.status).json(error.message);

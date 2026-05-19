@@ -7,7 +7,7 @@ const authRouter = Router();
 authRouter.post("/auth/login", async (req, res) => {
   //{"email":"email@gmail.com","contrasena":"ejemplo_contrasena"}
 
-  const { email } = req.body;
+  const { email, contrasena } = req.body;
   try {
     console.log("==== LOGIN POST ====");
     console.log("-USUARIO:", req.body);

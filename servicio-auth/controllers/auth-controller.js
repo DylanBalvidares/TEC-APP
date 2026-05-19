@@ -21,25 +21,73 @@ function generarToken(usuario) {
   return jwt.sign(payload, secretKey, opciones);
 }
 
-async function login(usuario) {
-  const { email, contrasena } = usuario;
+async function login(infoLogin) {
+  const { email, contrasena } = infoLogin;
 
   console.log("===== EMAIL ", email);
+  console.log("===== CONTRASENA ", contrasena);
+
   try {
-    // PETICION PARA BUSCAR EL USUARIO ESPECIFICADO A SERVICIO USUARIOS?
-    const response = await axios.get(
+    // REQ BUSCAR USUARIO POR EMAIL
+    const usuario = await axios.get(
       `http://servicio-usuarios:3310/apiUsuarios/usuarios/buscar`,
       {
         params: { email },
       },
     );
 
-    if (!response.data) {
-      throw new ErrorHandler(401, "Credenciales invalidas");
+    if (!usuario.data) {
+      throw new ErrorHandler(404, "Usuario no encontrado");
     }
 
-    return response.data;
+    //SI EL USUARIO EXISTE, INTENTA LOGIN(email,contrasena)
+    const login = await axios.post(
+      `http://servicio-usuarios:3310/apiUsuarios/usuarios/login`,
+      {
+        email,
+        contrasena,
+      },
+    );
+
+    //LA REQUEST DEVUELVE 404, EN EL CASO DE QUE
+    if (!login.data) {
+      throw new ErrorHandler(401, "La contraseña es incorrecta");
+    }
+
+    const datosUsuario = login.data;
+
+    const payload = {
+      id: datosUsuario.id,
+      email: datosUsuario.email,
+      rol: datosUsuario.id_rol,
+    };
+
+    const token = jwt.sign(
+      payload,
+      process.env.JWT_SECRET || "clave_secreta_super_segura",
+      { expiresIn: "2h" },
+    );
+
+    return {
+      mensaje: "Login exitoso",
+      token: token,
+      usuario: payload,
+    };
   } catch (error) {
+    if (error.response) {
+      if (error.response.status === 400) {
+        throw new ErrorHandler(400, "Faltan datos para el inicio de sesión");
+      }
+
+      if (error.response.status === 404) {
+        throw new ErrorHandler(404, "Usuario no encontrado");
+      }
+
+      if (error.response.status === 401) {
+        throw new ErrorHandler(401, "La contraseña es incorrecta");
+      }
+    }
+
     if (error instanceof ErrorHandler) {
       throw error;
     }
