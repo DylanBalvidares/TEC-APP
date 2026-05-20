@@ -19,18 +19,9 @@ usuariosRouter.get("/usuarios", async (req, res) => {
     console.log(`=== ERROR USUARIOS(GET) ${error} ===`);
     // BUG FIX: Evita caídas si error.status es undefined
     const statusCode = error.status || 500;
-    return res.status(statusCode).json({ error: error.message || "Error interno del servidor" });
-  }
-});
-
-//// ============== OBTENER USUARIO POR ID ==============
-usuariosRouter.get("/usuarios/:id", async (req, res) => {
-  try {
-    const usuario = await obtenerUsuario(req.params.id);
-    return res.status(200).json(usuario);
-  } catch (error) {
-    const statusCode = error.status || 500;
-    return res.status(statusCode).json({ error: error.message || "Error al obtener usuario" });
+    return res
+      .status(statusCode)
+      .json({ error: error.message || "Error interno del servidor" });
   }
 });
 
@@ -42,7 +33,22 @@ usuariosRouter.get("/usuarios/buscar", async (req, res) => {
     return res.status(200).json(usuario);
   } catch (error) {
     const statusCode = error.status || 500;
-    return res.status(statusCode).json({ error: error.message || "Error al buscar usuario" });
+    return res
+      .status(statusCode)
+      .json({ error: error.message || "Error al buscar usuario" });
+  }
+});
+
+//// ============== OBTENER USUARIO POR ID ==============
+usuariosRouter.get("/usuarios/:id", async (req, res) => {
+  try {
+    const usuario = await obtenerUsuario(req.params.id);
+    return res.status(200).json(usuario);
+  } catch (error) {
+    const statusCode = error.status || 500;
+    return res
+      .status(statusCode)
+      .json({ error: error.message || "Error al obtener usuario" });
   }
 });
 
@@ -61,7 +67,9 @@ usuariosRouter.post("/usuarios/login", async (req, res) => {
     return res.status(200).json(usuario);
   } catch (error) {
     const statusCode = error.status || 500;
-    return res.status(statusCode).json({ error: error.message || "Error en la validación de credenciales" });
+    return res.status(statusCode).json({
+      error: error.message || "Error en la validación de credenciales",
+    });
   }
 });
 
@@ -69,10 +77,16 @@ usuariosRouter.post("/usuarios/login", async (req, res) => {
 usuariosRouter.delete("/usuarios/:id", async (req, res) => {
   try {
     const usuario = await eliminarUsuario(req.params.id);
-    return res.status(200).json({ ok: true, mensaje: "Usuario eliminado con éxito", registrosAfectados: usuario });
+    return res.status(200).json({
+      ok: true,
+      mensaje: "Usuario eliminado con éxito",
+      registrosAfectados: usuario,
+    });
   } catch (error) {
     const statusCode = error.status || 500;
-    return res.status(statusCode).json({ error: error.message || "Error al eliminar usuario" });
+    return res
+      .status(statusCode)
+      .json({ error: error.message || "Error al eliminar usuario" });
   }
 });
 
@@ -92,7 +106,9 @@ usuariosRouter.post("/usuarios/", async (req, res) => {
   } catch (error) {
     console.log("=== ERROR AL CREAR USUARIO ->", error);
     const statusCode = error.status || 500;
-    return res.status(statusCode).json({ error: error.message || "Error al procesar la creación del usuario" });
+    return res.status(statusCode).json({
+      error: error.message || "Error al procesar la creación del usuario",
+    });
   }
 });
 
@@ -103,7 +119,9 @@ usuariosRouter.patch("/usuarios/", async (req, res) => {
     return res.status(200).json(usuarioModificado);
   } catch (error) {
     const statusCode = error.status || 500;
-    return res.status(statusCode).json({ error: error.message || "Error al modificar usuario" });
+    return res
+      .status(statusCode)
+      .json({ error: error.message || "Error al modificar usuario" });
   }
 });
 
