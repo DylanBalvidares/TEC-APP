@@ -5,24 +5,24 @@ const Profesor = sequelize.define(
   "profesores",
   {
     id_profesor: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER(11),
       primaryKey: true,
       autoIncrement: true,
     },
     nombre: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(100),
       allowNull: false,
     },
     apellido: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(100),
       allowNull: false,
     },
     materia: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(100),
       allowNull: false,
     },
     email: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(100),
       allowNull: false,
       unique: true,
     },

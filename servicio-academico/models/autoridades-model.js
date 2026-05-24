@@ -5,7 +5,7 @@ const Autoridad = sequelize.define(
   "autoridades",
   {
     id_autoridad: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER(11),
       primaryKey: true,
       autoIncrement: true,
       allowNull: false,
@@ -28,7 +28,7 @@ const Autoridad = sequelize.define(
       unique: "email_autoridad", // Asegura que no haya emails duplicados en el registro
     },
     id_usuario: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER(11),
       allowNull: true, // Puede ser NULL si la autoridad aún no creó su login
       references: {
         model: "usuarios", // Referencia al microservicio de Auth

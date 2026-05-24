@@ -6,7 +6,7 @@ const Asistencia = sequelize.define(
   "asistencias",
   {
     id_asistencia: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER(11),
       autoIncrement: true,
       primaryKey: true,
     },
@@ -23,7 +23,7 @@ const Asistencia = sequelize.define(
 
     //FK
     id_alumno: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER(11),
       allowNull: false,
       references: {
         model: "alumnos",
@@ -33,7 +33,7 @@ const Asistencia = sequelize.define(
 
     //FK
     id_curso: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER(11),
       allowNull: false,
       references: {
         model: "cursos",

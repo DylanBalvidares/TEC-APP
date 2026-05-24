@@ -2,7 +2,7 @@ import sequelize from "../db/conexionDB.js";
 import { DataTypes } from "sequelize";
 
 const Alumno = sequelize.define(
-  "alumnos", 
+  "alumnos",
   {
     // PRIMER OBJETO: Definición estricta de las columnas físicas
     id_alumno: {
@@ -26,7 +26,7 @@ const Alumno = sequelize.define(
 
     //FK
     id_curso: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER(11),
       allowNull: false,
       references: {
         model: "cursos",
@@ -36,19 +36,19 @@ const Alumno = sequelize.define(
 
     //FK
     id_usuario: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER(11),
       allowNull: true,
       references: {
         model: "usuarios",
         key: "id_usuario",
       },
     },
-  }, // <--- ¡AQUÍ CERRAMOS LAS COLUMNAS!
+  },
   {
     // SEGUNDO OBJETO (Tercer argumento): Opciones de la tabla
     tableName: "alumnos", // Forzamos el nombre exacto de la tabla si es necesario
-    timestamps: false,    // Desactiva createdAt y updatedAt si tu tabla no los usa
-    
+    timestamps: false, // Desactiva createdAt y updatedAt si tu tabla no los usa
+
     indexes: [
       {
         name: "dni_unico",
@@ -61,7 +61,7 @@ const Alumno = sequelize.define(
         fields: ["id_usuario"],
       },
     ],
-  }
+  },
 );
 
 export default Alumno;

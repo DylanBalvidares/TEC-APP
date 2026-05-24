@@ -27,7 +27,7 @@ alumnosRouter.get("/alumnos", async (req, res) => {
   }
 });
 
-alumnosRouter.post("/alumnos/:alumno", async (req, res) => {
+alumnosRouter.post("/alumnos", async (req, res) => {
   console.log("== ALUMNO REQUEST:", req.body); //DEBUG
   try {
     const alumno = await crearAlumno(req.body);

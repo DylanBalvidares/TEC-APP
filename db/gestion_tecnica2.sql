@@ -4,49 +4,93 @@
 --  Nombres de tablas y columnas respetados del SQL original
 --  Motor: MySQL 8+ / MariaDB 10.5+
 -- ============================================================
+-- Configuración inicial de variables de entorno del servidor
 SET
   SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 
+-- Inicio de la transacción para asegurar atomicidad en la creación del esquema
 START TRANSACTION;
 
+-- Establecimiento de la zona horaria global de la sesión
 SET
   time_zone = "+00:00";
 
+-- Eliminación de la base de datos preexistente para evitar conflictos de duplicación
 DROP DATABASE IF EXISTS gestion_tecnica2;
 
+-- Creación de la base de datos especificando el juego de caracteres ideal para soporte multilenguaje (utf8mb4)
 CREATE DATABASE gestion_tecnica2 CHARACTER
 SET
   utf8mb4 COLLATE utf8mb4_general_ci;
 
+-- Selección de la base de datos activa para las siguientes operaciones
 USE gestion_tecnica2;
 
 -- ============================================================
--- TABLAS BASE (sin dependencias)
+-- ROL-BASED ACCESS CONTROL (RBAC) / CONTROL DE ACCESO
 -- ============================================================
--- ------------------------------------------------------------
--- roles  (sin cambios respecto al original)
--- ------------------------------------------------------------
+-- Tabla 'roles': Define las categorías o perfiles de los distintos actores institucionales
 CREATE TABLE
   `roles` (
     `id_rol` int (11) NOT NULL AUTO_INCREMENT,
     `nombre_rol` varchar(50) NOT NULL,
     PRIMARY KEY (`id_rol`)
-  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
+-- Inserción de los roles requeridos para el funcionamiento del sistema escolar
 INSERT INTO
   `roles` (`id_rol`, `nombre_rol`)
 VALUES
-  (1, 'admin'),
-  (2, 'profesor'),
-  (3, 'alumno'),
-  (4, 'bibliotecario'),
-  (5, 'delegado');
+  (1, 'alumno'),
+  (2, 'delegado'),
+  (3, 'profesor'),
+  (4, 'preceptor'),
+  (5, 'bibliotecario'),
+  (6, 'tutor'),
+  (7, 'invitado'),
+  (8, 'administrativo'),
+  (9, 'admin');
 
--- ------------------------------------------------------------
--- usuarios
---   CAMBIO: renombrado contraseña → contrasena (elimina tilde
---           para evitar errores en drivers/ORMs)
--- ------------------------------------------------------------
+-- Tabla 'permisos': Listado de acciones atómicas y específicas que se pueden ejecutar en la plataforma
+CREATE TABLE
+  `permisos` (
+    `id_permiso` int (11) NOT NULL AUTO_INCREMENT,
+    `nombre_permiso` varchar(100) NOT NULL UNIQUE,
+    PRIMARY KEY (`id_permiso`)
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+-- Tabla intermedia 'rol_permisos': Rompe la relación muchos a muchos asignando permisos a cada rol
+CREATE TABLE
+  `rol_permisos` (
+    `id_rol` int (11) NOT NULL,
+    `id_permiso` int (11) NOT NULL,
+    PRIMARY KEY (`id_rol`, `id_permiso`),
+    CONSTRAINT `fk_rp_rol` FOREIGN KEY (`id_rol`) REFERENCES `roles` (`id_rol`) ON DELETE CASCADE,
+    CONSTRAINT `fk_rp_permiso` FOREIGN KEY (`id_permiso`) REFERENCES `permisos` (`id_permiso`) ON DELETE CASCADE
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+-- Inserción de ejemplo de permisos básicos del sistema
+INSERT INTO
+  `permisos` (`nombre_permiso`)
+VALUES
+  ('crear_usuario'),
+  ('editar_notas'),
+  ('ver_horario'),
+  ('eliminar_alumno');
+
+-- Asignación de ejemplo: El rol 'admin' (id 1) recibe todas las capacidades operativas definidas
+INSERT INTO
+  `rol_permisos` (`id_rol`, `id_permiso`)
+VALUES
+  (1, 1),
+  (1, 2),
+  (1, 3),
+  (1, 4);
+
+-- ============================================================
+-- ENTIDAD CENTRAL DE AUTENTICACIÓN
+-- ============================================================
+-- Tabla 'usuarios': Almacena las credenciales globales de acceso e información de identidad general
 CREATE TABLE
   `usuarios` (
     `id_usuario` int (11) NOT NULL AUTO_INCREMENT,
@@ -61,9 +105,10 @@ CREATE TABLE
     CONSTRAINT `usuarios_ibfk_1` FOREIGN KEY (`id_rol`) REFERENCES `roles` (`id_rol`)
   ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
--- ------------------------------------------------------------
--- cursos  (sin cambios)
--- ------------------------------------------------------------
+-- ============================================================
+-- MÓDULO ESTRUCTURA ACADÉMICA
+-- ============================================================
+-- Tabla 'cursos': Registro de divisiones académicas, sus turnos horarios y la asignación física de aulas
 CREATE TABLE
   `cursos` (
     `id_curso` int (11) NOT NULL AUTO_INCREMENT,
@@ -73,14 +118,7 @@ CREATE TABLE
     PRIMARY KEY (`id_curso`)
   ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
--- ============================================================
--- TABLAS QUE EXTIENDEN usuarios (herencia)
--- ============================================================
--- ------------------------------------------------------------
--- alumnos
---   CAMBIO: agregado id_usuario (FK → usuarios) para vincular
---           al alumno con el sistema de login
--- ------------------------------------------------------------
+-- Tabla 'alumnos': Almacena el padrón de estudiantes vinculado a un curso y enlazado opcionalmente a un usuario
 CREATE TABLE
   `alumnos` (
     `id_alumno` int (11) NOT NULL AUTO_INCREMENT,
@@ -97,11 +135,7 @@ CREATE TABLE
     CONSTRAINT `alumnos_ibfk_2` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`) ON DELETE SET NULL
   ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
--- ------------------------------------------------------------
--- profesores
---   CAMBIO: agregado id_usuario (FK → usuarios) para vincular
---           al profesor con el sistema de login
--- ------------------------------------------------------------
+-- Tabla 'profesores': Registro del cuerpo docente de la institución y su respectivo enlace de login
 CREATE TABLE
   `profesores` (
     `id_profesor` int (11) NOT NULL AUTO_INCREMENT,
@@ -116,12 +150,56 @@ CREATE TABLE
     CONSTRAINT `profesores_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`) ON DELETE SET NULL
   ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
--- ------------------------------------------------------------
--- autoridades  (tabla nueva del diagrama)
---   NOTA: cargo aparece como FK en el diagrama pero no existe
---         tabla de cargos → se mantiene como VARCHAR para
---         respetar el diagrama sin agregar tablas no pedidas
--- ------------------------------------------------------------
+-- Tabla 'materias': Listado global de asignaturas curriculares dictadas en el establecimiento
+CREATE TABLE
+  `materias` (
+    `id_materia` int (11) NOT NULL AUTO_INCREMENT,
+    `nombre_materia` varchar(100) NOT NULL,
+    PRIMARY KEY (`id_materia`)
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+-- Tabla 'asignaciones': Relación ternaria que une un Curso, una Materia y el Profesor asignado a dictarla
+CREATE TABLE
+  `asignaciones` (
+    `id_asignacion` int (11) NOT NULL AUTO_INCREMENT,
+    `id_curso` int (11) NOT NULL,
+    `id_materia` int (11) NOT NULL,
+    `id_profesor` int (11) NOT NULL,
+    PRIMARY KEY (`id_asignacion`),
+    CONSTRAINT `fk_asig_curso` FOREIGN KEY (`id_curso`) REFERENCES `cursos` (`id_curso`),
+    CONSTRAINT `fk_asig_materia` FOREIGN KEY (`id_materia`) REFERENCES `materias` (`id_materia`),
+    CONSTRAINT `fk_asig_profesor` FOREIGN KEY (`id_profesor`) REFERENCES `profesores` (`id_profesor`)
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+-- ============================================================
+-- SEGUIMIENTO ACADÉMICO Y EVALUACIONES
+-- ============================================================
+-- Tabla 'notas': Almacena las calificaciones individuales de los alumnos asociadas a cada asignación docente
+CREATE TABLE
+  `notas` (
+    `id_nota` int (11) NOT NULL AUTO_INCREMENT,
+    `id_alumno` int (11) NOT NULL,
+    `id_asignacion` int (11) NOT NULL,
+    `calificacion` decimal(3, 1) NOT NULL CHECK (
+      `calificacion` >= 0.0
+      AND `calificacion` <= 10.0
+    ),
+    `fecha_carga` date NOT NULL,
+    `observaciones` text DEFAULT NULL,
+    PRIMARY KEY (`id_nota`),
+    CONSTRAINT `fk_nota_alumno` FOREIGN KEY (`id_alumno`) REFERENCES `alumnos` (`id_alumno`),
+    CONSTRAINT `fk_nota_asig` FOREIGN KEY (`id_asignacion`) REFERENCES `asignaciones` (`id_asignacion`)
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+-- Índices para mejorar la velocidad al consultar boletines o notas
+CREATE INDEX `idx_notas_alumno` ON `notas` (`id_alumno`);
+
+CREATE INDEX `idx_asignacion_curso` ON `asignaciones` (`id_curso`);
+
+-- ============================================================
+-- AUTORIDADES INSTITUCIONALES Y ASISTENCIA DAILY
+-- ============================================================
+-- Tabla 'autoridades': Miembros directivos y administrativos de alto rango a cargo de la gestión escolar
 CREATE TABLE
   `autoridades` (
     `id_autoridad` int (11) NOT NULL AUTO_INCREMENT,
@@ -136,16 +214,7 @@ CREATE TABLE
     CONSTRAINT `autoridades_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`) ON DELETE SET NULL
   ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
--- ============================================================
--- MÓDULO ACADÉMICO
--- ============================================================
--- ------------------------------------------------------------
--- asistencias
---   CAMBIO 1: agregado id_curso (FK → cursos) — saber a qué
---             clase pertenece cada asistencia
---   CAMBIO 2: UNIQUE (id_alumno, fecha) — evita duplicados
---   CAMBIO 3: estado pasa a ENUM con valores controlados
--- ------------------------------------------------------------
+-- Tabla 'asistencias': Registro periódico de presentismo estudiantil filtrado por alumno, curso y fecha
 CREATE TABLE
   `asistencias` (
     `id_asistencia` int (11) NOT NULL AUTO_INCREMENT,
@@ -162,11 +231,9 @@ CREATE TABLE
   ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
 -- ============================================================
--- MÓDULO BIBLIOTECA
+-- MÓDULO DE BIBLIOTECA E INVENTARIO DE RECURSOS
 -- ============================================================
--- ------------------------------------------------------------
--- biblioteca  (sin cambios en columnas)
--- ------------------------------------------------------------
+-- Tabla 'biblioteca': Ubicaciones o sectores de consulta literaria dentro del establecimiento y sus encargados
 CREATE TABLE
   `biblioteca` (
     `id_biblioteca` int (11) NOT NULL AUTO_INCREMENT,
@@ -178,10 +245,7 @@ CREATE TABLE
     CONSTRAINT `biblioteca_ibfk_1` FOREIGN KEY (`responsable`) REFERENCES `usuarios` (`id_usuario`)
   ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
--- ------------------------------------------------------------
--- recursos
---   CAMBIO: estado pasa a ENUM con valores controlados
--- ------------------------------------------------------------
+-- Tabla 'recursos': Inventario físico disponible en la biblioteca (libros, tecnología, equipamiento)
 CREATE TABLE
   `recursos` (
     `id_recurso` int (11) NOT NULL AUTO_INCREMENT,
@@ -195,10 +259,7 @@ CREATE TABLE
     CONSTRAINT `recursos_ibfk_1` FOREIGN KEY (`id_biblioteca`) REFERENCES `biblioteca` (`id_biblioteca`)
   ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
--- ------------------------------------------------------------
--- prestamos
---   CAMBIO: estado pasa a ENUM con valores controlados
--- ------------------------------------------------------------
+-- Tabla 'prestamos': Bitácora transaccional para el control de los recursos retirados temporalmente por los usuarios
 CREATE TABLE
   `prestamos` (
     `id_prestamo` int (11) NOT NULL AUTO_INCREMENT,
@@ -215,12 +276,9 @@ CREATE TABLE
   ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
 -- ============================================================
--- MÓDULO SERVICIOS INSTITUCIONALES (tablas nuevas del diagrama)
+-- MÓDULO COMUNIDAD (COMUNICADOS Y HALLAZGOS)
 -- ============================================================
--- ------------------------------------------------------------
--- objetos_perdidos  (nueva)
---   encontrado_por FK → autoridades (según línea del diagrama)
--- ------------------------------------------------------------
+-- Tabla 'objetos_perdidos': Control interno de pertenencias extraviadas dentro del establecimiento
 CREATE TABLE
   `objetos_perdidos` (
     `id_objeto` int (11) NOT NULL AUTO_INCREMENT,
@@ -234,10 +292,7 @@ CREATE TABLE
     CONSTRAINT `objetos_perdidos_ibfk_1` FOREIGN KEY (`encontrado_por`) REFERENCES `autoridades` (`id_autoridad`) ON DELETE SET NULL
   ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
--- ------------------------------------------------------------
--- noticias  (nueva)
---   autor FK → usuarios (campo llamado "autor" según diagrama)
--- ------------------------------------------------------------
+-- Tabla 'noticias': Cartelera informativa digital o anuncios masivos dirigidos a la comunidad escolar
 CREATE TABLE
   `noticias` (
     `id_noticia` int (11) NOT NULL AUTO_INCREMENT,
@@ -250,9 +305,7 @@ CREATE TABLE
     CONSTRAINT `noticias_ibfk_1` FOREIGN KEY (`autor`) REFERENCES `usuarios` (`id_usuario`) ON DELETE SET NULL
   ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
--- ============================================================
--- ÍNDICES ADICIONALES (rendimiento en consultas frecuentes)
--- ============================================================
+-- Índices de optimización complementarios enfocados en acelerar búsquedas frecuentes por rangos de fecha y estados lógicos
 CREATE INDEX `idx_asistencias_fecha` ON `asistencias` (`fecha`);
 
 CREATE INDEX `idx_prestamos_estado` ON `prestamos` (`estado`);
@@ -261,35 +314,35 @@ CREATE INDEX `idx_recursos_estado` ON `recursos` (`estado`);
 
 CREATE INDEX `idx_objetos_reclamado` ON `objetos_perdidos` (`reclamado`);
 
-COMMIT;
+-- ==========================================
+-- MÓDULO COMUNIDAD
+-- ==========================================
+-- Registro de hallazgos
+CREATE TABLE
+  `objetos_perdidos` (
+    `id_objeto` int (11) NOT NULL AUTO_INCREMENT,
+    `nombre` varchar(100) NOT NULL,
+    `descripcion` text DEFAULT NULL,
+    `fecha_encontrado` date NOT NULL,
+    `encontrado_por` int (11) DEFAULT NULL,
+    `reclamado` tinyint (1) NOT NULL DEFAULT 0,
+    PRIMARY KEY (`id_objeto`),
+    KEY `encontrado_por` (`encontrado_por`),
+    CONSTRAINT `fk_objeto_autoridad` FOREIGN KEY (`encontrado_por`) REFERENCES `autoridades` (`id_autoridad`) ON DELETE SET NULL
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
--- ============================================================
--- RESUMEN DE CAMBIOS RESPECTO AL SQL ORIGINAL
--- ============================================================
---
---  RENOMBRADO:
---    usuarios.contraseña  →  usuarios.contrasena  (elimina tilde)
---
---  COLUMNAS AGREGADAS:
---    alumnos.id_usuario    FK → usuarios
---    profesores.id_usuario FK → usuarios
---    asistencias.id_curso  FK → cursos
---
---  TIPOS CORREGIDOS (VARCHAR → ENUM):
---    asistencias.estado    presente|ausente|justificado|tardanza
---    recursos.estado       disponible|prestado|dañado|baja
---    prestamos.estado      activo|devuelto|vencido
---
---  CONSTRAINTS NUEVOS:
---    asistencias: UNIQUE (id_alumno, fecha)
---
---  TABLAS NUEVAS (del diagrama):
---    autoridades      (id_autoridad, nombre, apellido, cargo, email, id_usuario)
---    objetos_perdidos (id_objeto, nombre, descripcion, fecha_encontrado,
---                      encontrado_por, reclamado)
---    noticias         (id_noticia, titulo, contenido, fecha, autor)
---
---  SIN CAMBIOS:
---    roles, cursos, biblioteca, prestamos (estructura)
---
--- ============================================================
+-- Cartelera de anuncios
+CREATE TABLE
+  `noticias` (
+    `id_noticia` int (11) NOT NULL AUTO_INCREMENT,
+    `titulo` varchar(200) NOT NULL,
+    `contenido` text NOT NULL,
+    `fecha` date NOT NULL,
+    `autor_id` int (11) DEFAULT NULL,
+    PRIMARY KEY (`id_noticia`),
+    KEY `autor_id` (`autor_id`),
+    CONSTRAINT `fk_noticia_autor` FOREIGN KEY (`autor_id`) REFERENCES `usuarios` (`id_usuario`) ON DELETE SET NULL
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
+
+-- Cierre exitoso y persistencia de todos los cambios de la transacción actual en el almacenamiento
+COMMIT;

@@ -24,7 +24,8 @@ services:
     #persistir datos(volumenes)
     volumes:
       - ./db/gestion_tecnica2.sql:/docker-entrypoint-initdb.d/init.sql
-
+      #NUEVA LÍNEA: Guarda las bases de datos físicamente en tu PC
+      - ./db/mysql_data:/var/lib/mysql
     networks:
       - app-network
 
@@ -43,7 +44,7 @@ services:
     environment:
       # Usamos las credenciales definidas arriba
 
-      DATABASE_URL: "mysql://root:root@mysql-db:3306/gestion_tecnica2"
+      DATABASE_URL: "mysql://root:root_pass@mysql-db:3306/gestion_tecnica2"
 
     #el servicio no arranca hasta que el servicio especificado(mysql) este prendido
 
@@ -65,7 +66,7 @@ services:
       - "3308:3308"
 
     environment:
-      DATABASE_URL: "mysql://root:root@mysql-db:3306/gestion_tecnica2"
+      DATABASE_URL: "mysql://root:root_pass@mysql-db:3306/gestion_tecnica2"
 
     depends_on:
       - mysql-db
@@ -81,10 +82,10 @@ services:
     container_name: servicio-biblioteca
 
     ports:
-      - "3309:3309"
+      - "3310:3310"
 
     environment:
-      DATABASE_URL: "mysql://root:root@mysql-db:3306/gestion_tecnica2"
+      DATABASE_URL: "mysql://root:root_pass@mysql-db:3306/gestion_tecnica2"
 
     depends_on:
       - mysql-db
@@ -103,7 +104,10 @@ services:
     container_name: servicio-usuarios
 
     ports:
-      - "3310:3310"
+      - "3309:3309"
+
+    environment:
+      DATABASE_URL: "mysql://root:root_pass@mysql-db:3306/gestion_tecnica2"
 
     depends_on:
       - mysql-db
@@ -122,6 +126,9 @@ services:
 
     ports:
       - "9000:9000"
+
+    environment:
+      DATABASE_URL: "mysql://root:root_pass@mysql-db:3306/gestion_tecnica2"
 
     networks:
       - app-network
