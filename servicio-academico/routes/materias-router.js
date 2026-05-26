@@ -7,9 +7,11 @@ import {
   modificarMateria,
 } from "../controllers/materias-controller.js";
 
+import comprobarPermiso from "../middlewares/comprobarPermisos.js";
+
 const materiasRouter = Router();
 
-materiasRouter.get("/materias/:id", async (req, res) => {
+materiasRouter.get("/materias/:id", comprobarPermiso("root_gestionar_roles"), async (req, res) => {
   try {
     const materia = await obtenerMateria(req.params.id);
     return res.status(200).json(materia);
@@ -18,7 +20,7 @@ materiasRouter.get("/materias/:id", async (req, res) => {
   }
 });
 
-materiasRouter.get("/materias", async (req, res) => {
+materiasRouter.get("/materias", comprobarPermiso("root_gestionar_roles"), async (req, res) => {
   try {
     const materias = await obtenerTodasMaterias();
     return res.status(200).json(materias);
@@ -27,7 +29,7 @@ materiasRouter.get("/materias", async (req, res) => {
   }
 });
 
-materiasRouter.post("/materias", async (req, res) => {
+materiasRouter.post("/materias", comprobarPermiso("root_gestionar_roles"), async (req, res) => {
   try {
     const materia = await crearMateria(req.body);
     return res.status(201).json(materia);
@@ -36,7 +38,7 @@ materiasRouter.post("/materias", async (req, res) => {
   }
 });
 
-materiasRouter.delete("/materias/:id", async (req, res) => {
+materiasRouter.delete("/materias/:id", comprobarPermiso("root_gestionar_roles"), async (req, res) => {
   try {
     const resultado = await eliminarMateria(req.params.id);
     return res.status(200).json(resultado);
@@ -45,7 +47,7 @@ materiasRouter.delete("/materias/:id", async (req, res) => {
   }
 });
 
-materiasRouter.patch("/materias/:materia", async (req, res) => {
+materiasRouter.patch("/materias/:materia", comprobarPermiso("root_gestionar_roles"), async (req, res) => {
   const { id_materia, nombre_materia } = req.body;
   try {
     const materia = {

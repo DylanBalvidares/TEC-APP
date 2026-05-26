@@ -7,9 +7,11 @@ import {
   modificarNota,
 } from "../controllers/notas-controller.js";
 
+import comprobarPermiso from "../middlewares/comprobarPermisos.js";
+
 const notasRouter = Router();
 
-notasRouter.get("/notas/:id", async (req, res) => {
+notasRouter.get("/notas/:id", comprobarPermiso("profesor_gestionar_notas"), async (req, res) => {
   try {
     const nota = await obtenerNota(req.params.id);
     return res.status(200).json(nota);
@@ -18,7 +20,7 @@ notasRouter.get("/notas/:id", async (req, res) => {
   }
 });
 
-notasRouter.get("/notas", async (req, res) => {
+notasRouter.get("/notas", comprobarPermiso("profesor_gestionar_notas"), async (req, res) => {
   try {
     const notas = await obtenerTodasNotas();
     return res.status(200).json(notas);
@@ -27,7 +29,7 @@ notasRouter.get("/notas", async (req, res) => {
   }
 });
 
-notasRouter.post("/notas", async (req, res) => {
+notasRouter.post("/notas", comprobarPermiso("profesor_gestionar_notas"), async (req, res) => {
   try {
     const nota = await crearNota(req.body);
     return res.status(201).json(nota);
@@ -36,7 +38,7 @@ notasRouter.post("/notas", async (req, res) => {
   }
 });
 
-notasRouter.delete("/notas/:id", async (req, res) => {
+notasRouter.delete("/notas/:id", comprobarPermiso("profesor_gestionar_notas"), async (req, res) => {
   try {
     const resultado = await eliminarNota(req.params.id);
     return res.status(200).json(resultado);
@@ -45,7 +47,7 @@ notasRouter.delete("/notas/:id", async (req, res) => {
   }
 });
 
-notasRouter.patch("/notas/:nota", async (req, res) => {
+notasRouter.patch("/notas/:nota", comprobarPermiso("profesor_gestionar_notas"), async (req, res) => {
   const { id_nota, id_alumno, id_asignacion, calificacion, fecha_carga, observaciones } = req.body;
   try {
     const nota = {

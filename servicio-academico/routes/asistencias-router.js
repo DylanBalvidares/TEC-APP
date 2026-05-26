@@ -7,9 +7,11 @@ import {
   obtenerTodosAsistencias,
 } from "../controllers/asistencias-controller.js";
 
+import comprobarPermiso from "../middlewares/comprobarPermisos.js";
+
 const asistenciasRouter = Router();
 
-asistenciasRouter.get("/asistencias/:id", async (req, res) => {
+asistenciasRouter.get("/asistencias/:id", comprobarPermiso("profesor_gestionar_asistencias"), async (req, res) => {
   try {
     const asistencia = await obtenerAsistencia(req.params.id);
 
@@ -19,7 +21,7 @@ asistenciasRouter.get("/asistencias/:id", async (req, res) => {
   }
 });
 
-asistenciasRouter.get("/asistencias", async (req, res) => {
+asistenciasRouter.get("/asistencias", comprobarPermiso("profesor_gestionar_asistencias"), async (req, res) => {
   try {
     const asistencias = await obtenerTodosAsistencias();
     return res.status(200).json(asistencias);
@@ -28,7 +30,7 @@ asistenciasRouter.get("/asistencias", async (req, res) => {
   }
 });
 
-asistenciasRouter.post("/asistencias/:asistencia", async (req, res) => {
+asistenciasRouter.post("/asistencias/:asistencia", comprobarPermiso("profesor_gestionar_asistencias"), async (req, res) => {
   try {
     const asistencia = await crearAsistencia(req.body);
     return res.status(200).json(asistencia);
@@ -37,7 +39,7 @@ asistenciasRouter.post("/asistencias/:asistencia", async (req, res) => {
   }
 });
 
-asistenciasRouter.delete("/asistencias/:id", async (req, res) => {
+asistenciasRouter.delete("/asistencias/:id", comprobarPermiso("profesor_gestionar_asistencias"), async (req, res) => {
   try {
     const resultado = await eliminarAsistencia(req.params.id);
     return res.status(200).json(resultado);
@@ -46,7 +48,7 @@ asistenciasRouter.delete("/asistencias/:id", async (req, res) => {
   }
 });
 
-asistenciasRouter.patch("/asistencias/:asistencia", async (req, res) => {
+asistenciasRouter.patch("/asistencias/:asistencia", comprobarPermiso("profesor_gestionar_asistencias"), async (req, res) => {
   const { id_asistencia, fecha, estado, id_alumno } = req.body;
   try {
     const asistencia = {

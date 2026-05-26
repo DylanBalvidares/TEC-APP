@@ -82,7 +82,7 @@ services:
     container_name: servicio-biblioteca
 
     ports:
-      - "3310:3310"
+      - "3309:3309"
 
     environment:
       DATABASE_URL: "mysql://root:root_pass@mysql-db:3306/gestion_tecnica2"
@@ -104,7 +104,7 @@ services:
     container_name: servicio-usuarios
 
     ports:
-      - "3309:3309"
+      - "3310:3310"
 
     environment:
       DATABASE_URL: "mysql://root:root_pass@mysql-db:3306/gestion_tecnica2"

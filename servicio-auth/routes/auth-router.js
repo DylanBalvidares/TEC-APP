@@ -24,7 +24,7 @@ authRouter.post("/login", async (req, res) => {
 
     return res.status(200).json(response);
   } catch (error) {
-    console.log("=== ERROR->", error);
+    console.log("=== ERROR->", error.name);
 
     // BUG FIX: Si error.status es undefined (error nativo), responde con un código 400 o 500 para evitar que se caiga Express
     const statusCode = error.status || 400;

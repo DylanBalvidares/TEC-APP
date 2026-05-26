@@ -8,6 +8,6 @@ RUN npm install
 
 COPY ./servicio-biblioteca ./
 
-EXPOSE 3310
+EXPOSE 3309
 
 CMD ["node","main.js"]

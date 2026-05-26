@@ -23,6 +23,29 @@ function generarToken(usuario) {
   return jwt.sign(payload, secretKey, opciones);
 }
 
+async function obtenerPermisosDeRol(id) {
+  try {
+    const permisos = await axios.get(
+      `http://servicio-usuarios:3310/apiPermisos/permisos/${id}`,
+    );
+
+    console.log("PERMISOS(AXIOS)->", permisos.data);
+
+    if (!permisos.data) {
+      throw new ErrorHandler(404, "Rol no encontrado");
+    }
+
+    return permisos.data;
+  } catch (error) {
+    if (error instanceof ErrorHandler) {
+      throw error;
+    }
+
+    console.error("Error en obtenerPermisosDeRol:", error);
+    throw new ErrorHandler(500, "Error interno al obtenerPermisosDeRol");
+  }
+}
+
 /**
  * Lógica de inicio de sesión comunicándose con el microservicio de usuarios
  */
@@ -36,7 +59,7 @@ async function login(infoLogin) {
     // 1. REQ BUSCAR USUARIO POR EMAIL
     const usuario = await axios.get(
       `http://servicio-usuarios:3310/apiUsuarios/usuarios/buscar`,
-      { params: { email } }
+      { params: { email } },
     );
 
     if (!usuario.data) {
@@ -46,7 +69,7 @@ async function login(infoLogin) {
     // 2. SI EL USUARIO EXISTE, INTENTA LOGIN (Verificación de contraseña en DB)
     const respuestaLogin = await axios.post(
       `http://servicio-usuarios:3310/apiUsuarios/usuarios/login`,
-      { email, contrasena }
+      { email, contrasena },
     );
 
     if (!respuestaLogin.data) {
@@ -55,17 +78,21 @@ async function login(infoLogin) {
 
     const datosUsuario = respuestaLogin.data;
 
+    const permisosRol = await obtenerPermisosDeRol(datosUsuario.id_rol);
+
+    console.log("PERMISOS ROL->", permisosRol);
     const payload = {
       id: datosUsuario.id || datosUsuario.id_usuario,
       email: datosUsuario.email,
       rol: datosUsuario.id_rol,
+      permisos: permisosRol,
     };
 
     // Generamos token de sesión
     const token = jwt.sign(
       payload,
       process.env.JWT_SECRET || "clave_secreta_super_segura",
-      { expiresIn: "2h" }
+      { expiresIn: "2h" },
     );
 
     return {
@@ -79,9 +106,11 @@ async function login(infoLogin) {
       const status = error.response.status;
       const msg = error.response.data?.message || error.response.data || "";
 
-      if (status === 400) throw new ErrorHandler(400, "Faltan datos para el inicio de sesión");
+      if (status === 400)
+        throw new ErrorHandler(400, "Faltan datos para el inicio de sesión");
       if (status === 404) throw new ErrorHandler(404, "Usuario no encontrado");
-      if (status === 401) throw new ErrorHandler(401, "La contraseña es incorrecta");
+      if (status === 401)
+        throw new ErrorHandler(401, "La contraseña es incorrecta");
 
       throw new ErrorHandler(status, msg || "Error en el servicio de usuarios");
     }
@@ -100,33 +129,40 @@ async function crearUsuario(datosUsuario) {
   try {
     console.log("=== ENVIANDO REGISTRO A SERVICIO-USUARIOS ===");
 
-    // BUG FIX: Se cambió la URL para apuntar a la ruta de creación de usuarios 
+    // BUG FIX: Se cambió la URL para apuntar a la ruta de creación de usuarios
     // y se le pasa el objeto 'datosUsuario' en el cuerpo del POST.
     const respuestaRegistro = await axios.post(
       "http://servicio-usuarios:3310/apiUsuarios/usuarios",
-      datosUsuario
+      datosUsuario,
     );
 
     if (!respuestaRegistro.data) {
-      throw new ErrorHandler(400, "No se pudieron procesar los datos de registro");
+      throw new ErrorHandler(
+        400,
+        "No se pudieron procesar los datos de registro",
+      );
     }
 
     // Retorna el usuario creado enviado por la Base de Datos
     return respuestaRegistro.data;
-
   } catch (error) {
     if (error.response) {
-      // BUG FIX: Si el microservicio de usuarios dice que el email ya existe (ej: 400 o 409), 
+      // BUG FIX: Si el microservicio de usuarios dice que el email ya existe (ej: 400 o 409),
       // heredamos ese código y mensaje para no enmascararlo con un 500.
       const status = error.response.status;
-      const mensajeApi = error.response.data?.message || "Error al registrar en la base de datos";
+      const mensajeApi =
+        error.response.data?.message ||
+        "Error al registrar en la base de datos";
       throw new ErrorHandler(status, mensajeApi);
     }
 
     if (error instanceof ErrorHandler) throw error;
 
     console.error("Error en crearUsuario:", error);
-    throw new ErrorHandler(500, "Error interno en el servicio de autenticación al registrar");
+    throw new ErrorHandler(
+      500,
+      "Error interno en el servicio de autenticación al registrar",
+    );
   }
 }
 
@@ -140,22 +176,31 @@ async function modificarUsuario(datosNuevos) {
     // Envía los cambios al servicio correspondiente mediante PATCH
     const respuestaModificar = await axios.patch(
       "http://servicio-usuarios:3310/apiUsuarios/usuarios",
-      datosNuevos
+      datosNuevos,
     );
 
     if (!respuestaModificar.data) {
-      throw new ErrorHandler(400, "No se pudo actualizar la información del usuario");
+      throw new ErrorHandler(
+        400,
+        "No se pudo actualizar la información del usuario",
+      );
     }
 
     return respuestaModificar.data;
   } catch (error) {
     if (error.response) {
-      throw new ErrorHandler(error.response.status, error.response.data?.message || "Error al modificar");
+      throw new ErrorHandler(
+        error.response.status,
+        error.response.data?.message || "Error al modificar",
+      );
     }
     if (error instanceof ErrorHandler) throw error;
 
     console.error("Error en modificarUsuario:", error);
-    throw new ErrorHandler(500, "Error interno al intentar modificar el usuario");
+    throw new ErrorHandler(
+      500,
+      "Error interno al intentar modificar el usuario",
+    );
   }
 }
 

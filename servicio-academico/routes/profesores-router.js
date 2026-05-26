@@ -8,9 +8,11 @@ import {
   crearProfesor,
 } from "../controllers/profesores-controller.js";
 
+import comprobarPermiso from "../middlewares/comprobarPermisos.js";
+
 const profesoresRouter = Router();
 
-profesoresRouter.get("/profesores/:id", async (req, res) => {
+profesoresRouter.get("/profesores/:id", comprobarPermiso("root_gestionar_roles"), async (req, res) => {
   try {
     const profesor = await obtenerProfesor(req.params.id);
 
@@ -20,7 +22,7 @@ profesoresRouter.get("/profesores/:id", async (req, res) => {
   }
 });
 
-profesoresRouter.get("/profesores", async (req, res) => {
+profesoresRouter.get("/profesores", comprobarPermiso("root_gestionar_roles"), async (req, res) => {
   try {
     const profesores = await obtenerTodosProfesores();
     return res.status(200).json(profesores);
@@ -29,7 +31,7 @@ profesoresRouter.get("/profesores", async (req, res) => {
   }
 });
 
-profesoresRouter.post("/profesores/:profesor", async (req, res) => {
+profesoresRouter.post("/profesores/:profesor", comprobarPermiso("root_gestionar_roles"), async (req, res) => {
   console.log("== PROFESOR REQUEST:", req.body); //DEBUG
   try {
     const curso = await crearProfesor(req.body);
@@ -39,7 +41,7 @@ profesoresRouter.post("/profesores/:profesor", async (req, res) => {
   }
 });
 
-profesoresRouter.delete("/profesores/:id", async (req, res) => {
+profesoresRouter.delete("/profesores/:id", comprobarPermiso("root_gestionar_roles"), async (req, res) => {
   try {
     const resultado = await eliminarProfesor(req.params.id);
     return res.status(200).json(resultado);
@@ -48,7 +50,7 @@ profesoresRouter.delete("/profesores/:id", async (req, res) => {
   }
 });
 
-profesoresRouter.patch("/profesores/:profesor", async (req, res) => {
+profesoresRouter.patch("/profesores/:profesor", comprobarPermiso("root_gestionar_roles"), async (req, res) => {
   const { id_profesor, nombre, apellido, materia, email } = req.body;
 
   try {

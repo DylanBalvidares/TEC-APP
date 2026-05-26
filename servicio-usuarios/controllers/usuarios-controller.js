@@ -2,7 +2,7 @@ import { where } from "sequelize";
 import ErrorHandler from "../ErrorHandler.js";
 import { Usuario } from "../models/index.js";
 import bcrypt from "bcryptjs"; // ¡Esencial para el hashing seguro de contraseñas!
-
+import obtenerPermisosDeRol from "./rol-permisos-controller.js";
 /**
  * Busca un usuario en la base de datos utilizando su dirección de correo electrónico
  */
@@ -120,11 +120,20 @@ async function crearUsuario(datosUsuario) {
     // BUG FIX: Implementación del Hashing antes de impactar la Base de Datos
     if (datosUsuario.contrasena) {
       const salt = await bcrypt.genSalt(10);
-      datosUsuario.contrasena = await bcrypt.hash(datosUsuario.contrasena, salt);
+      datosUsuario.contrasena = await bcrypt.hash(
+        datosUsuario.contrasena,
+        salt,
+      );
     } else {
-      throw new ErrorHandler(400, "La contraseña es obligatoria para el registro");
+      throw new ErrorHandler(
+        400,
+        "La contraseña es obligatoria para el registro",
+      );
     }
 
+    const permisos = await obtenerPermisosDeRol(datosUsuario.id_rol);
+
+    console.log("PERMISOS:", permisos);
     const nuevoUsuario = await Usuario.create(datosUsuario);
     const datosFinales = nuevoUsuario.toJSON();
 
@@ -135,14 +144,20 @@ async function crearUsuario(datosUsuario) {
       apellido: datosFinales.apellido,
       email: datosFinales.email,
       id_rol: datosFinales.id_rol,
+      permisos: permisos,
     };
+
+    console.log("REGISTER RETURN->", usuarioSinContrasena);
 
     return usuarioSinContrasena;
   } catch (error) {
     console.error("Error en crearUsuario:", error);
 
     if (error.name === "SequelizeUniqueConstraintError") {
-      throw new ErrorHandler(400, "El correo electrónico ya se encuentra registrado");
+      throw new ErrorHandler(
+        400,
+        "El correo electrónico ya se encuentra registrado",
+      );
     }
 
     if (error instanceof ErrorHandler) throw error;
@@ -200,7 +215,10 @@ async function modificarUsuario(usuario) {
     });
 
     if (filasActualizadas === 0) {
-      throw new ErrorHandler(404, "No se encontró el usuario especificado o los datos son idénticos");
+      throw new ErrorHandler(
+        404,
+        "No se encontró el usuario especificado o los datos son idénticos",
+      );
     }
 
     return { ok: true, message: "Usuario modificado exitosamente" };

@@ -7,9 +7,11 @@ import {
   modificarAutoridad,
 } from "../controllers/autoridades-controller.js";
 
+import comprobarPermiso from "../middlewares/comprobarPermisos.js";
+
 const autoridadesRouter = Router();
 
-autoridadesRouter.get("/autoridades/:id", async (req, res) => {
+autoridadesRouter.get("/autoridades/:id", comprobarPermiso("root_gestionar_roles"), async (req, res) => {
   try {
     const autoridad = await obtenerAutoridad(req.params.id);
     return res.status(200).json(autoridad);
@@ -18,7 +20,7 @@ autoridadesRouter.get("/autoridades/:id", async (req, res) => {
   }
 });
 
-autoridadesRouter.get("/autoridades", async (req, res) => {
+autoridadesRouter.get("/autoridades", comprobarPermiso("root_gestionar_roles"), async (req, res) => {
   try {
     const autoridades = await obtenerTodasAutoridades();
     return res.status(200).json(autoridades);
@@ -27,7 +29,7 @@ autoridadesRouter.get("/autoridades", async (req, res) => {
   }
 });
 
-autoridadesRouter.post("/autoridades", async (req, res) => {
+autoridadesRouter.post("/autoridades", comprobarPermiso("root_gestionar_roles"), async (req, res) => {
   try {
     const autoridad = await crearAutoridad(req.body);
     return res.status(201).json(autoridad);
@@ -36,7 +38,7 @@ autoridadesRouter.post("/autoridades", async (req, res) => {
   }
 });
 
-autoridadesRouter.delete("/autoridades/:id", async (req, res) => {
+autoridadesRouter.delete("/autoridades/:id", comprobarPermiso("root_gestionar_roles"), async (req, res) => {
   try {
     const resultado = await eliminarAutoridad(req.params.id);
     return res.status(200).json(resultado);
@@ -45,7 +47,7 @@ autoridadesRouter.delete("/autoridades/:id", async (req, res) => {
   }
 });
 
-autoridadesRouter.patch("/autoridades", async (req, res) => {
+autoridadesRouter.patch("/autoridades", comprobarPermiso("root_gestionar_roles"), async (req, res) => {
   try {
     const resultado = await modificarAutoridad(req.body);
     return res.status(200).json(resultado);

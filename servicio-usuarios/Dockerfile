@@ -10,6 +10,6 @@ RUN npm install
 
 COPY ./servicio-usuarios ./
 
-EXPOSE 3309
+EXPOSE 3310
 
 CMD ["node","main.js"]
