@@ -1,3 +1,5 @@
+/*
+======= SIN USO =====
 import jwt from "jsonwebtoken";
 import ErrorHandler from "../ErrorHandler.js";
 
@@ -10,7 +12,10 @@ function autenticar(req, res, next) {
   }
 
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET || "clave_secreta_super_segura");
+    const payload = jwt.verify(
+      token,
+      process.env.JWT_SECRET || "clave_secreta_super_segura",
+    );
     req.user = payload;
     next();
   } catch (error) {
@@ -22,3 +27,4 @@ function autenticar(req, res, next) {
 }
 
 export default autenticar;
+*/

@@ -1,27 +1,31 @@
-import { Rol, Permiso } from "../../servicio-usuarios/models/index.js";
 import ErrorHandler from "../ErrorHandler.js";
+import axios from "axios";
 
 const comprobarPermiso = (permisoRequerido) => {
   return async (req, res, next) => {
+    console.log("HEADERS(comprobarPermisos):", Object.keys(req.headers)); //DEBUG
+    const rol = req.headers["id_rol"];
+    console.log("ROL ID EN COMPROBAR PERMISO:", rol); //DEBUG
+    const usuario = req.headers["id_usuario"];
+    console.log("USER ID EN COMPROBAR PERMISO:", usuario); //DEBUG
+
     try {
-      if (!req.user || !req.user.id_rol) {
+      if (!usuario || !rol) {
         return next(
-          new ErrorHandler(401, "Token inválido o rol no disponible en el request."),
+          new ErrorHandler(
+            401,
+            "Token inválido o rol no disponible en el request.",
+          ),
         );
       }
 
-      const idRolUsuario = req.user.id_rol;
+      //const idRolUsuario = req.headers["id_rol"]; // intenta obtener el rol desde ambos lugares
 
-      const rolConPermisos = await Rol.findByPk(idRolUsuario, {
-        include: {
-          model: Permiso,
-          as: "permisos",
-          attributes: ["nombre_permiso"],
-          through: { attributes: [] },
-        },
-      });
+      const rolConPermisos = await axios.get(
+        `http://servicio-usuarios:3310/apiPermisos/permisos/${rol}`,
+      );
 
-      if (!rolConPermisos) {
+      if (!rolConPermisos.data) {
         return next(
           new ErrorHandler(
             403,
@@ -30,9 +34,9 @@ const comprobarPermiso = (permisoRequerido) => {
         );
       }
 
-      const listaDePermisos = rolConPermisos.permisos.map(
-        (p) => p.nombre_permiso,
-      );
+      console.log("ROL CON PERMISOS OBTENIDO:", rolConPermisos.data); //DEBUG
+
+      const listaDePermisos = rolConPermisos.data;
 
       const tieneAcceso = listaDePermisos.includes(permisoRequerido);
 
@@ -40,7 +44,8 @@ const comprobarPermiso = (permisoRequerido) => {
         return next(
           new ErrorHandler(
             403,
-            `Acceso denegado: No tenés el permiso necesario (${permisoRequerido}).`,
+            `Acceso denegado: No tenés el permiso necesario`,
+            //`Acceso denegado: No tenés el permiso necesario (${permisoRequerido})`,DEBUG
           ),
         );
       }

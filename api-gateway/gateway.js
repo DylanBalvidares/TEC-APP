@@ -14,10 +14,10 @@ function verificarToken(req, res, next) {
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
 
-    //req.headers["id_usuario"] = payload.id;
-    //req.headers["email"] = payload.email;
-    //req.headers["id_rol"] = payload.id_rol;
-    //req.headers[expiracion del token] = ??
+    req.headers["id_usuario"] = payload.id || payload.id_usuario; // intenta obtener el id desde ambos lugares
+    req.headers["email"] = payload.email;
+    req.headers["id_rol"] = payload.id_rol || payload.rol; // intenta obtener el rol desde ambos lugares
+    //req.headers["expiracion del token"] = payload.exp;
 
     next();
   } catch (error) {
