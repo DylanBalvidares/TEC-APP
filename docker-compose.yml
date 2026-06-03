@@ -1,4 +1,3 @@
-#definimos los contenedores(servicios)
 services:
   #contenedor de mysql(BD)
   mysql-db:
@@ -115,6 +114,27 @@ services:
     networks:
       - app-network
 
+  servicio-comunidad:
+    build:
+      context: .
+      dockerfile: ./servicio-comunidad/Dockerfile
+
+    container_name: servicio-comunidad
+
+    ports:
+      - "3305:3305"
+
+    volumes:
+    # Mapea la carpeta de almacenamiento local al contenedor para persistir los archivos subidos
+      - ./almacenamiento:/app/uploads
+    environment:
+      DATABASE_URL: "mysql://root:root_pass@mysql-db:3306/gestion_tecnica2"
+
+    depends_on:
+      - mysql-db
+
+    networks:
+      - app-network
   api-gateway:
     env_file:
       - ./servicio-auth/.env

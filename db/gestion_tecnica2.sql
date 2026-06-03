@@ -325,10 +325,25 @@ CREATE TABLE `objetos_perdidos` (
     `descripcion` text DEFAULT NULL,
     `fecha_encontrado` date NOT NULL,
     `encontrado_por` int(11) DEFAULT NULL,
-    `reclamado` tinyint(1) NOT NULL DEFAULT 0,
+    `estado` ENUM('perdido', 'encontrado', 'reclamado') NOT NULL,
+
     PRIMARY KEY (`id_objeto`),
     KEY `encontrado_por` (`encontrado_por`),
     CONSTRAINT `fk_objeto_autoridad` FOREIGN KEY (`encontrado_por`) REFERENCES `autoridades` (`id_autoridad`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Estructura de tabla para la tabla comunicados
+CREATE TABLE comunicados (
+  `id_comunicado` int(11) NOT NULL AUTO_INCREMENT,
+  `titulo` varchar(255) NOT NULL,
+  `mensaje` text NOT NULL,
+  `importancia` enum('baja', 'media', 'alta') NOT NULL DEFAULT 'media',
+  `destino` enum('todos', 'profesores', 'alumnos', 'autoridades') NOT NULL DEFAULT 'todos',
+  `fecha_publicacion` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `autor_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id_comunicado`),
+  KEY `autor_id` (`autor_id`),
+  CONSTRAINT `fk_comunicado_autor` FOREIGN KEY (`autor_id`) REFERENCES `usuarios` (`id_usuario`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Cartelera de anuncios
@@ -338,6 +353,7 @@ CREATE TABLE `noticias` (
     `contenido` text NOT NULL,
     `fecha` date NOT NULL,
     `autor_id` int(11) DEFAULT NULL,
+    `imagen_url` varchar(255) DEFAULT NULL,
     PRIMARY KEY (`id_noticia`),
     KEY `autor_id` (`autor_id`),
     CONSTRAINT `fk_noticia_autor` FOREIGN KEY (`autor_id`) REFERENCES `usuarios` (`id_usuario`) ON DELETE SET NULL
@@ -352,7 +368,7 @@ CREATE INDEX `idx_asignacion_curso` ON `asignaciones` (`id_curso`);
 CREATE INDEX `idx_asistencias_fecha` ON `asistencias` (`fecha`);
 CREATE INDEX `idx_prestamos_estado` ON `prestamos` (`estado`);
 CREATE INDEX `idx_recursos_estado` ON `recursos` (`estado`);
-CREATE INDEX `idx_objetos_reclamado` ON `objetos_perdidos` (`reclamado`);
+CREATE INDEX `idx_objetos_estado` ON `objetos_perdidos` (`estado`);
 
 -- Cierre exitoso y persistencia de todos los cambios de la transacción actual en el almacenamiento
 COMMIT;
