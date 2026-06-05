@@ -353,7 +353,8 @@ CREATE TABLE `noticias` (
     `contenido` text NOT NULL,
     `fecha` date NOT NULL,
     `autor_id` int(11) DEFAULT NULL,
-    `imagen_url` varchar(255) DEFAULT NULL,
+    `imagen` varchar(255) DEFAULT NULL,
+    `imagen_path` varchar(255) DEFAULT NULL,
     PRIMARY KEY (`id_noticia`),
     KEY `autor_id` (`autor_id`),
     CONSTRAINT `fk_noticia_autor` FOREIGN KEY (`autor_id`) REFERENCES `usuarios` (`id_usuario`) ON DELETE SET NULL

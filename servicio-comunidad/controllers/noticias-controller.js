@@ -11,7 +11,17 @@ export async function obtenerTodasNoticias() {
       throw new ErrorHandler(404, "No se encontraron noticias");
     }
 
-    return noticias;
+    const imagenUrl = `http://servicio-comunidad:3305/uploads/${noticias.imagen}`;
+
+    return {
+      //esto funciona, y no se que hace, esta escrito de forma rara,
+      //pero funciona y devulve la url por cada noticia
+      noticias: noticias.map((n) => ({
+        ...n.toJSON(),
+        //imagen_url: `http://servicio-comunidad:3305/uploads/${n.imagen}`,
+        imagen_url: `http://localhost:3305/uploads/${n.imagen}`,
+      })),
+    };
   } catch (error) {
     if (error instanceof ErrorHandler) {
       throw error;
@@ -43,23 +53,35 @@ export async function obtenerNoticia(id) {
   }
 }
 
-export async function crearNoticia(datos) {
+export async function crearNoticia(datos, archivo) {
+  console.log("=== Datos recibidos en crearNoticia ===");
+  console.log(datos);
+  console.log("=======================================");
   try {
-    const { titulo, contenido, autor_id, imagen_url } = datos;
+    const { titulo, contenido, autor_id } = datos;
 
     if (!titulo || !contenido) {
       throw new ErrorHandler(400, "Título y contenido son requeridos");
     }
 
+    const nombreImagen = archivo.filename || null;
+    const imagenPath = archivo.path || null;
+
     const noticia = await Noticia.create({
-      titulo,
-      contenido,
-      autor_id,
-      imagen_url,
+      titulo: titulo,
+      contenido: contenido,
+      autor_id: autor_id,
+      imagen: nombreImagen,
+      imagen_path: imagenPath,
       fecha: new Date(),
     });
 
-    return noticia;
+    const imagenUrl = `http://servicio-comunidad:3305/uploads/${nombreImagen}`;
+
+    return {
+      noticia,
+      imagen_url: imagenUrl,
+    };
   } catch (error) {
     if (error instanceof ErrorHandler) {
       throw error;
@@ -99,17 +121,17 @@ export async function actualizarNoticia(id, datos) {
       throw new ErrorHandler(400, "ID de noticia inválido");
     }
 
-    const { titulo, contenido, imagen_url } = datos;
+    const { titulo, contenido, imagen } = datos;
 
-    if (!titulo && !contenido && !imagen_url) {
+    if (!titulo && !contenido && !imagen) {
       throw new ErrorHandler(400, "Al menos un campo debe ser actualizado");
     }
 
     const [filasActualizadas] = await Noticia.update(
       {
-        ...(titulo && { titulo }),
-        ...(contenido && { contenido }),
-        ...(imagen_url && { imagen_url }),
+        ...(titulo && { titulo: titulo }),
+        ...(contenido && { contenido: contenido }),
+        ...(imagen && { imagen: imagen }),
       },
       { where: { id_noticia: id } },
     );

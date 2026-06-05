@@ -42,6 +42,15 @@ app.use(
   }),
 );
 
+app.use(
+  "/api/comunidad",
+  createProxyMiddleware({
+    target: "http://servicio-comunidad:3305",
+    changeOrigin: true,
+    pathRewrite: { "^/api/comunidad": "" },
+  }),
+);
+
 app.use(verificarToken); //apartir de aca, todo requiere token
 
 app.use(

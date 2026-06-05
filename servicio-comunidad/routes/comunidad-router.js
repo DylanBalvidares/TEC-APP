@@ -2,6 +2,7 @@ import { Router } from "express";
 import * as noticiasCtrl from "../controllers/noticias-controller.js";
 import * as comunicadosCtrl from "../controllers/comunicados-controller.js";
 import * as objetosCtrl from "../controllers/objetos-perdidos-controller.js";
+import upload from "../middlewares/uploads.js";
 
 const router = Router();
 
@@ -24,21 +25,25 @@ router.get("/noticias/:id", async (req, res) => {
   }
 });
 
-//======        MULTER ,REVISAR         ======
-router.post("/noticias", upload.single('imagen'), async (req, res) => {
+router.post("/noticias", upload.single("imagen"), async (req, res) => {
+  console.log("=== Datos recibidos en POST /noticias ===");
+  console.log(req.body);
+  console.log(req.file);
+  console.log("==========================================");
   try {
-    const noticia = await noticiasCtrl.crearNoticia(req.body);
+    const noticia = await noticiasCtrl.crearNoticia(req.body, req.file);
     return res.status(201).json(noticia);
   } catch (error) {
     return res.status(error.status || 500).json(error.message);
   }
 });
 
-router.patch("/noticias/:id", upload.single('imagen'), async (req, res) => {
+router.patch("/noticias/:id", upload.single("imagen"), async (req, res) => {
   try {
     const resultado = await noticiasCtrl.actualizarNoticia(
       req.params.id,
       req.body,
+      req.file,
     );
     return res.status(200).json({ mensaje: "Noticia actualizada", resultado });
   } catch (error) {

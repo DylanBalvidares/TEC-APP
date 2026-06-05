@@ -10,6 +10,6 @@ COPY ./db ./db
 
 COPY ./servicio-comunidad ./
 
-EXPOSE 3005
+EXPOSE 3305
 
 CMD ["npm", "start"]

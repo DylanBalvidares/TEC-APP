@@ -31,7 +31,12 @@ const Noticia = sequelize.define(
         key: "id_usuario",
       },
     },
-    imagen_url: {
+    imagen: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+
+    imagen_path: {
       type: DataTypes.STRING(255),
       allowNull: true,
     },

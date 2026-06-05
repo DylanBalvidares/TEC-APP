@@ -1,6 +1,9 @@
 import "dotenv/config.js";
 import express from "express";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
+
 import comunidadRouter from "./routes/comunidad-router.js";
 import errorMiddleware from "./ErrorHandler.js";
 
@@ -8,16 +11,21 @@ import { Noticia, Comunicado, ObjetoPerdido } from "./models/index.js";
 
 const app = express();
 
-const PORT = process.env.COMUNIDAD_PORT || 3005;
+const PORT = process.env.COMUNIDAD_PORT || 3305;
 
 app.use(cors());
 
 app.use(express.json());
 
+// middleware para servir archivos estáticos (imagenes subidas)
+//const __filename = fileURLToPath(import.meta.url);
+//const __dirname = path.dirname(__filename);
+app.use("/uploads", express.static("/app/uploads"));
+
 // middleware para parsear datos de formularios si fuera necesario
 app.use(express.urlencoded({ extended: true }));
 
-app.use("/api/comunidad", comunidadRouter);
+app.use("/", comunidadRouter);
 
 // Ruta base de diagnóstico (Health Check)
 app.get("/health", (req, res) => {
