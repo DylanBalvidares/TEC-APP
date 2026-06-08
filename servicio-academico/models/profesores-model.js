@@ -17,14 +17,19 @@ const Profesor = sequelize.define(
       type: DataTypes.STRING(100),
       allowNull: false,
     },
-    materia: {
-      type: DataTypes.STRING(100),
-      allowNull: false,
-    },
+
     email: {
       type: DataTypes.STRING(100),
       allowNull: false,
       unique: true,
+    },
+    id_usuario: {
+      type: DataTypes.INTEGER(11),
+      allowNull: true,
+      references: {
+        model: "usuarios",
+        key: "id_usuario",
+      },
     },
   },
   {

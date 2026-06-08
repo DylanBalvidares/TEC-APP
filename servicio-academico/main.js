@@ -21,14 +21,14 @@ app.use(express.json()); //PERMITE LEER JSON EN EL BODY DE UN REQUEST
 //app.use(autenticar);
 
 //RUTAS
-app.use("/apiAlumnos", alumnosRouter);
-app.use("/apiCursos", cursosRouter);
-app.use("/apiProfesores", profesoresRouter);
-app.use("/apiAsistencias", asistenciasRouter);
-app.use("/apiAutoridades", autoridadesRouter);
-app.use("/apiMaterias", materiasRouter);
-app.use("/apiAsignaciones", asignacionesRouter);
-app.use("/apiNotas", notasRouter);
+app.use("/", alumnosRouter);
+app.use("/", cursosRouter);
+app.use("/", profesoresRouter);
+app.use("/", asistenciasRouter);
+app.use("/", autoridadesRouter);
+app.use("/", materiasRouter);
+app.use("/", asignacionesRouter);
+app.use("/", notasRouter);
 
 app.listen(PORT, () => {
   console.log(`== SERVICIO ACADEMICO CORRIENDO EN ${PORT} ==`);

@@ -43,6 +43,15 @@ app.use(
 );
 
 app.use(
+  "/api/comunidad/uploads",
+  createProxyMiddleware({
+    target: "http://servicio-comunidad:3305/uploads", // Apunta directo al handler estático
+    changeOrigin: true,
+    pathRewrite: { "^/api/comunidad/uploads": "" }, // Deja solo el nombre del archivo (ej: /foto.png)
+  }),
+);
+
+app.use(
   "/api/comunidad",
   createProxyMiddleware({
     target: "http://servicio-comunidad:3305",

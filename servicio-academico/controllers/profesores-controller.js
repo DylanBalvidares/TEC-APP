@@ -77,7 +77,7 @@ async function eliminarProfesor(id) {
 }
 
 async function modificarProfesor(profesor) {
-  const { id_profesor, nombre, apellido, materia, email } = profesor;
+  const { id_profesor, nombre, apellido, email } = profesor;
 
   try {
     if (!id_profesor) {
@@ -88,7 +88,6 @@ async function modificarProfesor(profesor) {
       {
         nombre: nombre,
         apellido: apellido,
-        materia: materia,
         email: email,
       },
       {

@@ -21,8 +21,6 @@ app.use(express.json());
 //const __filename = fileURLToPath(import.meta.url);
 //const __dirname = path.dirname(__filename);
 app.use("/uploads", express.static("/app/uploads"));
-
-// middleware para parsear datos de formularios si fuera necesario
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/", comunidadRouter);

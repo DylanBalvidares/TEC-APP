@@ -37,7 +37,7 @@ CREATE TABLE `roles` (
 INSERT INTO `roles` (`id_rol`, `nombre_rol`) VALUES
 (1, 'alumno'), (2, 'delegado'), (3, 'profesor'), 
 (4, 'preceptor'), (5, 'bibliotecario'), (6, 'tutor'), 
-(7, 'invitado'), (8, 'administrativo'), (9, 'admin');
+(7, 'invitado'), (8, 'administrativo'), (9, 'root');
 
 -- Tabla 'permisos': Listado de acciones atómicas y específicas que se pueden ejecutar en la plataforma
 CREATE TABLE `permisos` (
@@ -83,11 +83,11 @@ INSERT IGNORE INTO `permisos` (`nombre_permiso`) VALUES
 ('tutor_ver_perfil_hijo'), ('tutor_ver_notas_hijo'), ('tutor_ver_asistencias_hijo'), ('tutor_ver_sanciones_hijo'), ('tutor_ver_calendario'),
 
 -- Administrativo
-('admin_crear_alumno'), ('admin_editar_alumno'), ('admin_eliminar_alumno'), ('admin_asignar_curso'), ('admin_crear_usuario'), ('admin_editar_usuario'), ('admin_eliminar_usuario'), ('admin_asignar_rol'), ('admin_ver_reportes'), ('admin_ver_todos_alumnos'), ('admin_ver_todos_cursos'),
+('administrativo_crear_alumno'), ('administrativo_editar_alumno'), ('administrativo_eliminar_alumno'), ('administrativo_crear_curso'),('administrativo_editar_curso'),('administrativo_eliminar_curso'), ('administrativo_crear_usuario'), ('administrativo_editar_usuario'), ('administrativo_eliminar_usuario'), ('administrativo_asignar_rol'), ('administrativo_ver_reportes'), ('administrativo_ver_todos_alumnos'), ('administrativo_ver_todos_cursos'),
+('administrativo_ver_todos_profesores'),('administrativo_crear_profesor'),('administrativo_editar_profesor'),('administrativo_eliminar_profesor'),
 
 -- Admin / Root
 ('root_gestionar_roles'), ('root_gestionar_permisos'), ('root_ver_logs_sistema'), ('root_configurar_sistema'), ('root_eliminar_cualquier_contenido');
-
 
 -- ============================================================
 -- 2. ASIGNACIÓN DE PERMISOS A CADA ROL
@@ -134,7 +134,7 @@ SELECT 6, id_permiso FROM `permisos` WHERE `nombre_permiso` IN (
 -- ADMINISTRATIVO (id_rol = 8)
 INSERT IGNORE INTO `rol_permisos` (`id_rol`, `id_permiso`)
 SELECT 8, id_permiso FROM `permisos` WHERE `nombre_permiso` IN (
-    'admin_crear_alumno', 'admin_editar_alumno', 'admin_eliminar_alumno', 'admin_asignar_curso', 'admin_crear_usuario', 'admin_editar_usuario', 'admin_eliminar_usuario', 'admin_asignar_rol', 'admin_ver_reportes', 'admin_ver_todos_alumnos', 'admin_ver_todos_cursos'
+    'administrativo_crear_alumno', 'administrativo_editar_alumno', 'administrativo_eliminar_alumno', 'administrativo_crear_curso', 'administrativo_crear_usuario', 'administrativo_editar_usuario', 'administrativo_eliminar_usuario', 'administrativo_asignar_rol', 'administrativo_ver_reportes', 'administrativo_ver_todos_alumnos', 'administrativo_ver_todos_cursos','administrativo_crear_curso','administrativo_eliminar_curso',('administrativo_ver_todos_profesores'),('administrativo_crear_profesor'),('administrativo_editar_profesor'),('administrativo_eliminar_profesor')
 );
 
 -- ADMIN / ROOT (id_rol = 9)
@@ -193,7 +193,6 @@ CREATE TABLE `profesores` (
     `id_profesor` int(11) NOT NULL AUTO_INCREMENT,
     `nombre` varchar(100) NOT NULL,
     `apellido` varchar(100) NOT NULL,
-    `materia` varchar(100) NOT NULL,
     `email` varchar(100) NOT NULL,
     `id_usuario` int(11) DEFAULT NULL, 
     PRIMARY KEY (`id_profesor`),

@@ -12,7 +12,7 @@ import comprobarPermiso from "../middlewares/comprobarPermisos.js";
 
 const profesoresRouter = Router();
 
-profesoresRouter.get("/profesores/:id", comprobarPermiso("root_gestionar_roles"), async (req, res) => {
+profesoresRouter.get("/profesores/:id", comprobarPermiso("administrativo_ver_todos_profesores"), async (req, res) => {
   try {
     const profesor = await obtenerProfesor(req.params.id);
 
@@ -22,7 +22,7 @@ profesoresRouter.get("/profesores/:id", comprobarPermiso("root_gestionar_roles")
   }
 });
 
-profesoresRouter.get("/profesores", comprobarPermiso("root_gestionar_roles"), async (req, res) => {
+profesoresRouter.get("/profesores", comprobarPermiso("administrativo_ver_todos_profesores"), async (req, res) => {
   try {
     const profesores = await obtenerTodosProfesores();
     return res.status(200).json(profesores);
@@ -31,7 +31,7 @@ profesoresRouter.get("/profesores", comprobarPermiso("root_gestionar_roles"), as
   }
 });
 
-profesoresRouter.post("/profesores/:profesor", comprobarPermiso("root_gestionar_roles"), async (req, res) => {
+profesoresRouter.post("/profesores", comprobarPermiso("administrativo_crear_profesor"), async (req, res) => {
   console.log("== PROFESOR REQUEST:", req.body); //DEBUG
   try {
     const curso = await crearProfesor(req.body);
@@ -41,7 +41,7 @@ profesoresRouter.post("/profesores/:profesor", comprobarPermiso("root_gestionar_
   }
 });
 
-profesoresRouter.delete("/profesores/:id", comprobarPermiso("root_gestionar_roles"), async (req, res) => {
+profesoresRouter.delete("/profesores/:id", comprobarPermiso("administrativo_eliminar_profesor"), async (req, res) => {
   try {
     const resultado = await eliminarProfesor(req.params.id);
     return res.status(200).json(resultado);
@@ -50,15 +50,14 @@ profesoresRouter.delete("/profesores/:id", comprobarPermiso("root_gestionar_role
   }
 });
 
-profesoresRouter.patch("/profesores/:profesor", comprobarPermiso("root_gestionar_roles"), async (req, res) => {
-  const { id_profesor, nombre, apellido, materia, email } = req.body;
+profesoresRouter.patch("/profesores", comprobarPermiso("administrativo_editar_profesor"), async (req, res) => {
+  const { id_profesor, nombre, apellido, email } = req.body;
 
   try {
     const profesor = {
       id_profesor: id_profesor,
       nombre: nombre,
-      apellido: nombre,
-      materia: materia,
+      apellido: apellido,
       email: email,
     };
 

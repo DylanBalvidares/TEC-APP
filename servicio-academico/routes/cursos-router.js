@@ -21,7 +21,7 @@ cursosRouter.get("/cursos/:id", comprobarPermiso("admin_ver_todos_cursos"), asyn
   }
 });
 
-cursosRouter.get("/cursos", comprobarPermiso("admin_ver_todos_cursos"), async (req, res) => {
+cursosRouter.get("/cursos", comprobarPermiso("administrativo_ver_todos_cursos"), async (req, res) => {
   try {
     const cursos = await obtenerTodosCursos();
     return res.status(200).json(cursos);
@@ -30,7 +30,7 @@ cursosRouter.get("/cursos", comprobarPermiso("admin_ver_todos_cursos"), async (r
   }
 });
 
-cursosRouter.post("/cursos/:curso", comprobarPermiso("admin_asignar_curso"), async (req, res) => {
+cursosRouter.post("/cursos", comprobarPermiso("administrativo_asignar_curso"), async (req, res) => {
   console.log("== CURSO REQUEST:", req.body); //DEBUG
   try {
     const curso = await crearCurso(req.body);
@@ -40,7 +40,7 @@ cursosRouter.post("/cursos/:curso", comprobarPermiso("admin_asignar_curso"), asy
   }
 });
 
-cursosRouter.delete("/cursos/:id", comprobarPermiso("admin_asignar_curso"), async (req, res) => {
+cursosRouter.delete("/cursos/:id", comprobarPermiso("administrativo_asignar_curso"), async (req, res) => {
   try {
     const resultado = await eliminarCurso(req.params.id);
     return res.status(204).json(resultado);
@@ -49,7 +49,7 @@ cursosRouter.delete("/cursos/:id", comprobarPermiso("admin_asignar_curso"), asyn
   }
 });
 
-cursosRouter.patch("/cursos/:curso", comprobarPermiso("admin_asignar_curso"), async (req, res) => {
+cursosRouter.patch("/cursos/:curso", comprobarPermiso("administrativo_asignar_curso"), async (req, res) => {
   const { id_curso, nombre_curso, turno, aula } = req.body;
   console.log("CURSOS-ROUTER:", req.body);
   try {
