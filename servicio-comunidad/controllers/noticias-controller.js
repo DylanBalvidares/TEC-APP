@@ -19,7 +19,8 @@ export async function obtenerTodasNoticias() {
       noticias: noticias.map((n) => ({
         ...n.toJSON(),
         //imagen_url: `http://servicio-comunidad:3305/uploads/${n.imagen}`,
-        imagen_url: `http://localhost:3305/uploads/${n.imagen}`,
+        // //ESTO SE DEBE REEMPLAZAR POR VARIABLES DE ENTORNO(.env), ya que esta todo hardcodeado
+        imagen_url: `http://186.0.171.84:8000/api/comunidad/uploads/${n.imagen}`,
       })),
     };
   } catch (error) {
