@@ -11,7 +11,7 @@ import comprobarPermiso from "../middlewares/comprobarPermisos.js";
 
 const asignacionesRouter = Router();
 
-asignacionesRouter.get("/asignaciones/:id", comprobarPermiso("admin_asignar_curso"), async (req, res) => {
+asignacionesRouter.get("/asignaciones/:id", comprobarPermiso("administrativo_ver_todos_asignaciones"), async (req, res) => {
   try {
     const asignacion = await obtenerAsignacion(req.params.id);
     return res.status(200).json(asignacion);
@@ -20,7 +20,7 @@ asignacionesRouter.get("/asignaciones/:id", comprobarPermiso("admin_asignar_curs
   }
 });
 
-asignacionesRouter.get("/asignaciones", comprobarPermiso("admin_asignar_curso"), async (req, res) => {
+asignacionesRouter.get("/asignaciones", comprobarPermiso("administrativo_ver_todos_asignaciones"), async (req, res) => {
   try {
     const asignaciones = await obtenerTodasAsignaciones();
     return res.status(200).json(asignaciones);
@@ -29,7 +29,7 @@ asignacionesRouter.get("/asignaciones", comprobarPermiso("admin_asignar_curso"),
   }
 });
 
-asignacionesRouter.post("/asignaciones", comprobarPermiso("admin_asignar_curso"), async (req, res) => {
+asignacionesRouter.post("/asignaciones", comprobarPermiso("administrativo_crear_asignacion"), async (req, res) => {
   try {
     const asignacion = await crearAsignacion(req.body);
     return res.status(201).json(asignacion);
@@ -38,7 +38,7 @@ asignacionesRouter.post("/asignaciones", comprobarPermiso("admin_asignar_curso")
   }
 });
 
-asignacionesRouter.delete("/asignaciones/:id", comprobarPermiso("admin_asignar_curso"), async (req, res) => {
+asignacionesRouter.delete("/asignaciones/:id", comprobarPermiso("administrativo_eliminar_asignacion"), async (req, res) => {
   try {
     const resultado = await eliminarAsignacion(req.params.id);
     return res.status(200).json(resultado);
@@ -47,7 +47,7 @@ asignacionesRouter.delete("/asignaciones/:id", comprobarPermiso("admin_asignar_c
   }
 });
 
-asignacionesRouter.patch("/asignaciones/:asignacion", comprobarPermiso("admin_asignar_curso"), async (req, res) => {
+asignacionesRouter.patch("/asignaciones", comprobarPermiso("administrativo_editar_asignacion"), async (req, res) => {
   const { id_asignacion, id_curso, id_materia, id_profesor } = req.body;
   try {
     const asignacion = {

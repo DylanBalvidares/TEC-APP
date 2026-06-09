@@ -35,8 +35,8 @@ CREATE TABLE `roles` (
 
 -- Inserción de los roles requeridos para el funcionamiento del sistema escolar
 INSERT INTO `roles` (`id_rol`, `nombre_rol`) VALUES
-(1, 'alumno'), (2, 'delegado'), (3, 'profesor'), 
-(4, 'preceptor'), (5, 'bibliotecario'), (6, 'tutor'), 
+(1, 'alumno'), (2, 'delegado'), (3, 'profesor'),
+(4, 'preceptor'), (5, 'bibliotecario'), (6, 'tutor'),
 (7, 'invitado'), (8, 'administrativo'), (9, 'root');
 
 -- Tabla 'permisos': Listado de acciones atómicas y específicas que se pueden ejecutar en la plataforma
@@ -71,7 +71,7 @@ INSERT IGNORE INTO `permisos` (`nombre_permiso`) VALUES
 ('delegado_crear_noticia'), ('delegado_editar_mis_noticias'), ('delegado_eliminar_mis_noticias'),
 
 -- Profesor
-('profesor_ver_curso'), ('profesor_ver_alumnos_de_curso'), ('profesor_ver_perfil_alumno'), ('profesor_gestionar_notas'), ('profesor_gestionar_asistencias'), ('profesor_ver_horario'),
+('profesor_ver_curso'), ('profesor_ver_alumnos_de_curso'), ('profesor_ver_perfil_alumno'), ('profesor_ver_todos_notas'),('profesor_crear_nota'),('profesor_editar_nota'),('profesor_eliminar_nota'), ('profesor_gestionar_asistencias'), ('profesor_ver_horario'),
 
 -- Preceptor
 ('preceptor_ver_curso'), ('preceptor_ver_alumnos_de_curso'), ('preceptor_ver_perfil_alumno'), ('preceptor_registrar_asistencias'), ('preceptor_ver_asistencias'), ('preceptor_gestionar_sanciones'), ('preceptor_ver_sanciones'),
@@ -83,9 +83,13 @@ INSERT IGNORE INTO `permisos` (`nombre_permiso`) VALUES
 ('tutor_ver_perfil_hijo'), ('tutor_ver_notas_hijo'), ('tutor_ver_asistencias_hijo'), ('tutor_ver_sanciones_hijo'), ('tutor_ver_calendario'),
 
 -- Administrativo
-('administrativo_crear_alumno'), ('administrativo_editar_alumno'), ('administrativo_eliminar_alumno'), ('administrativo_crear_curso'),('administrativo_editar_curso'),('administrativo_eliminar_curso'), ('administrativo_crear_usuario'), ('administrativo_editar_usuario'), ('administrativo_eliminar_usuario'), ('administrativo_asignar_rol'), ('administrativo_ver_reportes'), ('administrativo_ver_todos_alumnos'), ('administrativo_ver_todos_cursos'),
+('administrativo_ver_todos_alumnos'), ('administrativo_crear_alumno'), ('administrativo_editar_alumno'), ('administrativo_eliminar_alumno'),
+('administrativo_ver_todos_cursos'),('administrativo_crear_curso'),('administrativo_editar_curso'),('administrativo_eliminar_curso'),
+('administrativo_crear_usuario'), ('administrativo_editar_usuario'), ('administrativo_eliminar_usuario'),
+('administrativo_asignar_rol'), ('administrativo_ver_reportes'),
 ('administrativo_ver_todos_profesores'),('administrativo_crear_profesor'),('administrativo_editar_profesor'),('administrativo_eliminar_profesor'),
-
+('administrativo_ver_todos_asignaciones'),('administrativo_crear_asignacion'),('administrativo_editar_asignacion'),('administrativo_eliminar_asignacion'),
+('administrativo_ver_todos_materias'),('administrativo_crear_materia'),('administrativo_editar_materia'),('administrativo_eliminar_materia'),
 -- Admin / Root
 ('root_gestionar_roles'), ('root_gestionar_permisos'), ('root_ver_logs_sistema'), ('root_configurar_sistema'), ('root_eliminar_cualquier_contenido');
 
@@ -110,7 +114,9 @@ SELECT 2, id_permiso FROM `permisos` WHERE `nombre_permiso` IN (
 -- PROFESOR (id_rol = 3)
 INSERT IGNORE INTO `rol_permisos` (`id_rol`, `id_permiso`)
 SELECT 3, id_permiso FROM `permisos` WHERE `nombre_permiso` IN (
-    'profesor_ver_curso', 'profesor_ver_alumnos_de_curso', 'profesor_ver_perfil_alumno', 'profesor_gestionar_notas', 'profesor_gestionar_asistencias', 'profesor_ver_horario'
+'profesor_ver_curso', 'profesor_ver_alumnos_de_curso', 'profesor_ver_perfil_alumno',
+'profesor_ver_todos_notas','profesor_crear_nota','profesor_editar_nota','profesor_eliminar_nota',
+'profesor_gestionar_asistencias', 'profesor_ver_horario'
 );
 
 -- PRECEPTOR (id_rol = 4)
@@ -133,9 +139,17 @@ SELECT 6, id_permiso FROM `permisos` WHERE `nombre_permiso` IN (
 
 -- ADMINISTRATIVO (id_rol = 8)
 INSERT IGNORE INTO `rol_permisos` (`id_rol`, `id_permiso`)
-SELECT 8, id_permiso FROM `permisos` WHERE `nombre_permiso` IN (
-    'administrativo_crear_alumno', 'administrativo_editar_alumno', 'administrativo_eliminar_alumno', 'administrativo_crear_curso', 'administrativo_crear_usuario', 'administrativo_editar_usuario', 'administrativo_eliminar_usuario', 'administrativo_asignar_rol', 'administrativo_ver_reportes', 'administrativo_ver_todos_alumnos', 'administrativo_ver_todos_cursos','administrativo_crear_curso','administrativo_eliminar_curso',('administrativo_ver_todos_profesores'),('administrativo_crear_profesor'),('administrativo_editar_profesor'),('administrativo_eliminar_profesor')
-);
+SELECT 8, id_permiso
+FROM `permisos`
+WHERE `nombre_permiso` IN (
+  'administrativo_ver_todos_alumnos', 'administrativo_crear_alumno', 'administrativo_editar_alumno', 'administrativo_eliminar_alumno',
+  'administrativo_ver_todos_cursos', 'administrativo_crear_curso', 'administrativo_editar_curso', 'administrativo_eliminar_curso',
+  'administrativo_crear_usuario', 'administrativo_editar_usuario', 'administrativo_eliminar_usuario',
+  'administrativo_asignar_rol', 'administrativo_ver_reportes',
+  'administrativo_ver_todos_profesores', 'administrativo_crear_profesor', 'administrativo_editar_profesor', 'administrativo_eliminar_profesor',
+  'administrativo_ver_todos_asignaciones', 'administrativo_crear_asignacion','administrativo_editar_asignacion','administrativo_eliminar_asignacion',
+  'administrativo_ver_todos_materias','administrativo_crear_materia','administrativo_editar_materia','administrativo_eliminar_materia'
+  );
 
 -- ADMIN / ROOT (id_rol = 9)
 -- El "Dios" del sistema: en lugar de hacer un IN() gigante, le pasamos TODOS los permisos que existen en la tabla.
@@ -151,7 +165,7 @@ CREATE TABLE `usuarios` (
     `nombre` varchar(100) NOT NULL,
     `apellido` varchar(100) NOT NULL,
     `email` varchar(100) NOT NULL,
-    `contrasena` varchar(255) NOT NULL, 
+    `contrasena` varchar(255) NOT NULL,
     `id_rol` int(11) NOT NULL,
     PRIMARY KEY (`id_usuario`),
     UNIQUE KEY `email` (`email`),
@@ -179,7 +193,7 @@ CREATE TABLE `alumnos` (
     `apellido` varchar(100) NOT NULL,
     `dni` varchar(20) NOT NULL,
     `id_curso` int(11) NOT NULL,
-    `id_usuario` int(11) DEFAULT NULL, 
+    `id_usuario` int(11) DEFAULT NULL,
     PRIMARY KEY (`id_alumno`),
     UNIQUE KEY `dni_unico` (`dni`),
     UNIQUE KEY `uq_alumnos_usuario` (`id_usuario`),
@@ -194,7 +208,7 @@ CREATE TABLE `profesores` (
     `nombre` varchar(100) NOT NULL,
     `apellido` varchar(100) NOT NULL,
     `email` varchar(100) NOT NULL,
-    `id_usuario` int(11) DEFAULT NULL, 
+    `id_usuario` int(11) DEFAULT NULL,
     PRIMARY KEY (`id_profesor`),
     UNIQUE KEY `email_profesor` (`email`),
     UNIQUE KEY `uq_profesores_usuario` (`id_usuario`),
@@ -246,7 +260,7 @@ CREATE TABLE `autoridades` (
     `id_autoridad` int(11) NOT NULL AUTO_INCREMENT,
     `nombre` varchar(100) NOT NULL,
     `apellido` varchar(100) NOT NULL,
-    `cargo` varchar(80) NOT NULL, 
+    `cargo` varchar(80) NOT NULL,
     `email` varchar(100) NOT NULL,
     `id_usuario` int(11) DEFAULT NULL,
     PRIMARY KEY (`id_autoridad`),
@@ -259,11 +273,11 @@ CREATE TABLE `autoridades` (
 CREATE TABLE `asistencias` (
     `id_asistencia` int(11) NOT NULL AUTO_INCREMENT,
     `id_alumno` int(11) NOT NULL,
-    `id_curso` int(11) NOT NULL, 
+    `id_curso` int(11) NOT NULL,
     `fecha` date NOT NULL,
     `estado` ENUM('presente', 'ausente', 'justificado', 'tardanza') NOT NULL,
     PRIMARY KEY (`id_asistencia`),
-    UNIQUE KEY `uq_asis_dia` (`id_alumno`, `fecha`), 
+    UNIQUE KEY `uq_asis_dia` (`id_alumno`, `fecha`),
     KEY `id_alumno` (`id_alumno`),
     KEY `id_curso` (`id_curso`),
     CONSTRAINT `asistencias_ibfk_1` FOREIGN KEY (`id_alumno`) REFERENCES `alumnos` (`id_alumno`),
