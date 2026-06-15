@@ -1,6 +1,8 @@
 import jwt from "jsonwebtoken";
 import express from "express";
 import { createProxyMiddleware } from "http-proxy-middleware";
+import cors from "cors";
+
 console.log("=== GATEWAY SECRET:", process.env.JWT_SECRET);
 
 function verificarToken(req, res, next) {
@@ -31,6 +33,8 @@ function verificarToken(req, res, next) {
 
 const app = express();
 const PORT = 9000;
+
+app.use(cors());
 
 //RUTAS PUBLICAS, antes del middleware de verificarToken
 app.use(

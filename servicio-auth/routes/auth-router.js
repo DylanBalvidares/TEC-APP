@@ -45,9 +45,13 @@ authRouter.post("/registro", async (req, res) => {
     // Ahora funciona correctamente gracias a la importación superior
     const usuario = await crearUsuario(req.body);
 
-    const infoUsuario = generarToken(usuario);
+    const token = generarToken(usuario);
 
-    return res.status(200).json(infoUsuario);
+    return res.status(200).json({
+      mensaje: "Registro exitoso",
+      token: token,
+      usuario: usuario,
+    });
   } catch (error) {
     console.log("=== ERROR REGISTRO ->", error);
 

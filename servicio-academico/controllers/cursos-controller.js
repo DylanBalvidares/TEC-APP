@@ -76,6 +76,14 @@ async function eliminarCurso(id) {
     if (error instanceof ErrorHandler) {
       throw error;
     }
+    console.log("=== ERROR AL ELIMINAR CURSO:", error);
+
+    if (error.name === "SequelizeForeignKeyConstraintError") {
+      throw new ErrorHandler(
+        400,
+        "El curso no se puede eliminar porque tiene alumnos asignados, reasignalos a otro curso primero",
+      );
+    }
 
     throw new ErrorHandler(500, "Error interno del servidor");
   }
