@@ -47,7 +47,10 @@ async function crearProfesor(profesor) {
     console.error("Error en crearProfesor:", error);
 
     if (error.name === "SequelizeUniqueConstraintError") {
-      throw new ErrorHandler(400, "El email ya se encuentra registrado");
+      throw new ErrorHandler(
+        400,
+        "El DNI o el email ya se encuentran registrados",
+      );
     }
 
     throw new ErrorHandler(500, "Error al registrar el profesor");
@@ -77,22 +80,43 @@ async function eliminarProfesor(id) {
 }
 
 async function modificarProfesor(profesor) {
-  const { id_profesor, nombre, apellido, email } = profesor;
+  const {
+    id_profesor,
+    nombre,
+    apellido,
+    dni,
+    email,
+    telefono,
+    fecha_nacimiento,
+    domicilio,
+    fecha_contratacion,
+    estado,
+    titulo_habilitante,
+    especialidad,
+  } = profesor;
 
   try {
     if (!id_profesor) {
       throw new ErrorHandler(400, "ID invalida");
     }
 
-    const filasAfectadas = await Profesor.update(
+    const [filasAfectadas] = await Profesor.update(
       {
-        nombre: nombre,
-        apellido: apellido,
-        email: email,
+        nombre,
+        apellido,
+        dni,
+        email,
+        telefono,
+        fecha_nacimiento,
+        domicilio,
+        fecha_contratacion,
+        estado,
+        titulo_habilitante,
+        especialidad,
       },
       {
         where: {
-          id_profesor: id_profesor,
+          id_profesor,
         },
       },
     );

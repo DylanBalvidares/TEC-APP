@@ -1,6 +1,6 @@
 import { where } from "sequelize";
 import ErrorHandler from "../ErrorHandler.js";
-import { Usuario } from "../models/index.js";
+import { Usuario, Rol } from "../models/index.js";
 import bcrypt from "bcryptjs"; // ¡Esencial para el hashing seguro de contraseñas!
 import obtenerPermisosDeRol from "./rol-permisos-controller.js";
 /**
@@ -13,7 +13,9 @@ async function buscarUsuarioPorEmail(email) {
 
   try {
     const usuario = await Usuario.findOne({
-      where: { email: email },
+      where: {
+        email: email,
+      },
     });
 
     if (!usuario) {
@@ -28,40 +30,61 @@ async function buscarUsuarioPorEmail(email) {
   }
 }
 
-/**
- * Comprueba las credenciales del usuario comparando la contraseña ingresada con el hash de la DB
- */
 async function comprobarContrasenaUsuario(email, contrasena) {
   if (!contrasena || !email) {
     throw new ErrorHandler(400, "Email o contraseña inválidos");
   }
 
   try {
-    // BUG FIX: Primero buscamos al usuario únicamente por su email
     const usuario = await Usuario.findOne({
-      where: { email: email },
+      where: {
+        email: email,
+      },
+      include: [
+        {
+          model: Rol,
+          as: "rol",
+          attributes: ["nombre_rol"],
+        },
+      ],
     });
 
-    // BUG FIX: Validar si el usuario realmente existe antes de evaluar la contraseña
     if (!usuario) {
       throw new ErrorHandler(404, "Usuario no encontrado");
     }
 
-    // BUG FIX: Comparamos la contraseña en texto plano con la encriptada en la base de datos
     const esValida = await bcrypt.compare(contrasena, usuario.contrasena);
 
     if (!esValida) {
       throw new ErrorHandler(401, "La contraseña es incorrecta");
     }
 
-    return usuario;
+    // 1. Obtenemos los permisos del rol (igual que al crear un usuario)
+    const permisos = await obtenerPermisosDeRol(usuario.id_rol);
+
+    // 2. Convertimos a JSON para deshacernos de los metadatos de Sequelize
+    const datosBD = usuario.toJSON();
+
+    // 3. Estructuramos la respuesta omitiendo el password y aplanando el rol
+    const usuarioLimpio = {
+      id_usuario: datosBD.id_usuario,
+      nombre: datosBD.nombre,
+      apellido: datosBD.apellido,
+      email: datosBD.email,
+      nombre_rol: datosBD.rol?.nombre_rol, // Extraemos el string directamente
+      id_rol: datosBD.id_rol,
+      permisos: permisos,
+    };
+
+    //console.log("LOGIN INTERNO->", usuarioLimpio);
+
+    return usuarioLimpio;
   } catch (error) {
     if (error instanceof ErrorHandler) throw error;
     console.error("Error en comprobarContrasenaUsuario:", error);
     throw new ErrorHandler(500, "Error interno al comprobar la contraseña");
   }
 }
-
 /**
  * Obtiene el listado completo de usuarios registrados (Excluye contraseñas)
  */
@@ -112,12 +135,9 @@ async function obtenerUsuario(id) {
   }
 }
 
-/**
- * Registra un nuevo usuario aplicando Hashing automático a la credencial de acceso
- */
 async function crearUsuario(datosUsuario) {
   try {
-    // BUG FIX: Implementación del Hashing antes de impactar la Base de Datos
+    // 1. Implementación del Hashing antes de impactar la Base de Datos
     if (datosUsuario.contrasena) {
       const salt = await bcrypt.genSalt(10);
       datosUsuario.contrasena = await bcrypt.hash(
@@ -131,18 +151,27 @@ async function crearUsuario(datosUsuario) {
       );
     }
 
-    const permisos = await obtenerPermisosDeRol(datosUsuario.id_rol);
+    // 2. MEJORA: Buscamos los permisos y el nombre del rol en paralelo para optimizar tiempos de respuesta
+    const [permisos, rolAsociado] = await Promise.all([
+      obtenerPermisosDeRol(datosUsuario.id_rol),
+      Rol.findByPk(datosUsuario.id_rol, {
+        attributes: ["nombre_rol"],
+      }),
+    ]);
 
     console.log("PERMISOS:", permisos);
+
+    // 3. Creamos el usuario en la DB
     const nuevoUsuario = await Usuario.create(datosUsuario);
     const datosFinales = nuevoUsuario.toJSON();
 
-    // Estructuramos la respuesta omitiendo información sensible
+    // 4. Estructuramos la respuesta incluyendo "nombre_rol" en consistencia con el Login
     const usuarioSinContrasena = {
       id_usuario: datosFinales.id_usuario,
       nombre: datosFinales.nombre,
       apellido: datosFinales.apellido,
       email: datosFinales.email,
+      nombre_rol: rolAsociado?.nombre_rol || null, // <-- Agregado con éxito
       id_rol: datosFinales.id_rol,
       permisos: permisos,
     };

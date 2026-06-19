@@ -1,7 +1,7 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../db/conexionDB.js";
 
-const Roles = sequelize.define("roles", {
+const Rol = sequelize.define("roles", {
   id_rol: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
@@ -14,4 +14,4 @@ const Roles = sequelize.define("roles", {
   },
 });
 
-export default Roles;
+export default Rol;

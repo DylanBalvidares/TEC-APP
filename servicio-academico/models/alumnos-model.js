@@ -24,6 +24,29 @@ const Alumno = sequelize.define(
       unique: true,
     },
 
+    fecha_nacimiento: {
+      type: DataTypes.DATEONLY,
+      allowNull: false,
+    },
+
+    nombre_tutor: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
+    },
+
+    telefono_tutor: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+    },
+
+    domicilio: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
+    },
+
+    estado: {
+      type: DataTypes.ENUM("activo", "egresado", "baja", "condicional"),
+    },
     //FK
     id_curso: {
       type: DataTypes.INTEGER(11),

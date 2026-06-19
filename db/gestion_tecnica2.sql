@@ -333,16 +333,53 @@ CREATE TABLE
 -- ============================================================
 -- MÓDULO ESTRUCTURA ACADÉMICA
 -- ============================================================
--- Tabla 'cursos': Registro de divisiones académicas, sus turnos horarios y la asignación física de aulas
-CREATE TABLE
-    `cursos` (
-        `id_curso` int (11) NOT NULL AUTO_INCREMENT,
-        `nombre_curso` varchar(50) NOT NULL,
-        `turno` varchar(50) NOT NULL,
-        `aula` varchar(20) NOT NULL,
-        PRIMARY KEY (`id_curso`)
-    ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
+--
+--
+-- Tabla 'profesores': Registro del cuerpo docente de la institución y su respectivo enlace de login
+CREATE TABLE `profesores` (
+    `id_profesor` int(11) NOT NULL AUTO_INCREMENT,
+    `nombre` varchar(100) NOT NULL,
+    `apellido` varchar(100) NOT NULL,
+    `dni` varchar(20) NOT NULL,
+    `email` varchar(100) NOT NULL,
+    `telefono` varchar(20) NOT NULL,
+    `fecha_nacimiento` DATE NOT NULL,
+    `domicilio` varchar(255) NOT NULL,
+    `fecha_contratacion` DATE NOT NULL,
+    `estado` ENUM('activo','baja','licencia') DEFAULT 'activo',
+    `titulo_habilitante` varchar(100) DEFAULT NULL,
+    `especialidad` varchar(100) DEFAULT NULL,
+    `id_usuario` int(11) DEFAULT NULL,
 
+    PRIMARY KEY (`id_profesor`),
+    UNIQUE KEY `uq_profesores_dni` (`dni`),       -- ÍNDICE: DNI único
+    UNIQUE KEY `uq_profesores_email` (`email`),   -- Email único pero no PK lógica
+    UNIQUE KEY `uq_profesores_usuario` (`id_usuario`),
+    KEY `idx_estado` (`estado`),                  -- ÍNDICE: Filtros rápidos
+    KEY `idx_especialidad` (`especialidad`),      -- ÍNDICE: Búsqueda por materia
+
+    CONSTRAINT `profesores_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- Tabla 'cursos': Registro de divisiones académicas, sus turnos y la asignación física de aulas
+CREATE TABLE `cursos` (
+    `id_curso` int(11) NOT NULL AUTO_INCREMENT,
+    `nombre_curso` varchar(50) NOT NULL,           -- Ej: "5to Año B"
+    `nivel` varchar(50) NOT NULL,        -- Ej: "basico", "superior"
+    `ciclo_lectivo` smallint unsigned NOT NULL,           -- Ej: 2026
+    `capacidad_maxima` int(11) DEFAULT 30,   -- Límite de alumnos
+    `aula` varchar(20) DEFAULT NULL,         -- Ej: "Aula 101"
+    `turno` varchar(100) DEFAULT NULL,     -- Ej: "Lun-Vie 08:00-12:00"
+    `id_profesor_titular` int(11) DEFAULT NULL,-- Profesor a cargo del grupo
+    `estado` ENUM('activo','finalizado','cancelado') DEFAULT 'activo',
+
+    PRIMARY KEY (`id_curso`),
+    KEY `idx_ciclo` (`ciclo_lectivo`),       -- Búsqueda rápida por año
+    KEY `idx_estado` (`estado`),
+    KEY `fk_profesor_titular` (`id_profesor_titular`),
+
+    CONSTRAINT `cursos_ibfk_1` FOREIGN KEY (`id_profesor_titular`)
+        REFERENCES `profesores` (`id_profesor`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 -- Tabla 'alumnos': Almacena el padrón de estudiantes vinculado a un curso y enlazado opcionalmente a un usuario
 CREATE TABLE
     `alumnos` (
@@ -350,6 +387,11 @@ CREATE TABLE
         `nombre` varchar(100) NOT NULL,
         `apellido` varchar(100) NOT NULL,
         `dni` varchar(20) NOT NULL,
+        `fecha_nacimiento` DATE NOT NULL,
+        `nombre_tutor` varchar(100) NOT NULL,
+        `telefono_tutor` varchar(20) NOT NULL,
+        `domicilio` varchar(255) NOT NULL,
+        `estado` ENUM('activo','egresado','baja','condicional') DEFAULT 'activo',
         `id_curso` int (11) NOT NULL,
         `id_usuario` int (11) DEFAULT NULL,
         PRIMARY KEY (`id_alumno`),
@@ -358,20 +400,6 @@ CREATE TABLE
         KEY `id_curso` (`id_curso`),
         CONSTRAINT `alumnos_ibfk_1` FOREIGN KEY (`id_curso`) REFERENCES `cursos` (`id_curso`),
         CONSTRAINT `alumnos_ibfk_2` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`) ON DELETE SET NULL
-    ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
-
--- Tabla 'profesores': Registro del cuerpo docente de la institución y su respectivo enlace de login
-CREATE TABLE
-    `profesores` (
-        `id_profesor` int (11) NOT NULL AUTO_INCREMENT,
-        `nombre` varchar(100) NOT NULL,
-        `apellido` varchar(100) NOT NULL,
-        `email` varchar(100) NOT NULL,
-        `id_usuario` int (11) DEFAULT NULL,
-        PRIMARY KEY (`id_profesor`),
-        UNIQUE KEY `email_profesor` (`email`),
-        UNIQUE KEY `uq_profesores_usuario` (`id_usuario`),
-        CONSTRAINT `profesores_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`) ON DELETE SET NULL
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
 -- Tabla 'materias': Listado global de asignaturas curriculares dictadas en el establecimiento

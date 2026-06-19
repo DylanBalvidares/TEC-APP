@@ -51,15 +51,9 @@ profesoresRouter.delete("/profesores/:id", comprobarPermiso("administrativo_elim
 });
 
 profesoresRouter.patch("/profesores", comprobarPermiso("administrativo_editar_profesor"), async (req, res) => {
-  const { id_profesor, nombre, apellido, email } = req.body;
 
   try {
-    const profesor = {
-      id_profesor: id_profesor,
-      nombre: nombre,
-      apellido: apellido,
-      email: email,
-    };
+    const profesor = req.body;
 
     const resultado = await modificarProfesor(profesor);
     return res.status(200).json(resultado);

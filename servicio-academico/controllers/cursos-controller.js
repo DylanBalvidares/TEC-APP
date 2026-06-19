@@ -43,15 +43,15 @@ async function obtenerCurso(id) {
 
 async function crearCurso(curso) {
   try {
-    const data = await Curso.create(curso); //<--create:build & save
-
-    return data;
+    // Se crea el curso directamente con los datos recibidos del body
+    const nuevoCurso = await Curso.create(curso);
+    return nuevoCurso;
   } catch (error) {
-    if (error instanceof ErrorHandler) {
-      throw error;
+    if (error instanceof ErrorHandler) throw error;
+    if (error.name === "SequelizeValidationError") {
+      throw new ErrorHandler(400, "Datos inválidos: " + error.message);
     }
-
-    throw new ErrorHandler(500, "Error interno del servidor");
+    throw new ErrorHandler(500, "Error al crear el curso");
   }
 }
 
@@ -90,46 +90,37 @@ async function eliminarCurso(id) {
 }
 
 async function modificarCurso(curso) {
-  const { id_curso, nombre_curso, turno, aula } = curso;
-  console.log("CURSOS-CONTROLLER:", curso);
-
+  const {
+    id_curso,
+    nombre_curso,
+    nivel,
+    ciclo_lectivo,
+    capacidad_maxima,
+    aula,
+    turno,
+    id_profesor_titular,
+    estado,
+  } = curso; // Puede ser req.body, cursoData, o el objeto que contenga la información
   try {
-    if (id_curso < 0 || !id_curso) {
-      throw new ErrorHandler(400, "ID invalida");
+    if (!id_curso || id_curso < 0) throw new ErrorHandler(400, "ID inválida");
+
+    // Actualizamos usando el objeto completo, evitando sobrescribir el ID
+    delete curso.id_curso;
+
+    const [filasAfectadas] = await Curso.update(curso, {
+      where: {
+        id_curso: id_curso,
+      },
+    });
+
+    if (filasAfectadas === 0) {
+      throw new ErrorHandler(404, "No se encontró el curso para actualizar");
     }
 
-    const filasAfectadas = await Curso.update(
-      //retorna un array[],donde "[0]"" es la cantidad de filas afectadas
-      {
-        nombre_curso: nombre_curso,
-        turno: turno,
-        aula: aula,
-      },
-      {
-        where: {
-          id_curso: id_curso,
-        },
-      },
-    );
-
-    if (filasAfectadas[0] === 0) {
-      throw new ErrorHandler(404, " No se encontro el curso especificado");
-    }
-
-    return filasAfectadas;
+    return { mensaje: "Curso actualizado correctamente" };
   } catch (error) {
-    console.log("=== ERROR ===");
-    console.log(error);
-    console.log(error.name);
-    console.log(error.message);
-    console.log(error.sql);
-    console.log("=============");
-
-    if (error instanceof ErrorHandler) {
-      throw error;
-    }
-
-    throw new ErrorHandler(500, "Error interno del servidor");
+    if (error instanceof ErrorHandler) throw error;
+    throw new ErrorHandler(500, "Error interno al modificar el curso");
   }
 }
 

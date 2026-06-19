@@ -83,10 +83,14 @@ async function login(infoLogin) {
     console.log("PERMISOS ROL->", permisosRol);
     const payload = {
       id: datosUsuario.id || datosUsuario.id_usuario,
+      nombre: datosUsuario.nombre,
       email: datosUsuario.email,
-      rol: datosUsuario.id_rol,
+      nombre_rol: datosUsuario.nombre_rol,
+      id_rol: datosUsuario.id_rol,
       permisos: permisosRol,
     };
+
+    console.log("PAYLOAD PARA TOKEN->", payload);
 
     // Generamos token de sesión
     const token = jwt.sign(

@@ -5,6 +5,7 @@ import RolPermiso from "./rol-permisos-model.js";
 
 Usuario.belongsTo(Rol, {
   foreignKey: "id_rol",
+  as: "rol", // Alias para incluir el rol al obtener un usuario
 });
 
 Rol.hasMany(Usuario, {

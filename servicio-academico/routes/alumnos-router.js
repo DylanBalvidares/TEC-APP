@@ -3,6 +3,7 @@ import {
   crearAlumno,
   obtenerAlumno,
   obtenerTodosAlumnos,
+  obtenerAlumnosCurso,
   eliminarAlumno,
   modificarAlumno,
 } from "../controllers/alumnos-controller.js";
@@ -23,6 +24,15 @@ alumnosRouter.get("/alumnos/:id", comprobarPermiso("administrativo_ver_todos_alu
 alumnosRouter.get("/alumnos", comprobarPermiso("administrativo_ver_todos_alumnos"), async (req, res) => {
   try {
     const alumnos = await obtenerTodosAlumnos();
+    return res.status(200).json(alumnos);
+  } catch (error) {
+    return res.status(error.status).json(error.message);
+  }
+});
+
+alumnosRouter.get("/alumnos/curso/:id", comprobarPermiso("administrativo_ver_todos_alumnos"), async (req, res) => {
+  try {
+    const alumnos = await obtenerAlumnosCurso(req.params.id);
     return res.status(200).json(alumnos);
   } catch (error) {
     return res.status(error.status).json(error.message);
@@ -50,17 +60,9 @@ alumnosRouter.delete("/alumnos/:id", comprobarPermiso("administrativo_eliminar_a
 });
 
 alumnosRouter.patch("/alumnos", comprobarPermiso("administrativo_editar_alumno"), async (req, res) => {
-  const { id_alumno, nombre, apellido, dni, id_curso } = req.body;
   try {
-    const alumno = {
-      id_alumno: id_alumno,
-      nombre: nombre,
-      apellido: apellido,
-      dni: dni,
-      id_curso: id_curso,
-    };
-
-    const resultado = await modificarAlumno(alumno);
+    // CORRECCIÓN: Pasamos el req.body completo para que el controller actualice todos los campos
+    const resultado = await modificarAlumno(req.body);
     return res.status(200).json(resultado);
   } catch (error) {
     return res.status(error.status).json(error.message);

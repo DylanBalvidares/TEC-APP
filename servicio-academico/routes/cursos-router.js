@@ -50,21 +50,12 @@ cursosRouter.delete("/cursos/:id", comprobarPermiso("administrativo_eliminar_cur
 });
 
 cursosRouter.patch("/cursos", comprobarPermiso("administrativo_editar_curso"), async (req, res) => {
-  const { id_curso, nombre_curso, turno, aula } = req.body;
-  console.log("CURSOS-ROUTER:", req.body);
   try {
-    const curso = {
-      id_curso: id_curso,
-      nombre_curso: nombre_curso,
-      turno: turno,
-      aula: aula,
-    };
-
-    const resultado = await modificarCurso(curso);
-    return res.status(200).json(resultado);
-  } catch (error) {
-    return res.status(error.status).json(error.message);
-  }
+      const curso = await modificarCurso(req.body);
+      return res.status(201).json(curso);
+    } catch (error) {
+      return res.status(error.status || 500).json(error.message);
+    }
 });
 
 export default cursosRouter;

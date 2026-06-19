@@ -4,6 +4,8 @@ import * as comunicadosCtrl from "../controllers/comunicados-controller.js";
 import * as objetosCtrl from "../controllers/objetos-perdidos-controller.js";
 import upload from "../middlewares/uploads.js";
 
+// ====== FALTA IMPLEMENTAR EL CHEQUEO DE PERMISOS(AUTORIZACION) ======
+
 const router = Router();
 
 // === RUTAS DE NOTICIAS ===
