@@ -65,8 +65,9 @@ export async function crearNoticia(datos, archivo) {
       throw new ErrorHandler(400, "Título y contenido son requeridos");
     }
 
-    const nombreImagen = archivo.filename || null;
-    const imagenPath = archivo.path || null;
+    // 1. SOLUCIÓN AL ERROR: Agregar el signo de interrogación (?.)
+    const nombreImagen = archivo?.filename || null;
+    const imagenPath = archivo?.path || null;
 
     const noticia = await Noticia.create({
       titulo: titulo,
@@ -77,7 +78,9 @@ export async function crearNoticia(datos, archivo) {
       fecha: new Date(),
     });
 
-    const imagenUrl = `http://servicio-comunidad:3305/uploads/${nombreImagen}`;
+    const imagenUrl = nombreImagen
+      ? `http://servicio-comunidad:3305/uploads/${nombreImagen}`
+      : null;
 
     return {
       noticia,

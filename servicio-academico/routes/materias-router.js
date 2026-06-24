@@ -67,11 +67,13 @@ materiasRouter.patch(
   "/materias",
   comprobarPermiso("administrativo_editar_materia"),
   async (req, res) => {
-    const { id_materia, nombre_materia } = req.body;
+    const { id_materia, nombre_materia, carga_horaria, descripcion } = req.body;
     try {
       const materia = {
         id_materia,
         nombre_materia,
+        carga_horaria,
+        descripcion,
       };
 
       const resultado = await modificarMateria(materia);

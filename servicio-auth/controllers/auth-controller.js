@@ -2,47 +2,50 @@ import ErrorHandler from "../ErrorHandler.js";
 import axios from "axios";
 import jwt from "jsonwebtoken";
 
+// Configuración de variables de entorno
+import dotenv from "dotenv";
+dotenv.config();
+
+const USER_SERVICE_URL = process.env.USER_SERVICE_URL || "http://servicio-usuarios:3310";
+const JWT_SECRET = process.env.JWT_SECRET || "clave_secreta_super_segura";
+const JWT_EXPIRES_IN = "2h";
+
 /**
- * Genera un token JWT basado en la información del usuario
+ * Genera un token JWT estandarizado basado en la información del usuario y sus permisos
  */
-function generarToken(usuario) {
-  // Maneja tanto 'id_usuario' como 'id' por consistencia de respuestas
+function generarToken(usuario, permisos = null) {
   const payload = {
-    id_usuario: usuario.id_usuario || usuario.id,
+    id: usuario.id || usuario.id_usuario,
+    nombre: usuario.nombre,
     email: usuario.email,
     id_rol: usuario.id_rol || usuario.rol,
+    nombre_rol: usuario.nombre_rol,
+    ...(permisos && { permisos }), // Agrega los permisos solo si se proporcionan
   };
 
-  const secretKey = process.env.JWT_SECRET || "clave_secreta_super_segura";
-  console.log(`=== JWT_SECRET PROCESADO ===`);
-
-  const opciones = {
-    expiresIn: "2h",
-  };
-
-  return jwt.sign(payload, secretKey, opciones);
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 }
 
-async function obtenerPermisosDeRol(id) {
+/**
+ * Obtiene los permisos asociados a un rol específico desde el microservicio
+ */
+async function obtenerPermisosDeRol(idRol) {
   try {
-    const permisos = await axios.get(
-      `http://servicio-usuarios:3310/apiPermisos/permisos/${id}`,
-    );
+    const respuesta = await axios.get(`${USER_SERVICE_URL}/permisos/${idRol}`);
 
-    console.log("PERMISOS(AXIOS)->", permisos.data);
-
-    if (!permisos.data) {
+    if (!respuesta.data) {
       throw new ErrorHandler(404, "Rol no encontrado");
     }
 
-    return permisos.data;
+    return respuesta.data;
   } catch (error) {
-    if (error instanceof ErrorHandler) {
-      throw error;
-    }
+    if (error instanceof ErrorHandler) throw error;
 
-    console.error("Error en obtenerPermisosDeRol:", error);
-    throw new ErrorHandler(500, "Error interno al obtenerPermisosDeRol");
+    console.error("Error en obtenerPermisosDeRol:", error.message);
+    throw new ErrorHandler(
+      500,
+      "Error interno al obtener los permisos del rol",
+    );
   }
 }
 
@@ -52,63 +55,45 @@ async function obtenerPermisosDeRol(id) {
 async function login(infoLogin) {
   const { email, contrasena } = infoLogin;
 
-  console.log("===== EMAIL ", email);
-  console.log("===== CONTRASENA ", contrasena);
-
   try {
-    // 1. REQ BUSCAR USUARIO POR EMAIL
-    const usuario = await axios.get(
-      `http://servicio-usuarios:3310/apiUsuarios/usuarios/buscar`,
-      { params: { email } },
-    );
-
-    if (!usuario.data) {
-      throw new ErrorHandler(404, "Usuario no encontrado");
-    }
-
-    // 2. SI EL USUARIO EXISTE, INTENTA LOGIN (Verificación de contraseña en DB)
+    // Se elimina la petición 'buscar' redundante. El endpoint 'login' debe resolver ambos casos.
     const respuestaLogin = await axios.post(
-      `http://servicio-usuarios:3310/apiUsuarios/usuarios/login`,
-      { email, contrasena },
+      `${USER_SERVICE_URL}/usuarios/login`,
+      {
+        email,
+        contrasena,
+      },
     );
-
-    if (!respuestaLogin.data) {
-      throw new ErrorHandler(401, "La contraseña es incorrecta");
-    }
 
     const datosUsuario = respuestaLogin.data;
+    if (!datosUsuario) {
+      throw new ErrorHandler(401, "Credenciales inválidas");
+    }
 
+    // Obtención de permisos desde el servicio correspondiente
     const permisosRol = await obtenerPermisosDeRol(datosUsuario.id_rol);
 
-    console.log("PERMISOS ROL->", permisosRol);
-    const payload = {
-      id: datosUsuario.id || datosUsuario.id_usuario,
-      nombre: datosUsuario.nombre,
-      email: datosUsuario.email,
-      nombre_rol: datosUsuario.nombre_rol,
-      id_rol: datosUsuario.id_rol,
-      permisos: permisosRol,
-    };
-
-    console.log("PAYLOAD PARA TOKEN->", payload);
-
-    // Generamos token de sesión
-    const token = jwt.sign(
-      payload,
-      process.env.JWT_SECRET || "clave_secreta_super_segura",
-      { expiresIn: "2h" },
-    );
+    // Reutilización de la función unificada para generar el token
+    const token = generarToken(datosUsuario, permisosRol);
 
     return {
       mensaje: "Login exitoso",
-      token: token,
-      usuario: payload,
+      token,
+      usuario: {
+        id: datosUsuario.id || datosUsuario.id_usuario,
+        nombre: datosUsuario.nombre,
+        email: datosUsuario.email,
+        id_rol: datosUsuario.id_rol,
+        nombre_rol: datosUsuario.nombre_rol,
+        permisos: permisosRol,
+      },
     };
   } catch (error) {
-    // Interceptamos errores de Axios enviados por el servicio-usuarios
+    // Interceptación estructurada de errores de Axios enviados por el microservicio
     if (error.response) {
       const status = error.response.status;
-      const msg = error.response.data?.message || error.response.data || "";
+      const msg =
+        error.response.data?.message || "Error en el servicio de usuarios";
 
       if (status === 400)
         throw new ErrorHandler(400, "Faltan datos para el inicio de sesión");
@@ -116,7 +101,7 @@ async function login(infoLogin) {
       if (status === 401)
         throw new ErrorHandler(401, "La contraseña es incorrecta");
 
-      throw new ErrorHandler(status, msg || "Error en el servicio de usuarios");
+      throw new ErrorHandler(status, msg);
     }
 
     if (error instanceof ErrorHandler) throw error;
@@ -127,16 +112,12 @@ async function login(infoLogin) {
 }
 
 /**
- * REGISTRO: Petición estructurada para delegar la creación al servicio de usuarios
+ * REGISTRO: Delega la creación del usuario al microservicio correspondiente
  */
 async function crearUsuario(datosUsuario) {
   try {
-    console.log("=== ENVIANDO REGISTRO A SERVICIO-USUARIOS ===");
-
-    // BUG FIX: Se cambió la URL para apuntar a la ruta de creación de usuarios
-    // y se le pasa el objeto 'datosUsuario' en el cuerpo del POST.
     const respuestaRegistro = await axios.post(
-      "http://servicio-usuarios:3310/apiUsuarios/usuarios",
+      `${USER_SERVICE_URL}/usuarios`,
       datosUsuario,
     );
 
@@ -147,12 +128,9 @@ async function crearUsuario(datosUsuario) {
       );
     }
 
-    // Retorna el usuario creado enviado por la Base de Datos
     return respuestaRegistro.data;
   } catch (error) {
     if (error.response) {
-      // BUG FIX: Si el microservicio de usuarios dice que el email ya existe (ej: 400 o 409),
-      // heredamos ese código y mensaje para no enmascararlo con un 500.
       const status = error.response.status;
       const mensajeApi =
         error.response.data?.message ||
@@ -171,15 +149,12 @@ async function crearUsuario(datosUsuario) {
 }
 
 /**
- * MODIFICAR USUARIO: Actualización de datos del perfil
+ * MODIFICAR USUARIO: Envía actualizaciones parciales del perfil mediante PATCH
  */
 async function modificarUsuario(datosNuevos) {
   try {
-    console.log("=== ENVIANDO ACTUALIZACION A SERVICIO-USUARIOS ===");
-
-    // Envía los cambios al servicio correspondiente mediante PATCH
     const respuestaModificar = await axios.patch(
-      "http://servicio-usuarios:3310/apiUsuarios/usuarios",
+      `${USER_SERVICE_URL}/usuarios`,
       datosNuevos,
     );
 
@@ -208,5 +183,4 @@ async function modificarUsuario(datosNuevos) {
   }
 }
 
-// BUG FIX: Exportación explícita de todos los métodos requeridos por 'auth-routes.js'
 export { generarToken, login, crearUsuario, modificarUsuario };

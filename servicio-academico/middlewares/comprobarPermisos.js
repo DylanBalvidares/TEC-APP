@@ -22,7 +22,7 @@ const comprobarPermiso = (permisoRequerido) => {
       //const idRolUsuario = req.headers["id_rol"]; // intenta obtener el rol desde ambos lugares
 
       const rolConPermisos = await axios.get(
-        `http://servicio-usuarios:3310/apiPermisos/permisos/${rol}`,
+        `http://servicio-usuarios:3310/permisos/${rol}`,
       );
 
       if (!rolConPermisos.data) {

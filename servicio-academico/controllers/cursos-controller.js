@@ -1,9 +1,17 @@
-import { Curso } from "../models/index.js";
+import { Curso, Profesor } from "../models/index.js";
 import ErrorHandler from "../ErrorHandler.js";
 
 async function obtenerTodosCursos() {
   try {
-    const cursos = await Curso.findAll();
+    const cursos = await Curso.findAll({
+      include: [
+        {
+          model: Profesor,
+          as: "profesorTitular",
+          attributes: ["nombre", "apellido"],
+        },
+      ],
+    });
 
     if (!cursos.length) {
       throw new ErrorHandler(404, "No se encontraron cursos");

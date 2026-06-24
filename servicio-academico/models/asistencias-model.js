@@ -11,16 +11,6 @@ const Asistencia = sequelize.define(
       primaryKey: true,
     },
 
-    fecha: {
-      type: DataTypes.DATEONLY, //DATEONLY->ej:"2026-05-04"
-      allowNull: false,
-    },
-
-    estado: {
-      type: DataTypes.ENUM("presente", "ausente", "justificado", "tardanza"),
-      allowNull: false,
-    },
-
     //FK
     id_alumno: {
       type: DataTypes.INTEGER(11),
@@ -38,6 +28,25 @@ const Asistencia = sequelize.define(
       references: {
         model: "cursos",
         key: "id_curso",
+      },
+    },
+
+    fecha: {
+      type: DataTypes.DATEONLY, //DATEONLY->ej:"2026-05-04"
+      allowNull: false,
+    },
+
+    estado: {
+      type: DataTypes.ENUM("presente", "ausente", "justificado", "tarde"),
+      allowNull: false,
+    },
+
+    registrado_por: {
+      type: DataTypes.INTEGER(11),
+      allowNull: false,
+      references: {
+        model: "usuarios",
+        key: "id_usuario",
       },
     },
   },

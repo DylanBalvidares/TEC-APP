@@ -3,6 +3,7 @@ import {
   crearAsignacion,
   obtenerAsignacion,
   obtenerTodasAsignaciones,
+  obtenerAsignacionesProfesor,
   eliminarAsignacion,
   modificarAsignacion,
 } from "../controllers/asignaciones-controller.js";
@@ -23,6 +24,15 @@ asignacionesRouter.get("/asignaciones/:id", comprobarPermiso("administrativo_ver
 asignacionesRouter.get("/asignaciones", comprobarPermiso("administrativo_ver_todos_asignaciones"), async (req, res) => {
   try {
     const asignaciones = await obtenerTodasAsignaciones();
+    return res.status(200).json(asignaciones);
+  } catch (error) {
+    return res.status(error.status).json(error.message);
+  }
+});
+
+asignacionesRouter.get("/asignaciones/profesor/:id", comprobarPermiso("administrativo_ver_todos_asignaciones"), async (req, res) => {
+  try {
+    const asignaciones = await obtenerAsignacionesProfesor(req.params.id);
     return res.status(200).json(asignaciones);
   } catch (error) {
     return res.status(error.status).json(error.message);

@@ -1,9 +1,28 @@
+import { where } from "sequelize";
 import ErrorHandler from "../ErrorHandler.js";
-import { Asignacion } from "../models/index.js";
+import { Asignacion, Curso, Materia, Profesor } from "../models/index.js";
 
 async function obtenerTodasAsignaciones() {
   try {
-    const asignaciones = await Asignacion.findAll();
+    const asignaciones = await Asignacion.findAll({
+      include: [
+        {
+          model: Profesor,
+          as: "profesorAsignacion",
+          attributes: ["nombre", "apellido"],
+        },
+        {
+          model: Materia,
+          as: "materiaAsignacion",
+          attributes: ["nombre_materia"],
+        },
+        {
+          model: Curso,
+          as: "cursoAsignacion",
+          attributes: ["nombre_curso", "aula", "nivel", "turno"],
+        },
+      ],
+    });
 
     if (!asignaciones.length) {
       throw new ErrorHandler(404, "No se encontraron asignaciones");
@@ -13,6 +32,49 @@ async function obtenerTodasAsignaciones() {
   } catch (error) {
     if (error instanceof ErrorHandler) throw error;
     console.error("Error en obtenerTodasAsignaciones:", error);
+    throw new ErrorHandler(500, "Error interno al obtener asignaciones");
+  }
+}
+
+async function obtenerAsignacionesProfesor(id) {
+  try {
+    if (!id || id < 0) {
+      throw new ErrorHandler(400, "ID de profesor inválida");
+    }
+
+    const asignaciones = await Asignacion.findAll({
+      where: {
+        id_profesor: id,
+      },
+      include: [
+        {
+          model: Profesor,
+          as: "profesorAsignacion",
+          attributes: ["nombre", "apellido"],
+        },
+        {
+          model: Materia,
+          as: "materiaAsignacion",
+          attributes: ["nombre_materia"],
+        },
+        {
+          model: Curso,
+          as: "cursoAsignacion",
+          attributes: ["nombre_curso", "aula", "nivel", "turno"],
+        },
+      ],
+    });
+
+    if (!asignaciones.length) {
+      throw new ErrorHandler(404, "No se encontraron asignaciones");
+    }
+
+    return asignaciones;
+  } catch (error) {
+    if (error instanceof ErrorHandler) {
+      throw error;
+    }
+    console.error("Error en obtenerAsignacionesProfesor:", error);
     throw new ErrorHandler(500, "Error interno al obtener asignaciones");
   }
 }
@@ -119,6 +181,7 @@ async function modificarAsignacion(asignacion) {
 export {
   obtenerTodasAsignaciones,
   obtenerAsignacion,
+  obtenerAsignacionesProfesor,
   crearAsignacion,
   eliminarAsignacion,
   modificarAsignacion,

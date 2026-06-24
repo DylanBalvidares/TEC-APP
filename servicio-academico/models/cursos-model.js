@@ -14,7 +14,7 @@ const Curso = sequelize.define("cursos", {
   },
 
   nivel: {
-    type: DataTypes.STRING(50),
+    type: DataTypes.ENUM("Ciclo basico", "Ciclo superior"),
     allowNull: false,
   },
 
@@ -40,7 +40,7 @@ const Curso = sequelize.define("cursos", {
 
   id_profesor_titular: {
     type: DataTypes.INTEGER(11),
-    allowNull: false,
+    allowNull: true,
     references: {
       model: "profesores",
       key: "id_profesor",

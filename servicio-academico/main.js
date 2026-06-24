@@ -10,7 +10,8 @@ import materiasRouter from "./routes/materias-router.js";
 import asignacionesRouter from "./routes/asignaciones-router.js";
 import notasRouter from "./routes/notas-router.js";
 //import autenticar from "./middlewares/autenticar.js";
-import autoridadesRouter from "./routes/autoridades-router.js";
+import personalRouter from "./routes/personal-router.js";
+import cargosRouter from "./routes/cargos-router.js";
 
 const app = express();
 
@@ -25,10 +26,11 @@ app.use("/", alumnosRouter);
 app.use("/", cursosRouter);
 app.use("/", profesoresRouter);
 app.use("/", asistenciasRouter);
-app.use("/", autoridadesRouter);
+app.use("/", personalRouter);
 app.use("/", materiasRouter);
 app.use("/", asignacionesRouter);
 app.use("/", notasRouter);
+app.use("/", cargosRouter);
 
 app.listen(PORT, () => {
   console.log(`== SERVICIO ACADEMICO CORRIENDO EN ${PORT} ==`);

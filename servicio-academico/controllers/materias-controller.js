@@ -68,7 +68,7 @@ async function eliminarMateria(id) {
 }
 
 async function modificarMateria(materia) {
-  const { id_materia, nombre_materia } = materia;
+  const { id_materia, nombre_materia, carga_horaria, descripcion } = materia;
 
   try {
     if (!id_materia || id_materia < 0) {
@@ -78,6 +78,8 @@ async function modificarMateria(materia) {
     const filasAfectadas = await Materia.update(
       {
         nombre_materia,
+        carga_horaria,
+        descripcion,
       },
       {
         where: {

@@ -1,27 +1,23 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../db/conexionDB.js";
 
-const Materia = sequelize.define("materias", {
-  id_materia: {
+const Cargo = sequelize.define("cargos", {
+  id_cargo: {
     type: DataTypes.INTEGER(11),
     primaryKey: true,
     autoIncrement: true,
     allowNull: false,
   },
-  nombre_materia: {
+
+  nombre_cargo: {
     type: DataTypes.STRING(100),
     allowNull: false,
-  },
-
-  carga_horaria: {
-    type: DataTypes.TINYINT,
-    allowNull: false,
+    unique: true,
   },
 
   descripcion: {
     type: DataTypes.TEXT,
-    allowNull: true,
   },
 });
 
-export default Materia;
+export default Cargo;

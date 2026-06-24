@@ -50,7 +50,7 @@ const Alumno = sequelize.define(
     //FK
     id_curso: {
       type: DataTypes.INTEGER(11),
-      allowNull: false,
+      allowNull: true,
       references: {
         model: "cursos",
         key: "id_curso",
