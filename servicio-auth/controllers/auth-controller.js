@@ -2,11 +2,20 @@ import ErrorHandler from "../ErrorHandler.js";
 import axios from "axios";
 import jwt from "jsonwebtoken";
 
+import {
+  crearCodigoVerificacion,
+  guardarCodigoVerificacion,
+  eliminarCodigoVerificacion,
+} from "../controllers/codigoDeVerificacion-controller.js";
+
+import { enviarEmailVerificacion } from "../utils/sendMail.js";
+
 // Configuración de variables de entorno
 import dotenv from "dotenv";
 dotenv.config();
 
-const USER_SERVICE_URL = process.env.USER_SERVICE_URL || "http://servicio-usuarios:3310";
+const USER_SERVICE_URL =
+  process.env.USER_SERVICE_URL || "http://servicio-usuarios:3310";
 const JWT_SECRET = process.env.JWT_SECRET || "clave_secreta_super_segura";
 const JWT_EXPIRES_IN = "2h";
 
@@ -114,12 +123,51 @@ async function login(infoLogin) {
 /**
  * REGISTRO: Delega la creación del usuario al microservicio correspondiente
  */
+
+async function buscarEnPadron(infoPadron) {
+  try {
+    console.log("AUTH CONTROLLER BUSCAR EN PADRON:", infoPadron);
+
+    const respuestaValidacion = await axios.post(
+      `http://servicio-academico:3307/alumnos/validar-identidad`,
+      infoPadron,
+    );
+
+    if (!respuestaValidacion.data) {
+      throw new ErrorHandler(
+        400,
+        "No se pudieron validar los datos de tu registro",
+      );
+    }
+
+    return respuestaValidacion.data;
+  } catch (error) {
+    if (error instanceof ErrorHandler) {
+      throw error;
+    }
+
+    console.error("Error en buscarEnPadron:", error);
+    throw new ErrorHandler(
+      500,
+      "Error interno en el servicio de autenticación al buscarEnPadron",
+    );
+  }
+}
+
 async function crearUsuario(datosUsuario) {
   try {
+    const { nombre, apellido, email, constrasena, id_rol } = datosUsuario;
+
+    console.log("=== DATOS NUEVO USUARIO:", datosUsuario);
+
+    console.log("=== ENVIANDO REGISTRO A SERVICIO-USUARIOS ===");
+
     const respuestaRegistro = await axios.post(
-      `${USER_SERVICE_URL}/usuarios`,
+      `${USER_SERVICE_URL}/usuarios/registro`,
       datosUsuario,
     );
+
+    console.log();
 
     if (!respuestaRegistro.data) {
       throw new ErrorHandler(
@@ -128,8 +176,11 @@ async function crearUsuario(datosUsuario) {
       );
     }
 
+    // Retorna el usuario creado enviado por la Base de Datos
     return respuestaRegistro.data;
   } catch (error) {
+    console.error("STATUS:", error.response?.status); //DEBUG
+    console.error("DATA:", error.response?.data); //DEBUG
     if (error.response) {
       const status = error.response.status;
       const mensajeApi =
@@ -144,6 +195,64 @@ async function crearUsuario(datosUsuario) {
     throw new ErrorHandler(
       500,
       "Error interno en el servicio de autenticación al registrar",
+    );
+  }
+}
+
+async function iniciarRegistro(datosUsuario) {
+  try {
+    const { nacimiento, dni, email } = datosUsuario;
+
+    if (!dni || !nacimiento || !email) {
+      throw new ErrorHandler(400, "Datos mal formados");
+    }
+
+    const infoPadron = { dni, nacimiento };
+
+    const existe = await buscarEnPadron(infoPadron);
+
+    if (!existe) {
+      throw new ErrorHandler(401, "Credenciales inválidas");
+    }
+
+    const codigo = crearCodigoVerificacion();
+
+    if (!codigo) {
+      throw new ErrorHandler(500, "Error al generar codigo de verificacion");
+    }
+
+    const infoCodigo = {
+      email: email,
+      codigo: codigo,
+      tipo: "registro",
+      expiracion: new Date(Date.now() + 15 * 60 * 1000),
+    };
+
+    await guardarCodigoVerificacion(infoCodigo);
+
+    await enviarEmailVerificacion(codigo, email);
+
+    return {
+      message:
+        "El codigo de verificaion fue enviado a tu email(no olvides verificar la seccion de spam)",
+    };
+  } catch (error) {
+    if (error.response) {
+      const status = error.response.status;
+      console.error("Error en iniciarRegistro:", error);
+      const mensajeApi =
+        error.response.data?.message ||
+        "Error al registrar en la base de datos";
+      throw new ErrorHandler(status, mensajeApi);
+    }
+
+    if (error instanceof ErrorHandler) {
+      throw error;
+    }
+
+    throw new ErrorHandler(
+      500,
+      "Error interno en el servicio de autenticación al iniciarRegistro",
     );
   }
 }
@@ -183,4 +292,11 @@ async function modificarUsuario(datosNuevos) {
   }
 }
 
-export { generarToken, login, crearUsuario, modificarUsuario };
+export {
+  generarToken,
+  login,
+  crearUsuario,
+  modificarUsuario,
+  buscarEnPadron,
+  iniciarRegistro,
+};

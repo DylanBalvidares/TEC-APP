@@ -5,8 +5,12 @@ import {
   login,
   crearUsuario,
   modificarUsuario,
+  buscarEnPadron,
+  iniciarRegistro,
 } from "../controllers/auth-controller.js";
 import ErrorHandler from "../ErrorHandler.js";
+
+import { verificarCodigoVerificacion } from "../controllers/codigoDeVerificacion-controller.js";
 
 const authRouter = Router();
 
@@ -36,6 +40,7 @@ authRouter.post("/login", async (req, res) => {
 });
 
 //// ============== REGISTRO ==============
+/*
 authRouter.post("/registro", async (req, res) => {
   try {
     console.log("==== POST REGISTRO ====");
@@ -63,6 +68,35 @@ authRouter.post("/registro", async (req, res) => {
     return res.status(statusCode).json({ ok: false, error: message });
   }
 });
+*/
+
+authRouter.post("/iniciar-registro", async (req, res) => {
+  try {
+    console.log("==== POST REGISTRO ====");
+    console.log("-USUARIO REGISTRANDO:", req.body);
+    console.log("==============");
+
+    // Ahora funciona correctamente gracias a la importación superior
+    const usuario = await iniciarRegistro(req.body);
+
+    const token = generarToken(usuario);
+
+    return res.status(200).json({
+      mensaje: "Registro exitoso",
+      token: token,
+      usuario: usuario,
+    });
+  } catch (error) {
+    console.log("=== ERROR REGISTRO ->", error);
+
+    // BUG FIX: Validación segura del código de estado del error
+    const statusCode = error.status || 400;
+    const message =
+      error.message || "Ocurrió un error al procesar el inicio de registro.";
+
+    return res.status(statusCode).json({ ok: false, error: message });
+  }
+});
 
 //// ============== MODIFICAR USUARIO ==============
 authRouter.patch("/auth/", async (req, res) => {
@@ -79,6 +113,82 @@ authRouter.patch("/auth/", async (req, res) => {
     const message = error.message || "No se pudo modificar el usuario.";
 
     return res.status(statusCode).json({ ok: false, error: message });
+  }
+});
+
+//// ============== BUSCAR EN PADRON ==============
+authRouter.post("/buscar-en-padron", async (req, res) => {
+  try {
+    console.log("==== POST BUSCAR-EN-PADRON ====");
+    console.log(req.body);
+    console.log("==============");
+
+    const verificado = await buscarEnPadron(req.body);
+
+    if (!verificado) {
+      throw new ErrorHandler(404, "No se te encontró en el padrón");
+    }
+
+    return res.status(200).json({
+      valido: true,
+      alumno: verificado.alumno,
+    });
+  } catch (error) {
+    console.log("=== ERROR BUSCAR-EN-PADRON ->", error);
+
+    // BUG FIX: Validación segura del código de estado del error
+    const statusCode = error.status || 400;
+    const message = error.message || "Ocurrió un error al buscarEnPadron.";
+
+    return res.status(statusCode).json({
+      ok: false,
+      error: message,
+    });
+  }
+});
+
+//// ============== CODIGO DE VERIFICACION ==============
+authRouter.post("/verificar-codigo", async (req, res) => {
+  console.log("==== POST VERIFICAR-CODIGO ====");
+  console.log(req.body);
+  console.log("==============");
+  try {
+    const { nombre, apellido, email, codigo, contrasena, id_rol } = req.body;
+
+    const infoCodigo = {
+      email,
+      codigo,
+    };
+
+    const infoUsuario = {
+      nombre,
+      apellido,
+      email,
+      contrasena,
+      id_rol,
+    };
+
+    const verificado = await verificarCodigoVerificacion(infoCodigo);
+
+    const usuario = await crearUsuario(infoUsuario);
+
+    return res.status(200).json({
+      mensaje: "Registro exitoso",
+      usuario: usuario,
+      //      token: token,
+    });
+  } catch (error) {
+    console.log("=== ERROR VERIFICAR CODIGO ->", error);
+    if (error instanceof ErrorHandler) throw error;
+
+    const statusCode = error.status || 400;
+    const message =
+      error.message || "Ocurrió un error al procesar el registro.";
+
+    return res.status(statusCode).json({
+      ok: false,
+      error: message,
+    });
   }
 });
 
