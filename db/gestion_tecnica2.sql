@@ -515,6 +515,25 @@ CREATE TABLE `noticias` (
     CONSTRAINT `fk_noticia_autor` FOREIGN KEY (`autor_id`) REFERENCES `usuarios`(`id_usuario`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+CREATE TABLE `codigos_verificacion` (
+    `id_codigo` INT NOT NULL AUTO_INCREMENT,
+    `email` VARCHAR(255) NOT NULL,
+    `codigo` VARCHAR(6) NOT NULL,
+    `tipo` ENUM('registro','recuperacion_password','cambio_email') NOT NULL DEFAULT 'registro',
+    `expiracion` DATETIME NOT NULL,
+    `usado` BOOLEAN NOT NULL DEFAULT FALSE,
+    `fecha_creacion` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `id_alumno` INT NOT NULL,
+
+    PRIMARY KEY (`id_codigo`),
+
+    CONSTRAINT `fk_codigo_alumno`
+        FOREIGN KEY (`id_alumno`)
+        REFERENCES `alumnos` (`id_alumno`),
+
+    INDEX `idx_email` (`email`),
+    INDEX `idx_codigo` (`codigo`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 -- ============================================================
 -- ÍNDICES DE OPTIMIZACIÓN
 -- ============================================================

@@ -48,26 +48,42 @@ async function eliminarCodigoVerificacion(id) {
 async function verificarCodigoVerificacion(data) {
   try {
     const { email, codigo } = data;
+
     const verificarCodigo = await CodigoVerificacion.findOne({
       where: {
-        email: email,
-        codigo: codigo,
+        email,
+        codigo,
+        usado: false,
       },
     });
 
     if (!verificarCodigo) {
-      throw new ErrorHandler(404, "El codigo que proporcionó es incorrecto!");
+      throw new ErrorHandler(
+        404,
+        "El código que proporcionó es incorrecto o ya fue utilizado.",
+      );
+    }
+
+    if (verificarCodigo.expiracion < new Date()) {
+      throw new ErrorHandler(400, "El código de verificación ha expirado.");
     }
 
     return {
       valido: true,
+      id_alumno: verificarCodigo.id_alumno,
+      email: verificarCodigo.email,
+      tipo: verificarCodigo.tipo,
     };
   } catch (error) {
-    if (error instanceof ErrorHandler) throw error;
+    if (error instanceof ErrorHandler) {
+      throw error;
+    }
+
     console.error("Error en verificarCodigoVerificacion:", error);
+
     throw new ErrorHandler(
       500,
-      "Error interno al verificar codigo verificacion",
+      "Error interno al verificar el código de verificación",
     );
   }
 }
@@ -106,4 +122,5 @@ export {
   guardarCodigoVerificacion,
   eliminarCodigoVerificacion,
   verificarCodigoVerificacion,
+  invalidarCodigoVerificacion,
 };

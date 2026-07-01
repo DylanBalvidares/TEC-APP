@@ -2,6 +2,38 @@ import { where } from "sequelize";
 import ErrorHandler from "../ErrorHandler.js";
 import { Alumno, Curso } from "../models/index.js";
 
+async function validarIdentidadAlumno(data) {
+  const { dni, nacimiento } = data;
+
+  if (!dni || !nacimiento) {
+    throw new ErrorHandler(400, "El dni o la fecha de nacimiento inválida");
+  }
+
+  try {
+    const alumno = await Alumno.findOne({
+      where: {
+        dni: dni,
+        fecha_nacimiento: nacimiento,
+      },
+    });
+
+    if (!alumno) {
+      throw new ErrorHandler(404, "No se encontro el alumno especificado");
+    }
+
+    return {
+      valido: true,
+      alumno: alumno,
+    };
+  } catch (error) {
+    if (error instanceof ErrorHandler) {
+      throw error;
+    }
+    console.error("Error en obtenerAlumnoPorDniYNacimiento:", error);
+    throw new ErrorHandler(500, "Error interno al obtenerAlumno");
+  }
+}
+
 async function obtenerTodosAlumnos() {
   try {
     const alumnos = await Alumno.findAll({
@@ -75,6 +107,65 @@ async function obtenerAlumnosCurso(id) {
   }
 }
 
+async function obtenerAlumnosCursoParaAlumno(id) {
+  try {
+    if (!id || id < 0) {
+      throw new ErrorHandler(400, "ID de curso inválida");
+    }
+
+    const alumnos = await Alumno.findAll({
+      where: {
+        id_curso: id,
+      },
+      attributes: ["nombre", "apellido"],
+    });
+
+    if (!alumnos.length) {
+      throw new ErrorHandler(404, "No se encontraron alumnos asignados");
+    }
+
+    return alumnos;
+  } catch (error) {
+    if (error instanceof ErrorHandler) {
+      throw error;
+    }
+    console.error("Error en obtenerAlumnosCurso:", error);
+    throw new ErrorHandler(500, "Error interno al obtener alumnos");
+  }
+}
+
+async function obtenerInfoParaAlumno(id) {
+  try {
+    if (!id || id < 0) {
+      throw new ErrorHandler(400, "ID de alumno inválida");
+    }
+
+    const alumno = await Alumno.findOne({
+      where: {
+        id_usuario: id,
+      },
+
+      attributes: ["id_alumno", "nombre", "apellido", "estado", "id_curso"],
+    });
+
+    console.log("=== OBTENER-INFO-PARA-ALUMNO:", alumno);
+
+    if (!alumno) {
+      throw new ErrorHandler(404, "No se encontró el alumno especificado");
+    }
+
+    return alumno;
+  } catch (error) {
+    // Esto está excelente para propagar tus errores personalizados
+    if (error instanceof ErrorHandler) {
+      throw error;
+    }
+
+    console.error("Error en obtenerAlumno:", error);
+    throw new ErrorHandler(500, "Error interno al obtener alumno");
+  }
+}
+
 async function crearAlumno(alumno) {
   try {
     const data = await Alumno.create(alumno);
@@ -91,6 +182,32 @@ async function crearAlumno(alumno) {
     }
 
     throw new ErrorHandler(500, "Error interno al crear alumno");
+  }
+}
+
+async function sincronizarUsuarioAlumno(payload) {
+  try {
+    const { idAlumno, idUsuario } = payload;
+
+    if (!idAlumno || idUsuario < 0) {
+      throw new ErrorHandler(400, "ID de alumno/usuario inválida");
+    }
+
+    const data = await Alumno.update(
+      {
+        id_usuario: idUsuario,
+      },
+      {
+        where: {
+          id_alumno: idAlumno,
+        },
+      },
+    );
+
+    return data;
+  } catch (error) {
+    console.error("Error en sincronizarAlumno:", error);
+    throw new ErrorHandler(500, "Error interno al sincronizar alumno");
   }
 }
 
@@ -202,8 +319,12 @@ async function modificarAlumno(alumno) {
 export {
   obtenerTodosAlumnos,
   obtenerAlumnosCurso,
+  validarIdentidadAlumno,
+  obtenerInfoParaAlumno,
+  obtenerAlumnosCursoParaAlumno,
   obtenerAlumno,
   crearAlumno,
+  sincronizarUsuarioAlumno,
   eliminarAlumno,
   modificarAlumno,
 };

@@ -21,6 +21,16 @@ cursosRouter.get("/cursos/:id", comprobarPermiso("admin_ver_todos_cursos"), asyn
   }
 });
 
+cursosRouter.get("/info-curso-alumno/:id", comprobarPermiso("alumno_ver_mi_curso"), async (req, res) => {
+  try {
+    const curso = await obtenerCurso(req.params.id);
+
+    return res.status(200).json(curso);
+  } catch (error) {
+    return res.status(error.status).json(error.message);
+  }
+});
+
 cursosRouter.get("/cursos", comprobarPermiso("administrativo_ver_todos_cursos"), async (req, res) => {
   try {
     const cursos = await obtenerTodosCursos();

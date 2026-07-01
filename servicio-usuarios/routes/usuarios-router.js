@@ -90,8 +90,8 @@ usuariosRouter.delete("/usuarios/:id", async (req, res) => {
   }
 });
 
-//// ============== CREAR USUARIO (Mapeado desde Registro) ==============
-usuariosRouter.post("/usuarios/", async (req, res) => {
+//// ============== CREAR USUARIO ==============
+usuariosRouter.post("/usuarios/registro", async (req, res) => {
   try {
     console.log("==== POST CREAR USUARIO (DB) ====");
     console.log("- DATOS RECIBIDOS:", req.body);

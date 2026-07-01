@@ -4,13 +4,17 @@ import {
   generarToken,
   login,
   crearUsuario,
+  sincronizarUsuarioAlumno,
   modificarUsuario,
   buscarEnPadron,
   iniciarRegistro,
 } from "../controllers/auth-controller.js";
 import ErrorHandler from "../ErrorHandler.js";
 
-import { verificarCodigoVerificacion } from "../controllers/codigoDeVerificacion-controller.js";
+import {
+  verificarCodigoVerificacion,
+  invalidarCodigoVerificacion,
+} from "../controllers/codigoDeVerificacion-controller.js";
 
 const authRouter = Router();
 
@@ -76,15 +80,11 @@ authRouter.post("/iniciar-registro", async (req, res) => {
     console.log("-USUARIO REGISTRANDO:", req.body);
     console.log("==============");
 
-    // Ahora funciona correctamente gracias a la importación superior
-    const usuario = await iniciarRegistro(req.body);
-
-    const token = generarToken(usuario);
+    const resultado = await iniciarRegistro(req.body);
 
     return res.status(200).json({
-      mensaje: "Registro exitoso",
-      token: token,
-      usuario: usuario,
+      mensaje: "Se envió el código de verificación al correo electrónico.",
+      ...resultado,
     });
   } catch (error) {
     console.log("=== ERROR REGISTRO ->", error);
@@ -172,22 +172,23 @@ authRouter.post("/verificar-codigo", async (req, res) => {
 
     const usuario = await crearUsuario(infoUsuario);
 
+    await sincronizarUsuarioAlumno(verificado.id_alumno, usuario.id_usuario);
+
+    await invalidarCodigoVerificacion(infoCodigo);
+
+    const token = generarToken(usuario);
+
     return res.status(200).json({
       mensaje: "Registro exitoso",
-      usuario: usuario,
-      //      token: token,
+      usuario,
+      token,
     });
   } catch (error) {
-    console.log("=== ERROR VERIFICAR CODIGO ->", error);
-    if (error instanceof ErrorHandler) throw error;
+    console.error("=== ERROR VERIFICAR CODIGO ->", error);
 
-    const statusCode = error.status || 400;
-    const message =
-      error.message || "Ocurrió un error al procesar el registro.";
-
-    return res.status(statusCode).json({
+    return res.status(error.status || 500).json({
       ok: false,
-      error: message,
+      error: error.message || "Ocurrió un error al procesar el registro.",
     });
   }
 });

@@ -44,7 +44,7 @@ const comprobarPermiso = (permisoRequerido) => {
         return next(
           new ErrorHandler(
             403,
-            `Acceso denegado: No tenés el permiso necesario`,
+            `Acceso denegado: No tenés el permiso necesario->(${permisoRequerido}`,
             //`Acceso denegado: No tenés el permiso necesario (${permisoRequerido})`,DEBUG
           ),
         );

@@ -154,9 +154,34 @@ async function buscarEnPadron(infoPadron) {
   }
 }
 
+async function sincronizarUsuarioAlumno(idAlumno, idUsuario) {
+  try {
+    const payload = {
+      idAlumno,
+      idUsuario,
+    };
+    const response = await axios.patch(
+      `http://servicio-academico:3307/alumnos/sincronizar-usuario-alumno`,
+      payload,
+    );
+
+    if (!response.data) {
+      throw new ErrorHandler(
+        400,
+        "No se pudo sincronizar tu usuario con tu respectivo alumno",
+      );
+    }
+
+    return response.data;
+  } catch (error) {
+    console.log("=== ERROR EN sincronizarUsuarioAlumno->", error, "===");
+    throw new ErrorHandler(500, "Error en sincronizarUsuarioAlumno");
+  }
+}
+
 async function crearUsuario(datosUsuario) {
   try {
-    const { nombre, apellido, email, constrasena, id_rol } = datosUsuario;
+    const { nombre, apellido, email, contrasena, id_rol } = datosUsuario;
 
     console.log("=== DATOS NUEVO USUARIO:", datosUsuario);
 
@@ -166,8 +191,6 @@ async function crearUsuario(datosUsuario) {
       `${USER_SERVICE_URL}/usuarios/registro`,
       datosUsuario,
     );
-
-    console.log();
 
     if (!respuestaRegistro.data) {
       throw new ErrorHandler(
@@ -211,6 +234,8 @@ async function iniciarRegistro(datosUsuario) {
 
     const existe = await buscarEnPadron(infoPadron);
 
+    const id_alumno = existe.alumno.id_alumno;
+
     if (!existe) {
       throw new ErrorHandler(401, "Credenciales inválidas");
     }
@@ -222,9 +247,10 @@ async function iniciarRegistro(datosUsuario) {
     }
 
     const infoCodigo = {
-      email: email,
-      codigo: codigo,
+      email,
+      codigo,
       tipo: "registro",
+      id_alumno,
       expiracion: new Date(Date.now() + 15 * 60 * 1000),
     };
 
@@ -234,7 +260,7 @@ async function iniciarRegistro(datosUsuario) {
 
     return {
       message:
-        "El codigo de verificaion fue enviado a tu email(no olvides verificar la seccion de spam)",
+        "El codigo de verificacion fue enviado a tu email(no olvides verificar la seccion de spam)",
     };
   } catch (error) {
     if (error.response) {
@@ -250,6 +276,7 @@ async function iniciarRegistro(datosUsuario) {
       throw error;
     }
 
+    console.log("ERROR INICIAR REGISTRO:", error);
     throw new ErrorHandler(
       500,
       "Error interno en el servicio de autenticación al iniciarRegistro",
@@ -296,6 +323,7 @@ export {
   generarToken,
   login,
   crearUsuario,
+  sincronizarUsuarioAlumno,
   modificarUsuario,
   buscarEnPadron,
   iniciarRegistro,

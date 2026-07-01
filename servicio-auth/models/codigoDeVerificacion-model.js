@@ -36,6 +36,10 @@ const codigoVerificacion = sequelize.define(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
+    id_alumno: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
   },
   {
     tableName: "codigos_verificacion",
