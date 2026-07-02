@@ -34,10 +34,10 @@ export async function enviarEmailVerificacion(codigo, email) {
       throw new ErrorHandler(500, "Error al intentar enviarEmail");
     }
 
-    console.log("=== ENVIAR EMAIL:", info);
+    console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m ENVIAR EMAIL:", info);
     return info;
   } catch (error) {
-    console.error("=== ERROR NODEMAILER ===");
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m NODEMAILER");
     console.error(error);
     if (error instanceof ErrorHandler) {
       throw error;

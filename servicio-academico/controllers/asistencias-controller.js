@@ -2,6 +2,7 @@ import ErrorHandler from "../ErrorHandler.js";
 import { Alumno, Asistencia } from "../models/index.js";
 
 async function obtenerTodosAsistencias() {
+  console.log("\x1b[1m\x1b[34m[CTRL]\x1b[0m Ejecutando controlador: obtenerTodosAsistencias");
   try {
     const asistencias = await Asistencia.findAll();
 
@@ -14,12 +15,13 @@ async function obtenerTodosAsistencias() {
     if (error instanceof ErrorHandler) {
       throw error;
     }
-    console.error("Error en obtenerTodosAsistencias:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en obtenerTodosAsistencias:", error);
     throw new ErrorHandler(500, "Error interno al obtener asistencias");
   }
 }
 
 async function obtenerTodosAsistenciasCurso(id) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: obtenerTodosAsistenciasCurso");
   try {
     const asistencias = await Asistencia.findAll({
       where: {
@@ -43,12 +45,13 @@ async function obtenerTodosAsistenciasCurso(id) {
     if (error instanceof ErrorHandler) {
       throw error;
     }
-    console.error("Error en obtenerTodosAsistencias:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en obtenerTodosAsistencias:", error);
     throw new ErrorHandler(500, "Error interno al obtener asistencias");
   }
 }
 
 async function obtenerAsistencia(id) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: obtenerAsistencia");
   try {
     if (!id || id < 0) {
       throw new ErrorHandler(400, "ID de asistencia inválida");
@@ -65,17 +68,18 @@ async function obtenerAsistencia(id) {
     if (error instanceof ErrorHandler) {
       throw error;
     }
-    console.error("Error en obtenerAsistencia:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en obtenerAsistencia:", error);
     throw new ErrorHandler(500, "Error interno al buscar la asistencia");
   }
 }
 
 async function crearAsistencia(asistencia) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: crearAsistencia");
   try {
     const data = await Asistencia.create(asistencia);
     return data;
   } catch (error) {
-    console.error("Error en crearAsistencia:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en crearAsistencia:", error);
 
     if (error.name === "SequelizeForeignKeyConstraintError") {
       throw new ErrorHandler(400, "El ID de alumno especificado no existe");
@@ -86,6 +90,7 @@ async function crearAsistencia(asistencia) {
 }
 
 async function eliminarAsistencia(id) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: eliminarAsistencia");
   try {
     const filasBorradas = await Asistencia.destroy({
       where: {
@@ -102,14 +107,15 @@ async function eliminarAsistencia(id) {
     if (error instanceof ErrorHandler) {
       throw error;
     }
-    console.error("Error en eliminarAsistencia:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en eliminarAsistencia:", error);
     throw new ErrorHandler(500, "Error interno al eliminar la asistencia");
   }
 }
 
 async function modificarAsistencia(asistencia) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: modificarAsistencia");
   const { id_asistencia, fecha, estado, id_alumno } = asistencia;
-  console.log("ASISTENCIAS-CONTROLLER:", asistencia);
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m ASISTENCIAS-CONTROLLER:", asistencia);
   try {
     if (!id_asistencia || id_asistencia < 0) {
       throw new ErrorHandler(400, "ID invalida");
@@ -134,7 +140,7 @@ async function modificarAsistencia(asistencia) {
 
     return filasAfectadas;
   } catch (error) {
-    console.error("Error en modificarAsistencia:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en modificarAsistencia:", error);
     if (error instanceof ErrorHandler) {
       throw error;
     }
@@ -152,6 +158,7 @@ async function modificarAsistencia(asistencia) {
 
 // Agregamos un segundo parámetro para recibir el ID del usuario
 async function guardarAsistenciasLote(datosLote) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: guardarAsistenciasLote");
   // CORRECCIÓN 1: Desestructurar desde datosLote.payload
   const { registrado_por, id_curso, fecha, registros } = datosLote.payload;
 

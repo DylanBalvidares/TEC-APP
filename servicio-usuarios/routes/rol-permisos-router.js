@@ -5,6 +5,7 @@ import obtenerPermisosDeRol from "../controllers/rol-permisos-controller.js";
 const rolPermisosRouter = Router();
 
 rolPermisosRouter.get("/permisos/:id", async (req, res) => {
+    
   try {
     const permisos = await obtenerPermisosDeRol(req.params.id);
 
@@ -15,6 +16,7 @@ rolPermisosRouter.get("/permisos/:id", async (req, res) => {
 });
 
 rolPermisosRouter.get("/permisos", async (req, res) => {
+    
   try {
     const idRol = req.query.id;
     if (!idRol) {

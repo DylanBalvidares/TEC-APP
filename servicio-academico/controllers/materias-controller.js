@@ -2,6 +2,7 @@ import ErrorHandler from "../ErrorHandler.js";
 import { Materia } from "../models/index.js";
 
 async function obtenerTodasMaterias() {
+  console.log("\x1b[1m\x1b[34m[CTRL]\x1b[0m Ejecutando controlador: obtenerTodasMaterias");
   try {
     const materias = await Materia.findAll();
 
@@ -12,12 +13,13 @@ async function obtenerTodasMaterias() {
     return materias;
   } catch (error) {
     if (error instanceof ErrorHandler) throw error;
-    console.error("Error en obtenerTodasMaterias:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en obtenerTodasMaterias:", error);
     throw new ErrorHandler(500, "Error interno al obtener materias");
   }
 }
 
 async function obtenerMateria(id) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: obtenerMateria");
   try {
     if (!id || id < 0) {
       throw new ErrorHandler(400, "ID de materia inválida");
@@ -32,22 +34,24 @@ async function obtenerMateria(id) {
     return materia;
   } catch (error) {
     if (error instanceof ErrorHandler) throw error;
-    console.error("Error en obtenerMateria:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en obtenerMateria:", error);
     throw new ErrorHandler(500, "Error interno al obtener materia");
   }
 }
 
 async function crearMateria(materia) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: crearMateria");
   try {
     const data = await Materia.create(materia);
     return data;
   } catch (error) {
-    console.error("Error en crearMateria:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en crearMateria:", error);
     throw new ErrorHandler(500, "Error interno al crear materia");
   }
 }
 
 async function eliminarMateria(id) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: eliminarMateria");
   try {
     const filasBorradas = await Materia.destroy({
       where: {
@@ -62,12 +66,13 @@ async function eliminarMateria(id) {
     return filasBorradas;
   } catch (error) {
     if (error instanceof ErrorHandler) throw error;
-    console.error("Error en eliminarMateria:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en eliminarMateria:", error);
     throw new ErrorHandler(500, "Error interno al eliminar materia");
   }
 }
 
 async function modificarMateria(materia) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: modificarMateria");
   const { id_materia, nombre_materia, carga_horaria, descripcion } = materia;
 
   try {
@@ -95,7 +100,7 @@ async function modificarMateria(materia) {
     return filasAfectadas;
   } catch (error) {
     if (error instanceof ErrorHandler) throw error;
-    console.error("Error en modificarMateria:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en modificarMateria:", error);
     throw new ErrorHandler(500, "Error interno al modificar materia");
   }
 }

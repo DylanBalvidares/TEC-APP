@@ -3,6 +3,7 @@ import ErrorHandler from "../ErrorHandler.js";
 import { Asignacion, Curso, Materia, Profesor } from "../models/index.js";
 
 async function obtenerTodasAsignaciones() {
+  console.log("\x1b[1m\x1b[34m[CTRL]\x1b[0m Ejecutando controlador: obtenerTodasAsignaciones");
   try {
     const asignaciones = await Asignacion.findAll({
       include: [
@@ -31,12 +32,13 @@ async function obtenerTodasAsignaciones() {
     return asignaciones;
   } catch (error) {
     if (error instanceof ErrorHandler) throw error;
-    console.error("Error en obtenerTodasAsignaciones:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en obtenerTodasAsignaciones:", error);
     throw new ErrorHandler(500, "Error interno al obtener asignaciones");
   }
 }
 
 async function obtenerAsignacionesProfesor(id) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: obtenerAsignacionesProfesor");
   try {
     if (!id || id < 0) {
       throw new ErrorHandler(400, "ID de profesor inválida");
@@ -74,12 +76,13 @@ async function obtenerAsignacionesProfesor(id) {
     if (error instanceof ErrorHandler) {
       throw error;
     }
-    console.error("Error en obtenerAsignacionesProfesor:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en obtenerAsignacionesProfesor:", error);
     throw new ErrorHandler(500, "Error interno al obtener asignaciones");
   }
 }
 
 async function obtenerAsignacion(id) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: obtenerAsignacion");
   try {
     if (!id || id < 0) {
       throw new ErrorHandler(400, "ID de asignación inválida");
@@ -94,17 +97,18 @@ async function obtenerAsignacion(id) {
     return asignacion;
   } catch (error) {
     if (error instanceof ErrorHandler) throw error;
-    console.error("Error en obtenerAsignacion:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en obtenerAsignacion:", error);
     throw new ErrorHandler(500, "Error interno al obtener asignación");
   }
 }
 
 async function crearAsignacion(asignacion) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: crearAsignacion");
   try {
     const data = await Asignacion.create(asignacion);
     return data;
   } catch (error) {
-    console.error("Error en crearAsignacion:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en crearAsignacion:", error);
 
     if (error.name === "SequelizeForeignKeyConstraintError") {
       throw new ErrorHandler(
@@ -118,6 +122,7 @@ async function crearAsignacion(asignacion) {
 }
 
 async function eliminarAsignacion(id) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: eliminarAsignacion");
   try {
     const filasBorradas = await Asignacion.destroy({
       where: {
@@ -132,12 +137,13 @@ async function eliminarAsignacion(id) {
     return filasBorradas;
   } catch (error) {
     if (error instanceof ErrorHandler) throw error;
-    console.error("Error en eliminarAsignacion:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en eliminarAsignacion:", error);
     throw new ErrorHandler(500, "Error interno al eliminar asignación");
   }
 }
 
 async function modificarAsignacion(asignacion) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: modificarAsignacion");
   const { id_asignacion, id_curso, id_materia, id_profesor } = asignacion;
 
   try {
@@ -165,7 +171,7 @@ async function modificarAsignacion(asignacion) {
     return filasAfectadas;
   } catch (error) {
     if (error instanceof ErrorHandler) throw error;
-    console.error("Error en modificarAsignacion:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en modificarAsignacion:", error);
 
     if (error.name === "SequelizeForeignKeyConstraintError") {
       throw new ErrorHandler(

@@ -4,6 +4,7 @@ import obtenerTodosRoles from "../controllers/roles-controller.js";
 const rolesRouter = Router();
 
 rolesRouter.get("/roles", async (req, res) => {
+    
   try {
     const data = await obtenerTodosRoles();
     res.status(200).json(data);

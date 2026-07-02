@@ -4,6 +4,7 @@ import * as controller from "../controllers/cargos-controller.js";
 const cargosRouter = express.Router();
 
 cargosRouter.get("/cargos", async (req, res) => {
+    
   try {
     const data = await controller.obtenerTodosCargos();
     res.status(200).json(data);
@@ -13,6 +14,7 @@ cargosRouter.get("/cargos", async (req, res) => {
 });
 
 cargosRouter.get("cargos/:id", async (req, res) => {
+    
   try {
     const data = await controller.obtenerCargo(req.params.id);
     res.status(200).json(data);
@@ -22,6 +24,7 @@ cargosRouter.get("cargos/:id", async (req, res) => {
 });
 
 cargosRouter.post("/cargos", async (req, res) => {
+    
   try {
     const data = await controller.crearCargo(req.body);
     res.status(201).json(data);
@@ -31,6 +34,7 @@ cargosRouter.post("/cargos", async (req, res) => {
 });
 
 cargosRouter.patch("cargos/:id", async (req, res) => {
+    
   try {
     const data = await controller.modificarCargo({
       ...req.body,
@@ -44,6 +48,7 @@ cargosRouter.patch("cargos/:id", async (req, res) => {
 });
 
 cargosRouter.delete("cargos/:id", async (req, res) => {
+    
   try {
     await controller.eliminarCargo(req.params.id);
     res.status(204).send();

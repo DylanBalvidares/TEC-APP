@@ -2,6 +2,7 @@ import ErrorHandler from "../ErrorHandler.js";
 import { Profesor } from "../models/index.js";
 
 async function obtenerTodosProfesores() {
+  console.log("\x1b[1m\x1b[34m[CTRL]\x1b[0m Ejecutando controlador: obtenerTodosProfesores");
   try {
     const profesores = await Profesor.findAll();
 
@@ -12,12 +13,13 @@ async function obtenerTodosProfesores() {
     return profesores;
   } catch (error) {
     if (error instanceof ErrorHandler) throw error;
-    console.error("Error en obtenerTodosProfesores:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en obtenerTodosProfesores:", error);
     throw new ErrorHandler(500, "Error interno al obtener profesores");
   }
 }
 
 async function obtenerProfesor(id) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: obtenerProfesor");
   try {
     if (!id || id < 0) {
       throw new ErrorHandler(400, "ID de profesor inválida");
@@ -34,17 +36,18 @@ async function obtenerProfesor(id) {
     if (error instanceof ErrorHandler) {
       throw error;
     }
-    console.error("Error en obtenerProfesor:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en obtenerProfesor:", error);
     throw new ErrorHandler(500, "Error interno al buscar profesor");
   }
 }
 
 async function crearProfesor(profesor) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: crearProfesor");
   try {
     const data = await Profesor.create(profesor);
     return data;
   } catch (error) {
-    console.error("Error en crearProfesor:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en crearProfesor:", error);
 
     if (error.name === "SequelizeUniqueConstraintError") {
       throw new ErrorHandler(
@@ -58,6 +61,7 @@ async function crearProfesor(profesor) {
 }
 
 async function eliminarProfesor(id) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: eliminarProfesor");
   try {
     const filasBorradas = await Profesor.destroy({
       where: {
@@ -74,12 +78,13 @@ async function eliminarProfesor(id) {
     if (error instanceof ErrorHandler) {
       throw error;
     }
-    console.error("Error en eliminarProfesor:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en eliminarProfesor:", error);
     throw new ErrorHandler(500, "Error interno al eliminar profesor");
   }
 }
 
 async function modificarProfesor(profesor) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: modificarProfesor");
   const {
     id_profesor,
     nombre,
@@ -127,7 +132,7 @@ async function modificarProfesor(profesor) {
 
     return filasAfectadas;
   } catch (error) {
-    console.error("Error en modificarProfesor:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en modificarProfesor:", error);
     if (error instanceof ErrorHandler) {
       throw error;
     }

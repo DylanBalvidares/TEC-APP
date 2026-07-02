@@ -17,6 +17,7 @@ asistenciasRouter.get(
   "/asistencias/curso/:id",
   comprobarPermiso("profesor_gestionar_asistencias"),
   async (req, res) => {
+    
     try {
       const asistencia = await obtenerTodosAsistenciasCurso(req.params.id);
 
@@ -31,6 +32,7 @@ asistenciasRouter.get(
   "/asistencias/:id",
   comprobarPermiso("profesor_gestionar_asistencias"),
   async (req, res) => {
+    
     try {
       const asistencia = await obtenerAsistencia(req.params.id);
 
@@ -45,6 +47,7 @@ asistenciasRouter.get(
   "/asistencias",
   comprobarPermiso("profesor_gestionar_asistencias"),
   async (req, res) => {
+    
     try {
       const asistencias = await obtenerTodosAsistencias();
       return res.status(200).json(asistencias);
@@ -59,6 +62,7 @@ asistenciasRouter.post(
   "/asistencias/lote",
   comprobarPermiso("profesor_gestionar_asistencias"),
   async (req, res) => {
+    
     console.log(JSON.stringify(req.body, null, 2));
 
     try {
@@ -78,6 +82,7 @@ asistenciasRouter.post(
   "/asistencias/:asistencia",
   comprobarPermiso("profesor_gestionar_asistencias"),
   async (req, res) => {
+    
     try {
       const asistencia = await crearAsistencia(req.body);
       return res.status(200).json(asistencia);
@@ -91,6 +96,7 @@ asistenciasRouter.delete(
   "/asistencias/:id",
   comprobarPermiso("profesor_gestionar_asistencias"),
   async (req, res) => {
+    
     try {
       const resultado = await eliminarAsistencia(req.params.id);
       return res.status(200).json(resultado);
@@ -104,6 +110,7 @@ asistenciasRouter.patch(
   "/asistencias/:asistencia",
   comprobarPermiso("profesor_gestionar_asistencias"),
   async (req, res) => {
+    
     const { id_asistencia, fecha, estado, id_alumno } = req.body;
     try {
       const asistencia = {

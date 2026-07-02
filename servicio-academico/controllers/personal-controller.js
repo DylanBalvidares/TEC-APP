@@ -2,6 +2,7 @@ import ErrorHandler from "../ErrorHandler.js";
 import { Cargo, Personal } from "../models/index.js";
 
 async function obtenerTodoPersonal() {
+  console.log("\x1b[1m\x1b[34m[CTRL]\x1b[0m Ejecutando controlador: obtenerTodoPersonal");
   try {
     const personal = await Personal.findAll({
       include: [
@@ -20,12 +21,13 @@ async function obtenerTodoPersonal() {
     return personal;
   } catch (error) {
     if (error instanceof ErrorHandler) throw error;
-    console.error("Error en obtenerTodoPersonal:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en obtenerTodoPersonal:", error);
     throw new ErrorHandler(500, "Error interno al obtener personal");
   }
 }
 
 async function obtenerPersonal(id) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: obtenerPersonal");
   try {
     if (!id || id < 0) {
       throw new ErrorHandler(400, "ID de personal inválida");
@@ -40,17 +42,18 @@ async function obtenerPersonal(id) {
     return personal;
   } catch (error) {
     if (error instanceof ErrorHandler) throw error;
-    console.error("Error en obtenerPersonal:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en obtenerPersonal:", error);
     throw new ErrorHandler(500, "Error interno al obtener personal");
   }
 }
 
 async function crearPersonal(datosPersonal) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: crearPersonal");
   try {
     const data = await Personal.create(datosPersonal);
     return data;
   } catch (error) {
-    console.error("Error en crearPersonal:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en crearPersonal:", error);
 
     if (error.name === "SequelizeUniqueConstraintError") {
       // Maneja tanto el email duplicado como el id_usuario duplicado
@@ -76,6 +79,7 @@ async function crearPersonal(datosPersonal) {
 }
 
 async function eliminarPersonal(id) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: eliminarPersonal");
   try {
     const filasBorradas = await Personal.destroy({
       where: {
@@ -90,12 +94,13 @@ async function eliminarPersonal(id) {
     return filasBorradas;
   } catch (error) {
     if (error instanceof ErrorHandler) throw error;
-    console.error("Error en eliminarPersonal:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en eliminarPersonal:", error);
     throw new ErrorHandler(500, "Error interno del servidor");
   }
 }
 
 async function modificarPersonal(personalData) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: modificarPersonal");
   // Se actualizan los campos extraídos para coincidir con el modelo Sequelize
   const {
     id_personal,
@@ -147,7 +152,7 @@ async function modificarPersonal(personalData) {
 
     return filasAfectadas;
   } catch (error) {
-    console.error("Error en modificarPersonal:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en modificarPersonal:", error);
     if (error instanceof ErrorHandler) throw error;
 
     if (error.name === "SequelizeUniqueConstraintError") {

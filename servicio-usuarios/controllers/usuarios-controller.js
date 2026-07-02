@@ -4,6 +4,7 @@ import { Usuario, Rol } from "../models/index.js";
 import obtenerPermisosDeRol from "./rol-permisos-controller.js";
 
 async function buscarUsuarioPorEmail(email) {
+  console.log("\x1b[1m\x1b[34m[CTRL]\x1b[0m Ejecutando controlador: buscarUsuarioPorEmail");
   if (!email) {
     throw new ErrorHandler(400, "Email inválido");
   }
@@ -22,12 +23,13 @@ async function buscarUsuarioPorEmail(email) {
     if (error instanceof ErrorHandler) {
       throw error;
     }
-    console.error("Error en buscarUsuarioPorEmail:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en buscarUsuarioPorEmail:", error);
     throw new ErrorHandler(500, "Error interno al buscar el usuario");
   }
 }
 
 async function buscarUsuarioPorDni(dni) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: buscarUsuarioPorDni");
   if (!dni) throw new ErrorHandler(400, "DNI inválido");
 
   try {
@@ -42,12 +44,13 @@ async function buscarUsuarioPorDni(dni) {
     if (error instanceof ErrorHandler) {
       throw error;
     }
-    console.error("Error en buscarUsuarioPorDni:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en buscarUsuarioPorDni:", error);
     throw new ErrorHandler(500, "Error interno al buscar el usuario por DNI");
   }
 }
 
 async function comprobarContrasenaUsuario(email, contrasena) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: comprobarContrasenaUsuario");
   if (!contrasena || !email) {
     throw new ErrorHandler(400, "Email o contraseña inválidos");
   }
@@ -79,12 +82,13 @@ async function comprobarContrasenaUsuario(email, contrasena) {
     };
   } catch (error) {
     if (error instanceof ErrorHandler) throw error;
-    console.error("Error en comprobarContrasenaUsuario:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en comprobarContrasenaUsuario:", error);
     throw new ErrorHandler(500, "Error interno al comprobar la contraseña");
   }
 }
 
 async function obtenerTodosUsuarios() {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: obtenerTodosUsuarios");
   try {
     const usuarios = await Usuario.findAll({
       include: [{ model: Rol, as: "rol", attributes: ["nombre_rol"] }],
@@ -97,12 +101,13 @@ async function obtenerTodosUsuarios() {
     return usuarios;
   } catch (error) {
     if (error instanceof ErrorHandler) throw error;
-    console.error("Error en obtenerTodosUsuarios:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en obtenerTodosUsuarios:", error);
     throw new ErrorHandler(500, "Error interno al obtener usuarios");
   }
 }
 
 async function obtenerUsuario(id) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: obtenerUsuario");
   try {
     if (!id || id < 0) throw new ErrorHandler(400, "ID de usuario inválida");
 
@@ -112,12 +117,13 @@ async function obtenerUsuario(id) {
     return usuario;
   } catch (error) {
     if (error instanceof ErrorHandler) throw error;
-    console.error("Error en obtenerUsuario:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en obtenerUsuario:", error);
     throw new ErrorHandler(500, "Error interno al obtener usuario");
   }
 }
 
 async function crearUsuario(datosUsuario) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: crearUsuario");
   try {
     if (!datosUsuario.contrasena) {
       throw new ErrorHandler(
@@ -144,7 +150,7 @@ async function crearUsuario(datosUsuario) {
       permisos: permisos,
     };
   } catch (error) {
-    console.error("Error en crearUsuario:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en crearUsuario:", error);
     if (error.name === "SequelizeUniqueConstraintError") {
       throw new ErrorHandler(
         400,
@@ -157,6 +163,7 @@ async function crearUsuario(datosUsuario) {
 }
 
 async function eliminarUsuario(id) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: eliminarUsuario");
   try {
     const filasBorradas = await Usuario.destroy({
       where: {
@@ -169,12 +176,13 @@ async function eliminarUsuario(id) {
     return filasBorradas;
   } catch (error) {
     if (error instanceof ErrorHandler) throw error;
-    console.error("Error en eliminarUsuario:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en eliminarUsuario:", error);
     throw new ErrorHandler(500, "Error interno al eliminar usuario");
   }
 }
 
 async function modificarUsuario(usuario) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: modificarUsuario");
   const { id_usuario, nombre, apellido, email, contrasena, id_rol } = usuario;
 
   try {
@@ -200,7 +208,7 @@ async function modificarUsuario(usuario) {
 
     return { ok: true, message: "Usuario modificado exitosamente" };
   } catch (error) {
-    console.error("Error en modificarUsuario:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en modificarUsuario:", error);
     if (error instanceof ErrorHandler) throw error;
     if (error.name === "SequelizeUniqueConstraintError") {
       throw new ErrorHandler(400, "El email ya está en uso por otro usuario");

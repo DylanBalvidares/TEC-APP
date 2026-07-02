@@ -3,11 +3,11 @@ import axios from "axios";
 
 const comprobarPermiso = (permisoRequerido) => {
   return async (req, res, next) => {
-    console.log("HEADERS(comprobarPermisos):", Object.keys(req.headers)); //DEBUG
+    console.log("[DEBUG] HEADERS(comprobarPermisos):", Object.keys(req.headers)); //DEBUG
     const rol = req.headers["id_rol"];
-    console.log("ROL ID EN COMPROBAR PERMISO:", rol); //DEBUG
+    console.log("[DEBUG] ROL ID EN COMPROBAR PERMISO:", rol); //DEBUG
     const usuario = req.headers["id_usuario"];
-    console.log("USER ID EN COMPROBAR PERMISO:", usuario); //DEBUG
+    console.log("[DEBUG] USER ID EN COMPROBAR PERMISO:", usuario); //DEBUG
 
     try {
       if (!usuario || !rol) {
@@ -34,7 +34,7 @@ const comprobarPermiso = (permisoRequerido) => {
         );
       }
 
-      console.log("ROL CON PERMISOS OBTENIDO:", rolConPermisos.data); //DEBUG
+      console.log("[DEBUG] ROL CON PERMISOS OBTENIDO:", rolConPermisos.data); //DEBUG
 
       const listaDePermisos = rolConPermisos.data;
 

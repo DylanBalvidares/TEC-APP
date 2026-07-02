@@ -18,7 +18,13 @@ const app = express();
 const PORT = 3307;
 
 app.use(cors());
-app.use(express.json()); //PERMITE LEER JSON EN EL BODY DE UN REQUEST
+app.use(express.json());
+// Middleware de log de peticiones
+app.use((req, res, next) => {
+  console.log(`\x1b[1m\x1b[35m[REQ]\x1b[0m ${req.method} ${req.originalUrl}`);
+  next();
+});
+ //PERMITE LEER JSON EN EL BODY DE UN REQUEST
 //app.use(autenticar);
 
 //RUTAS
@@ -33,7 +39,7 @@ app.use("/", notasRouter);
 app.use("/", cargosRouter);
 
 app.listen(PORT, () => {
-  console.log(`== SERVICIO ACADEMICO CORRIENDO EN ${PORT} ==`);
+  console.log(`\x1b[1m\x1b[32m[SUCCESS]\x1b[0m SERVICIO ACADEMICO CORRIENDO EN ${PORT}`);
 });
 
 export default app;

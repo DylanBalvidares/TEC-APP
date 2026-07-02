@@ -39,6 +39,7 @@ function generarToken(usuario, permisos = null) {
  * Obtiene los permisos asociados a un rol específico desde el microservicio
  */
 async function obtenerPermisosDeRol(idRol) {
+  console.log("\x1b[1m\x1b[34m[CTRL]\x1b[0m Ejecutando controlador: obtenerPermisosDeRol");
   try {
     const respuesta = await axios.get(`${USER_SERVICE_URL}/permisos/${idRol}`);
 
@@ -50,7 +51,7 @@ async function obtenerPermisosDeRol(idRol) {
   } catch (error) {
     if (error instanceof ErrorHandler) throw error;
 
-    console.error("Error en obtenerPermisosDeRol:", error.message);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m [ERROR] Error en obtenerPermisosDeRol:", error.message);
     throw new ErrorHandler(
       500,
       "Error interno al obtener los permisos del rol",
@@ -62,6 +63,7 @@ async function obtenerPermisosDeRol(idRol) {
  * Lógica de inicio de sesión comunicándose con el microservicio de usuarios
  */
 async function login(infoLogin) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: login");
   const { email, contrasena } = infoLogin;
 
   try {
@@ -115,7 +117,7 @@ async function login(infoLogin) {
 
     if (error instanceof ErrorHandler) throw error;
 
-    console.error("Error en login:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en login:", error);
     throw new ErrorHandler(500, "Error interno al logear usuario");
   }
 }
@@ -125,8 +127,9 @@ async function login(infoLogin) {
  */
 
 async function buscarEnPadron(infoPadron) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: buscarEnPadron");
   try {
-    console.log("AUTH CONTROLLER BUSCAR EN PADRON:", infoPadron);
+    console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m BUSCAR EN PADRON:", infoPadron);
 
     const respuestaValidacion = await axios.post(
       `http://servicio-academico:3307/alumnos/validar-identidad`,
@@ -146,7 +149,7 @@ async function buscarEnPadron(infoPadron) {
       throw error;
     }
 
-    console.error("Error en buscarEnPadron:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en buscarEnPadron:", error);
     throw new ErrorHandler(
       500,
       "Error interno en el servicio de autenticación al buscarEnPadron",
@@ -155,6 +158,7 @@ async function buscarEnPadron(infoPadron) {
 }
 
 async function sincronizarUsuarioAlumno(idAlumno, idUsuario) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: sincronizarUsuarioAlumno");
   try {
     const payload = {
       idAlumno,
@@ -174,18 +178,19 @@ async function sincronizarUsuarioAlumno(idAlumno, idUsuario) {
 
     return response.data;
   } catch (error) {
-    console.log("=== ERROR EN sincronizarUsuarioAlumno->", error, "===");
+    console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m ERROR EN sincronizarUsuarioAlumno->", error, "===");
     throw new ErrorHandler(500, "Error en sincronizarUsuarioAlumno");
   }
 }
 
 async function crearUsuario(datosUsuario) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: crearUsuario");
   try {
     const { nombre, apellido, email, contrasena, id_rol } = datosUsuario;
 
-    console.log("=== DATOS NUEVO USUARIO:", datosUsuario);
+    console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m DATOS NUEVO USUARIO:", datosUsuario);
 
-    console.log("=== ENVIANDO REGISTRO A SERVICIO-USUARIOS ===");
+    console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m ENVIANDO REGISTRO A SERVICIO-USUARIOS");
 
     const respuestaRegistro = await axios.post(
       `${USER_SERVICE_URL}/usuarios/registro`,
@@ -214,7 +219,7 @@ async function crearUsuario(datosUsuario) {
 
     if (error instanceof ErrorHandler) throw error;
 
-    console.error("Error en crearUsuario:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en crearUsuario:", error);
     throw new ErrorHandler(
       500,
       "Error interno en el servicio de autenticación al registrar",
@@ -223,6 +228,7 @@ async function crearUsuario(datosUsuario) {
 }
 
 async function iniciarRegistro(datosUsuario) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: iniciarRegistro");
   try {
     const { nacimiento, dni, email } = datosUsuario;
 
@@ -265,7 +271,7 @@ async function iniciarRegistro(datosUsuario) {
   } catch (error) {
     if (error.response) {
       const status = error.response.status;
-      console.error("Error en iniciarRegistro:", error);
+      console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en iniciarRegistro:", error);
       const mensajeApi =
         error.response.data?.message ||
         "Error al registrar en la base de datos";
@@ -288,6 +294,7 @@ async function iniciarRegistro(datosUsuario) {
  * MODIFICAR USUARIO: Envía actualizaciones parciales del perfil mediante PATCH
  */
 async function modificarUsuario(datosNuevos) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: modificarUsuario");
   try {
     const respuestaModificar = await axios.patch(
       `${USER_SERVICE_URL}/usuarios`,
@@ -311,7 +318,7 @@ async function modificarUsuario(datosNuevos) {
     }
     if (error instanceof ErrorHandler) throw error;
 
-    console.error("Error en modificarUsuario:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en modificarUsuario:", error);
     throw new ErrorHandler(
       500,
       "Error interno al intentar modificar el usuario",

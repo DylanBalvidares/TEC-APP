@@ -15,6 +15,7 @@ materiasRouter.get(
   "/materias/:id",
   comprobarPermiso("administrativo_ver_todos_materias"),
   async (req, res) => {
+    
     try {
       const materia = await obtenerMateria(req.params.id);
       return res.status(200).json(materia);
@@ -28,6 +29,7 @@ materiasRouter.get(
   "/materias",
   comprobarPermiso("administrativo_ver_todos_materias"),
   async (req, res) => {
+    
     try {
       const materias = await obtenerTodasMaterias();
       return res.status(200).json(materias);
@@ -41,6 +43,7 @@ materiasRouter.post(
   "/materias",
   comprobarPermiso("administrativo_crear_materia"),
   async (req, res) => {
+    
     try {
       const materia = await crearMateria(req.body);
       return res.status(201).json(materia);
@@ -54,6 +57,7 @@ materiasRouter.delete(
   "/materias/:id",
   comprobarPermiso("administrativo_eliminar_materia"),
   async (req, res) => {
+    
     try {
       const resultado = await eliminarMateria(req.params.id);
       return res.status(200).json(resultado);
@@ -67,6 +71,7 @@ materiasRouter.patch(
   "/materias",
   comprobarPermiso("administrativo_editar_materia"),
   async (req, res) => {
+    
     const { id_materia, nombre_materia, carga_horaria, descripcion } = req.body;
     try {
       const materia = {

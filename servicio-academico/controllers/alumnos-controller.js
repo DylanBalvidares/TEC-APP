@@ -3,6 +3,7 @@ import ErrorHandler from "../ErrorHandler.js";
 import { Alumno, Curso } from "../models/index.js";
 
 async function validarIdentidadAlumno(data) {
+  console.log("\x1b[1m\x1b[34m[CTRL]\x1b[0m Ejecutando controlador: validarIdentidadAlumno");
   const { dni, nacimiento } = data;
 
   if (!dni || !nacimiento) {
@@ -29,12 +30,13 @@ async function validarIdentidadAlumno(data) {
     if (error instanceof ErrorHandler) {
       throw error;
     }
-    console.error("Error en obtenerAlumnoPorDniYNacimiento:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en obtenerAlumnoPorDniYNacimiento:", error);
     throw new ErrorHandler(500, "Error interno al obtenerAlumno");
   }
 }
 
 async function obtenerTodosAlumnos() {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: obtenerTodosAlumnos");
   try {
     const alumnos = await Alumno.findAll({
       include: [
@@ -54,12 +56,13 @@ async function obtenerTodosAlumnos() {
     if (error instanceof ErrorHandler) {
       throw error;
     }
-    console.error("Error en obtenerTodosAlumnos:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en obtenerTodosAlumnos:", error);
     throw new ErrorHandler(500, "Error interno al obtener alumnos");
   }
 }
 
 async function obtenerAlumno(id) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: obtenerAlumno");
   try {
     if (!id || id < 0) {
       throw new ErrorHandler(400, "ID de alumno inválida");
@@ -76,12 +79,13 @@ async function obtenerAlumno(id) {
     if (error instanceof ErrorHandler) {
       throw error;
     }
-    console.error("Error en obtenerAlumno:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en obtenerAlumno:", error);
     throw new ErrorHandler(500, "Error interno al obtener alumno");
   }
 }
 
 async function obtenerAlumnosCurso(id) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: obtenerAlumnosCurso");
   try {
     if (!id || id < 0) {
       throw new ErrorHandler(400, "ID de curso inválida");
@@ -102,12 +106,13 @@ async function obtenerAlumnosCurso(id) {
     if (error instanceof ErrorHandler) {
       throw error;
     }
-    console.error("Error en obtenerAlumnosCurso:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en obtenerAlumnosCurso:", error);
     throw new ErrorHandler(500, "Error interno al obtener alumnos");
   }
 }
 
 async function obtenerAlumnosCursoParaAlumno(id) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: obtenerAlumnosCursoParaAlumno");
   try {
     if (!id || id < 0) {
       throw new ErrorHandler(400, "ID de curso inválida");
@@ -129,12 +134,13 @@ async function obtenerAlumnosCursoParaAlumno(id) {
     if (error instanceof ErrorHandler) {
       throw error;
     }
-    console.error("Error en obtenerAlumnosCurso:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en obtenerAlumnosCurso:", error);
     throw new ErrorHandler(500, "Error interno al obtener alumnos");
   }
 }
 
 async function obtenerInfoParaAlumno(id) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: obtenerInfoParaAlumno");
   try {
     if (!id || id < 0) {
       throw new ErrorHandler(400, "ID de alumno inválida");
@@ -148,7 +154,7 @@ async function obtenerInfoParaAlumno(id) {
       attributes: ["id_alumno", "nombre", "apellido", "estado", "id_curso"],
     });
 
-    console.log("=== OBTENER-INFO-PARA-ALUMNO:", alumno);
+    console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m OBTENER-INFO-PARA-ALUMNO:", alumno);
 
     if (!alumno) {
       throw new ErrorHandler(404, "No se encontró el alumno especificado");
@@ -161,17 +167,18 @@ async function obtenerInfoParaAlumno(id) {
       throw error;
     }
 
-    console.error("Error en obtenerAlumno:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en obtenerAlumno:", error);
     throw new ErrorHandler(500, "Error interno al obtener alumno");
   }
 }
 
 async function crearAlumno(alumno) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: crearAlumno");
   try {
     const data = await Alumno.create(alumno);
     return data;
   } catch (error) {
-    console.error("Error en crearAlumno:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en crearAlumno:", error);
 
     if (error.name === "SequelizeUniqueConstraintError") {
       throw new ErrorHandler(400, "El DNI o ID de Usuario ingresado ya existe");
@@ -186,6 +193,7 @@ async function crearAlumno(alumno) {
 }
 
 async function sincronizarUsuarioAlumno(payload) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: sincronizarUsuarioAlumno");
   try {
     const { idAlumno, idUsuario } = payload;
 
@@ -206,12 +214,13 @@ async function sincronizarUsuarioAlumno(payload) {
 
     return data;
   } catch (error) {
-    console.error("Error en sincronizarAlumno:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en sincronizarAlumno:", error);
     throw new ErrorHandler(500, "Error interno al sincronizar alumno");
   }
 }
 
 async function eliminarAlumno(id) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: eliminarAlumno");
   try {
     const filasBorradas = await Alumno.destroy({
       where: {
@@ -228,12 +237,13 @@ async function eliminarAlumno(id) {
     if (error instanceof ErrorHandler) {
       throw error;
     }
-    console.error("Error en eliminarAlumno:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en eliminarAlumno:", error);
     throw new ErrorHandler(500, "Error interno del servidor");
   }
 }
 
 async function modificarAlumno(alumno) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: modificarAlumno");
   // Desestructuramos todos los campos definidos en el modelo
   const {
     id_alumno,
@@ -249,7 +259,7 @@ async function modificarAlumno(alumno) {
     id_usuario,
   } = alumno;
 
-  console.log("ALUMNOS-CONTROLLER:", alumno);
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m ALUMNOS-CONTROLLER:", alumno);
 
   try {
     // CORRECCIÓN: Validamos el id_alumno, no el id_curso
@@ -286,7 +296,7 @@ async function modificarAlumno(alumno) {
 
     return filasAfectadas;
   } catch (error) {
-    console.error("Error en modificarAlumno:", error);
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en modificarAlumno:", error);
 
     if (error instanceof ErrorHandler) {
       throw error;

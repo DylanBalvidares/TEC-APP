@@ -2,6 +2,7 @@ import { Curso, Profesor } from "../models/index.js";
 import ErrorHandler from "../ErrorHandler.js";
 
 async function obtenerTodosCursos() {
+  console.log("\x1b[1m\x1b[34m[CTRL]\x1b[0m Ejecutando controlador: obtenerTodosCursos");
   try {
     const cursos = await Curso.findAll({
       include: [
@@ -22,12 +23,13 @@ async function obtenerTodosCursos() {
     if (error instanceof ErrorHandler) {
       throw error;
     }
-    console.log("=== ERROR->", error);
+    console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m ERROR->", error);
     throw new ErrorHandler(500, "Error interno del servidor");
   }
 }
 
 async function obtenerCurso(id) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: obtenerCurso");
   try {
     if (id < 0 || !id) {
       throw new ErrorHandler(400, "ID invalida");
@@ -50,6 +52,7 @@ async function obtenerCurso(id) {
 }
 
 async function crearCurso(curso) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: crearCurso");
   try {
     // Se crea el curso directamente con los datos recibidos del body
     const nuevoCurso = await Curso.create(curso);
@@ -64,6 +67,7 @@ async function crearCurso(curso) {
 }
 
 async function eliminarCurso(id) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: eliminarCurso");
   try {
     if (id < 0) {
       throw new ErrorHandler(400, "ID invalida");
@@ -84,7 +88,7 @@ async function eliminarCurso(id) {
     if (error instanceof ErrorHandler) {
       throw error;
     }
-    console.log("=== ERROR AL ELIMINAR CURSO:", error);
+    console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m ERROR AL ELIMINAR CURSO:", error);
 
     if (error.name === "SequelizeForeignKeyConstraintError") {
       throw new ErrorHandler(
@@ -98,6 +102,7 @@ async function eliminarCurso(id) {
 }
 
 async function modificarCurso(curso) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: modificarCurso");
   const {
     id_curso,
     nombre_curso,

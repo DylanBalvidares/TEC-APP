@@ -1,9 +1,9 @@
 import "dotenv";
 import { Sequelize } from "sequelize";
 
-console.log("=== URL:", process.env.DATABASE_URL);
-console.log("=== DATABASE NAME:", process.env.DATABASE_NAME);
-console.log("=== PASSWORD:", process.env.DATABASE_PASSWORD);
+console.log("[DEBUG] DATABASE URL:", process.env.DATABASE_URL);
+console.log("[DEBUG] DATABASE NAME:", process.env.DATABASE_NAME);
+// console.log("[DEBUG] PASSWORD:", process.env.DATABASE_PASSWORD); // Oculto por seguridad
 
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
   dialect: "mysql",
@@ -19,12 +19,9 @@ async function intentarConexion() {
   try {
     await sequelize.authenticate();
     //sequelize.sync(); //===== NO DESCOMENTAR
-    console.log("=== ¡La conexion a la BD es CORRECTA! ===");
+    console.log("[INFO] ¡La conexion a la BD es CORRECTA!");
   } catch (error) {
-    console.log(
-      "=== ¡La conexion a la BD FALLO,REINTENTANDO...! ===->ERROR:",
-      error,
-    );
+    console.error("[ERROR] ¡La conexion a la BD FALLO, REINTENTANDO...! -> ERROR:", error);
     setTimeout(intentarConexion, 5000);
   }
 }

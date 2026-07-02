@@ -13,6 +13,7 @@ const personalRouter = Router();
 
 // Obtener un personal por ID
 personalRouter.get("/personal/:id", comprobarPermiso("root_gestionar_roles"), async (req, res) => {
+    
   try {
     const personal = await obtenerPersonal(req.params.id);
     return res.status(200).json(personal);
@@ -23,6 +24,7 @@ personalRouter.get("/personal/:id", comprobarPermiso("root_gestionar_roles"), as
 
 // Obtener toda la lista de personal
 personalRouter.get("/personal", comprobarPermiso("root_gestionar_roles"), async (req, res) => {
+    
   try {
     const todoPersonal = await obtenerTodoPersonal();
     return res.status(200).json(todoPersonal);
@@ -33,6 +35,7 @@ personalRouter.get("/personal", comprobarPermiso("root_gestionar_roles"), async 
 
 // Crear un nuevo registro de personal
 personalRouter.post("/personal", comprobarPermiso("root_gestionar_roles"), async (req, res) => {
+    
   try {
     const personal = await crearPersonal(req.body);
     return res.status(201).json(personal);
@@ -43,6 +46,7 @@ personalRouter.post("/personal", comprobarPermiso("root_gestionar_roles"), async
 
 // Eliminar un personal por ID
 personalRouter.delete("/personal/:id", comprobarPermiso("root_gestionar_roles"), async (req, res) => {
+    
   try {
     const resultado = await eliminarPersonal(req.params.id);
     return res.status(200).json(resultado);
@@ -53,6 +57,7 @@ personalRouter.delete("/personal/:id", comprobarPermiso("root_gestionar_roles"),
 
 // Modificar datos de un personal
 personalRouter.patch("/personal", comprobarPermiso("root_gestionar_roles"), async (req, res) => {
+    
   try {
     const resultado = await modificarPersonal(req.body);
     return res.status(200).json(resultado);
