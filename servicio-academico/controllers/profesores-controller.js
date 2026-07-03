@@ -1,6 +1,39 @@
 import ErrorHandler from "../ErrorHandler.js";
 import { Profesor } from "../models/index.js";
 
+async function validarIdentidadProfesor(data) {
+  console.log("\x1b[1m\x1b[34m[CTRL]\x1b[0m Ejecutando controlador: validarIdentidadProfesor");
+  const { dni, nacimiento } = data;
+
+  if (!dni || !nacimiento) {
+    throw new ErrorHandler(400, "El dni o la fecha de nacimiento inválida");
+  }
+
+  try {
+    const profesor = await Profesor.findOne({
+      where: {
+        dni: dni,
+        fecha_nacimiento: nacimiento,
+      },
+    });
+
+    if (!profesor) {
+      throw new ErrorHandler(404, "No se encontro el profesor especificado");
+    }
+
+    return {
+      valido: true,
+      info: profesor,
+    };
+  } catch (error) {
+    if (error instanceof ErrorHandler) {
+      throw error;
+    }
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en validarIdentidadProfesor:", error);
+    throw new ErrorHandler(500, "Error interno al validarIdentidadProfesor");
+  }
+}
+
 async function obtenerTodosProfesores() {
   console.log("\x1b[1m\x1b[34m[CTRL]\x1b[0m Ejecutando controlador: obtenerTodosProfesores");
   try {
@@ -50,10 +83,7 @@ async function crearProfesor(profesor) {
     console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en crearProfesor:", error);
 
     if (error.name === "SequelizeUniqueConstraintError") {
-      throw new ErrorHandler(
-        400,
-        "El DNI o el email ya se encuentran registrados",
-      );
+      throw new ErrorHandler(400, "El DNI o el email ya se encuentran registrados");
     }
 
     throw new ErrorHandler(500, "Error al registrar el profesor");
@@ -140,10 +170,39 @@ async function modificarProfesor(profesor) {
   }
 }
 
+async function sincronizarUsuarioProfesor(payload) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: sincronizarUsuarioProfesor");
+  try {
+    const { idProfesor, idUsuario } = payload;
+
+    if (!idProfesor || idUsuario < 0) {
+      throw new ErrorHandler(400, "ID de profesor/usuario inválida");
+    }
+
+    const data = await Profesor.update(
+      {
+        id_usuario: idUsuario,
+      },
+      {
+        where: {
+          id_profesor: idProfesor,
+        },
+      }
+    );
+
+    return data;
+  } catch (error) {
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en sincronizarProfesor:", error);
+    throw new ErrorHandler(500, "Error interno al sincronizar profesor");
+  }
+}
+
 export {
   obtenerTodosProfesores,
   obtenerProfesor,
+  validarIdentidadProfesor,
   crearProfesor,
   eliminarProfesor,
   modificarProfesor,
+  sincronizarUsuarioProfesor,
 };

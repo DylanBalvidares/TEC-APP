@@ -40,6 +40,11 @@ const codigoVerificacion = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
+    rol_asociado: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      defaultValue: "alumno",
+    },
   },
   {
     tableName: "codigos_verificacion",
