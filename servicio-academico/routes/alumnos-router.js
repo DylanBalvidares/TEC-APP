@@ -90,7 +90,7 @@ alumnosRouter.get(
 
 alumnosRouter.get(
   "/alumnos/curso/:id",
-  comprobarPermiso("administrativo_ver_todos_alumnos"),
+  comprobarPermiso(["administrativo_ver_todos_alumnos", "profesor_ver_curso"]),
   async (req, res) => {
     
     try {

@@ -35,8 +35,11 @@ asignacionesRouter.get("/asignaciones", comprobarPermiso("administrativo_ver_tod
 });
 
 asignacionesRouter.get("/asignaciones/profesor/:id", comprobarPermiso("profesor_ver_curso"), async (req, res) => {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando GET /asignaciones/profesor/:id");
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m PARAMS ->", req.params);
   try {
     const asignaciones = await obtenerAsignacionesProfesor(req.params.id);
+    console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m RESULTADO ->", asignaciones);
     return res.status(200).json(asignaciones);
   } catch (error) {
     return res.status(error.status).json(error.message);

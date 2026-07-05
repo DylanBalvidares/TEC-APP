@@ -8,11 +8,30 @@ import {
   crearProfesor,
   validarIdentidadProfesor,
   sincronizarUsuarioProfesor,
+  obtenerInfoParaProfesor,
 } from "../controllers/profesores-controller.js";
 
 import comprobarPermiso from "../middlewares/comprobarPermisos.js";
 
 const profesoresRouter = Router();
+
+profesoresRouter.get(
+  "/profesores-mi-info/:id",
+  comprobarPermiso("profesor_ver_curso"),
+  async (req, res) => {
+    try {
+      console.log(
+        "==== PETICION GET EN PROFESORES-MI-INFO : req.params.id->",
+        req.params.id,
+        ";====",
+      );
+      const profesor = await obtenerInfoParaProfesor(req.params.id);
+      return res.status(200).json(profesor);
+    } catch (error) {
+      return res.status(error.status).json(error.message);
+    }
+  },
+);
 
 profesoresRouter.get("/profesores/:id", comprobarPermiso("administrativo_ver_todos_profesores"), async (req, res) => {
   try {

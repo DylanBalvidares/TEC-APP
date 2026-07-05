@@ -38,7 +38,8 @@ const comprobarPermiso = (permisoRequerido) => {
 
       const listaDePermisos = rolConPermisos.data;
 
-      const tieneAcceso = listaDePermisos.includes(permisoRequerido);
+      const permisosArray = Array.isArray(permisoRequerido) ? permisoRequerido : [permisoRequerido];
+      const tieneAcceso = permisosArray.some(p => listaDePermisos.includes(p));
 
       if (!tieneAcceso) {
         return next(

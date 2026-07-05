@@ -197,6 +197,31 @@ async function sincronizarUsuarioProfesor(payload) {
   }
 }
 
+async function obtenerInfoParaProfesor(idUsuario) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: obtenerInfoParaProfesor");
+  try {
+    if (!idUsuario) {
+      throw new ErrorHandler(400, "ID de usuario inválida");
+    }
+
+    const profesor = await Profesor.findOne({
+      where: {
+        id_usuario: idUsuario,
+      },
+    });
+
+    if (!profesor) {
+      throw new ErrorHandler(404, "Profesor no encontrado");
+    }
+
+    return { data: profesor };
+  } catch (error) {
+    if (error instanceof ErrorHandler) throw error;
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en obtenerInfoParaProfesor:", error);
+    throw new ErrorHandler(500, "Error interno al obtener perfil del profesor");
+  }
+}
+
 export {
   obtenerTodosProfesores,
   obtenerProfesor,
@@ -205,4 +230,5 @@ export {
   eliminarProfesor,
   modificarProfesor,
   sincronizarUsuarioProfesor,
+  obtenerInfoParaProfesor,
 };

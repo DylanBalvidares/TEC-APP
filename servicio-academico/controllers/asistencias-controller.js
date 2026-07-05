@@ -1,4 +1,5 @@
 import ErrorHandler from "../ErrorHandler.js";
+import { Op } from "sequelize";
 import { Alumno, Asistencia } from "../models/index.js";
 
 async function obtenerTodosAsistencias() {
@@ -70,6 +71,53 @@ async function obtenerAsistencia(id) {
     }
     console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en obtenerAsistencia:", error);
     throw new ErrorHandler(500, "Error interno al buscar la asistencia");
+  }
+}
+
+async function obtenerHistorialAsistencias({ id_curso, fecha_desde, fecha_hasta } = {}) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: obtenerHistorialAsistencias");
+  try {
+    const where = {};
+
+    if (id_curso) {
+      where.id_curso = id_curso;
+    }
+
+    if (fecha_desde || fecha_hasta) {
+      where.fecha = {};
+
+      if (fecha_desde) {
+        where.fecha[Op.gte] = fecha_desde;
+      }
+
+      if (fecha_hasta) {
+        where.fecha[Op.lte] = fecha_hasta;
+      }
+    }
+
+    const historial = await Asistencia.findAll({
+      where,
+      include: [
+        {
+          model: Alumno,
+          as: "alumno",
+          attributes: ["id_alumno", "nombre", "apellido"],
+        },
+      ],
+      order: [["fecha", "ASC"], ["id_alumno", "ASC"]],
+    });
+
+    if (!historial.length) {
+      throw new ErrorHandler(404, "No se encontró historial de asistencias");
+    }
+
+    return historial;
+  } catch (error) {
+    if (error instanceof ErrorHandler) {
+      throw error;
+    }
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en obtenerHistorialAsistencias:", error);
+    throw new ErrorHandler(500, "Error interno al obtener el historial de asistencias");
   }
 }
 
@@ -217,6 +265,7 @@ async function guardarAsistenciasLote(datosLote) {
 export {
   obtenerTodosAsistencias,
   obtenerAsistencia,
+  obtenerHistorialAsistencias,
   obtenerTodosAsistenciasCurso,
   crearAsistencia,
   eliminarAsistencia,
