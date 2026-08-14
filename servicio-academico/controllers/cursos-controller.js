@@ -137,10 +137,31 @@ async function modificarCurso(curso) {
   }
 }
 
+async function cancelarCurso(id) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: cancelarCurso");
+  try {
+    const [filasAfectadas] = await Curso.update(
+      { estado: "cancelado" },
+      { where: { id_curso: id } },
+    );
+
+    if (filasAfectadas === 0) {
+      throw new ErrorHandler(404, "No se encontró el curso especificado");
+    }
+
+    return { mensaje: "Curso cancelado correctamente", id_curso: id };
+  } catch (error) {
+    if (error instanceof ErrorHandler) throw error;
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en cancelarCurso:", error);
+    throw new ErrorHandler(500, "Error interno al cancelar el curso");
+  }
+}
+
 export {
   obtenerTodosCursos,
   obtenerCurso,
   crearCurso,
   eliminarCurso,
   modificarCurso,
+  cancelarCurso,
 };

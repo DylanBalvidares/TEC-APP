@@ -66,6 +66,14 @@ async function eliminarMateria(id) {
     return filasBorradas;
   } catch (error) {
     if (error instanceof ErrorHandler) throw error;
+
+    if (error.name === "SequelizeForeignKeyConstraintError") {
+      throw new ErrorHandler(
+        409,
+        "No se puede eliminar la materia porque tiene asignaciones activas vinculadas a cursos y profesores."
+      );
+    }
+
     console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en eliminarMateria:", error);
     throw new ErrorHandler(500, "Error interno al eliminar materia");
   }

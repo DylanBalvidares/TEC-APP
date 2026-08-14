@@ -1,6 +1,6 @@
-import { where } from "sequelize";
 import ErrorHandler from "../ErrorHandler.js";
-import { Asignacion, Curso, Materia, Profesor } from "../models/index.js";
+import { Asignacion, Curso, Materia, Profesor, Nota } from "../models/index.js";
+import sequelize from "../db/conexionDB.js";
 
 async function obtenerTodasAsignaciones() {
   console.log("\x1b[1m\x1b[34m[CTRL]\x1b[0m Ejecutando controlador: obtenerTodasAsignaciones");
@@ -81,6 +81,48 @@ async function obtenerAsignacionesProfesor(id) {
   }
 }
 
+async function obtenerAsignacionesCurso(id) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: obtenerAsignacionesCurso");
+  try {
+    if (!id || id < 0) {
+      throw new ErrorHandler(400, "ID de curso inválida");
+    }
+
+    const asignaciones = await Asignacion.findAll({
+      where: {
+        id_curso: id,
+      },
+      include: [
+        {
+          model: Profesor,
+          as: "profesorAsignacion",
+          attributes: ["nombre", "apellido"],
+        },
+        {
+          model: Materia,
+          as: "materiaAsignacion",
+          attributes: ["nombre_materia"],
+        },
+        {
+          model: Curso,
+          as: "cursoAsignacion",
+          attributes: ["nombre_curso", "aula", "nivel", "turno"],
+        },
+      ],
+    });
+
+    if (!asignaciones.length) {
+      throw new ErrorHandler(404, "No se encontraron asignaciones para este curso");
+    }
+
+    return asignaciones;
+  } catch (error) {
+    if (error instanceof ErrorHandler) throw error;
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en obtenerAsignacionesCurso:", error);
+    throw new ErrorHandler(500, "Error interno al obtener asignaciones del curso");
+  }
+}
+
 async function obtenerAsignacion(id) {
   console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: obtenerAsignacion");
   try {
@@ -123,20 +165,29 @@ async function crearAsignacion(asignacion) {
 
 async function eliminarAsignacion(id) {
   console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: eliminarAsignacion");
+  const t = await sequelize.transaction();
+
   try {
+    // Eliminar primero las notas asociadas para no violar la FK constraint
+    await Nota.destroy({
+      where: { id_asignacion: id },
+    }, { transaction: t });
+
     const filasBorradas = await Asignacion.destroy({
-      where: {
-        id_asignacion: id,
-      },
-    });
+      where: { id_asignacion: id },
+    }, { transaction: t });
 
     if (filasBorradas === 0) {
+      await t.rollback();
       throw new ErrorHandler(404, "No se encontró la asignación especificada");
     }
 
+    await t.commit();
     return filasBorradas;
   } catch (error) {
+    await t.rollback();
     if (error instanceof ErrorHandler) throw error;
+
     console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en eliminarAsignacion:", error);
     throw new ErrorHandler(500, "Error interno al eliminar asignación");
   }
@@ -188,6 +239,7 @@ export {
   obtenerTodasAsignaciones,
   obtenerAsignacion,
   obtenerAsignacionesProfesor,
+  obtenerAsignacionesCurso,
   crearAsignacion,
   eliminarAsignacion,
   modificarAsignacion,

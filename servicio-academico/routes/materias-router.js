@@ -20,7 +20,7 @@ materiasRouter.get(
       const materia = await obtenerMateria(req.params.id);
       return res.status(200).json(materia);
     } catch (error) {
-      return res.status(error.status).json(error.message);
+      return res.status(error.status).json({ message: error.message });
     }
   },
 );
@@ -34,7 +34,7 @@ materiasRouter.get(
       const materias = await obtenerTodasMaterias();
       return res.status(200).json(materias);
     } catch (error) {
-      return res.status(error.status).json(error.message);
+      return res.status(error.status).json({ message: error.message });
     }
   },
 );
@@ -48,7 +48,7 @@ materiasRouter.post(
       const materia = await crearMateria(req.body);
       return res.status(201).json(materia);
     } catch (error) {
-      return res.status(error.status).json(error.message);
+      return res.status(error.status).json({ message: error.message });
     }
   },
 );
@@ -62,7 +62,7 @@ materiasRouter.delete(
       const resultado = await eliminarMateria(req.params.id);
       return res.status(200).json(resultado);
     } catch (error) {
-      return res.status(error.status).json(error.message);
+      return res.status(error.status).json({ message: error.message });
     }
   },
 );
@@ -84,7 +84,7 @@ materiasRouter.patch(
       const resultado = await modificarMateria(materia);
       return res.status(200).json(resultado);
     } catch (error) {
-      return res.status(error.status).json(error.message);
+      return res.status(error.status).json({ message: error.message });
     }
   },
 );

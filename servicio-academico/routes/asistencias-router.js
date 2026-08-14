@@ -22,7 +22,7 @@ asistenciasRouter.get(
       const historial = await obtenerHistorialAsistencias(req.query);
       return res.status(200).json(historial);
     } catch (error) {
-      return res.status(error.status || 500).json(error.message);
+      return res.status(error.status || 500).json({ message: error.message });
     }
   },
 );
@@ -36,7 +36,7 @@ asistenciasRouter.get(
 
       return res.status(200).json(asistencia);
     } catch (error) {
-      return res.status(error.status).json(error.message);
+      return res.status(error.status).json({ message: error.message });
     }
   },
 );
@@ -50,7 +50,7 @@ asistenciasRouter.get(
 
       return res.status(200).json(asistencia);
     } catch (error) {
-      return res.status(error.status).json(error.message);
+      return res.status(error.status).json({ message: error.message });
     }
   },
 );
@@ -63,7 +63,7 @@ asistenciasRouter.get(
       const asistencias = await obtenerTodosAsistencias();
       return res.status(200).json(asistencias);
     } catch (error) {
-      return res.status(error.status).json(error.message);
+      return res.status(error.status).json({ message: error.message });
     }
   },
 );
@@ -83,7 +83,7 @@ asistenciasRouter.post(
       });
     } catch (error) {
       // Tu middleware de error handler asume que error tiene status y message
-      return res.status(error.status || 500).json(error.message);
+      return res.status(error.status || 500).json({ message: error.message });
     }
   },
 );
@@ -96,7 +96,7 @@ asistenciasRouter.post(
       const asistencia = await crearAsistencia(req.body);
       return res.status(200).json(asistencia);
     } catch (error) {
-      return res.status(error.status).json(error.message);
+      return res.status(error.status).json({ message: error.message });
     }
   },
 );
@@ -109,7 +109,7 @@ asistenciasRouter.delete(
       const resultado = await eliminarAsistencia(req.params.id);
       return res.status(200).json(resultado);
     } catch (error) {
-      return res.status(error.status).json(error.message);
+      return res.status(error.status).json({ message: error.message });
     }
   },
 );
@@ -130,7 +130,7 @@ asistenciasRouter.patch(
       const resultado = await modificarAsistencia(asistencia);
       return res.status(200).json(resultado);
     } catch (error) {
-      return res.status(error.status).json(error.message);
+      return res.status(error.status).json({ message: error.message });
     }
   },
 );

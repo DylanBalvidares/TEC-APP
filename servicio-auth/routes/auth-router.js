@@ -145,9 +145,9 @@ authRouter.post("/verificar-codigo", async (req, res) => {
     const usuario = await crearUsuario(infoUsuario);
 
     if (verificado.rol_asociado === "profesor") {
-      await sincronizarUsuarioProfesor(verificado.id_alumno, usuario.id_usuario);
+      await sincronizarUsuarioProfesor(verificado.id_entidad, usuario.id_usuario);
     } else {
-      await sincronizarUsuarioAlumno(verificado.id_alumno, usuario.id_usuario);
+      await sincronizarUsuarioAlumno(verificado.id_entidad, usuario.id_usuario);
     }
 
     await invalidarCodigoVerificacion(infoCodigo);

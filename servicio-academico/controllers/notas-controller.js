@@ -74,6 +74,14 @@ async function eliminarNota(id) {
     return filasBorradas;
   } catch (error) {
     if (error instanceof ErrorHandler) throw error;
+
+    if (error.name === "SequelizeForeignKeyConstraintError") {
+      throw new ErrorHandler(
+        409,
+        "No se puede eliminar la nota porque tiene dependencias vinculadas."
+      );
+    }
+
     console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en eliminarNota:", error);
     throw new ErrorHandler(500, "Error interno al eliminar nota");
   }

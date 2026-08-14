@@ -2,13 +2,13 @@ FROM node:alpine
 
 WORKDIR /app
 
-COPY ./db ./db
-
-COPY ./servicio-usuarios/package*.json ./
+COPY ./package.json ./
 
 RUN npm install
 
-COPY ./servicio-usuarios ./
+COPY ./backend-tecApp/servicio-usuarios ./
+
+COPY ./backend-tecApp/db ./db
 
 EXPOSE 3310
 

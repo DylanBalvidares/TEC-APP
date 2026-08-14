@@ -1,22 +1,15 @@
-#usa la imagen oficial de node
 FROM node:20-alpine
 
-#se crea una carpeta(/app/servicio-academico/) dentro del contenedor,y se coloca dentro de ella
-WORKDIR /servicio-academico
+WORKDIR /app
 
-#copia las dependencias al contenedor
-COPY ./servicio-academico/package*.json ./
+COPY ./package.json ./
 
-#instala librerias dentro del contenedor
-RUN npm install 
+RUN npm install
 
-#copiar carpeta db en el contenedor
-COPY ./db ./db
+COPY ./backend-tecApp/servicio-academico ./
 
-#copia todo el codigo de la carpeta actual la carpeta actual del contenedor(/app)
-COPY ./servicio-academico ./
+COPY ./backend-tecApp/db ./db
 
-#define el puerto en el que se escuchan conexiones
 EXPOSE 3307
 
 CMD [ "node","main.js" ]

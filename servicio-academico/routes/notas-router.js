@@ -17,7 +17,7 @@ notasRouter.get("/notas/:id", comprobarPermiso("profesor_ver_todos_notas"), asyn
     const nota = await obtenerNota(req.params.id);
     return res.status(200).json(nota);
   } catch (error) {
-    return res.status(error.status).json(error.message);
+    return res.status(error.status).json({ message: error.message });
   }
 });
 
@@ -27,7 +27,7 @@ notasRouter.get("/notas", comprobarPermiso("profesor_ver_todos_notas"), async (r
     const notas = await obtenerTodasNotas();
     return res.status(200).json(notas);
   } catch (error) {
-    return res.status(error.status).json(error.message);
+    return res.status(error.status).json({ message: error.message });
   }
 });
 
@@ -37,7 +37,7 @@ notasRouter.post("/notas", comprobarPermiso("profesor_crear_nota"), async (req, 
     const nota = await crearNota(req.body);
     return res.status(201).json(nota);
   } catch (error) {
-    return res.status(error.status).json(error.message);
+    return res.status(error.status).json({ message: error.message });
   }
 });
 
@@ -47,7 +47,7 @@ notasRouter.delete("/notas/:id", comprobarPermiso("profesor_eliminar_nota"), asy
     const resultado = await eliminarNota(req.params.id);
     return res.status(200).json(resultado);
   } catch (error) {
-    return res.status(error.status).json(error.message);
+    return res.status(error.status).json({ message: error.message });
   }
 });
 
@@ -67,7 +67,7 @@ notasRouter.patch("/notas/", comprobarPermiso("profesor_editar_nota"), async (re
     const resultado = await modificarNota(nota);
     return res.status(200).json(resultado);
   } catch (error) {
-    return res.status(error.status).json(error.message);
+    return res.status(error.status).json({ message: error.message });
   }
 });
 

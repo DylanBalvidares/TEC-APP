@@ -155,6 +155,14 @@ async function eliminarAsistencia(id) {
     if (error instanceof ErrorHandler) {
       throw error;
     }
+
+    if (error.name === "SequelizeForeignKeyConstraintError") {
+      throw new ErrorHandler(
+        409,
+        "No se puede eliminar la asistencia porque tiene dependencias vinculadas."
+      );
+    }
+
     console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en eliminarAsistencia:", error);
     throw new ErrorHandler(500, "Error interno al eliminar la asistencia");
   }
@@ -207,8 +215,8 @@ async function modificarAsistencia(asistencia) {
 // Agregamos un segundo parámetro para recibir el ID del usuario
 async function guardarAsistenciasLote(datosLote) {
   console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: guardarAsistenciasLote");
-  // CORRECCIÓN 1: Desestructurar desde datosLote.payload
-  const { registrado_por, id_curso, fecha, registros } = datosLote.payload;
+  // Desestructurar desde datosLote directamente
+  const { registrado_por, id_curso, fecha, registros } = datosLote;
 
   try {
     if (!id_curso || !fecha || !registros || !Array.isArray(registros)) {

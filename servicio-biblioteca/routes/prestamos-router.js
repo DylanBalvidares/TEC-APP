@@ -15,18 +15,18 @@ prestamosRouter.get("/prestamos/:id", async (req, res) => {
 
   try {
     const prestamo = await obtenerPrestamo(id);
-    return res.json(prestamo).statusCode(200);
+    return res.status(200).json(prestamo);
   } catch (error) {
-    return res.json(error).statusCode(404);
+    return res.status(404).json({ error });
   }
 });
 
 prestamosRouter.get("/prestamos", async (req, res) => {
   try {
     const prestamos = await obtenerTodosPrestamos();
-    return res.json(prestamos).statusCode(200);
+    return res.status(200).json(prestamos);
   } catch (error) {
-    return res.json(error).statusCode(201); //400?
+    return res.status(400).json({ error });
   }
 });
 
@@ -34,9 +34,9 @@ prestamosRouter.post("/prestamos/:prestamo", async (req, res) => {
   console.log("== PRESTAMOS REQUEST:", req.body); //DEBUG
   try {
     const prestamo = await crearPrestamo(req.body);
-    return res.json(prestamo).statusCode(201);
+    return res.status(201).json(prestamo);
   } catch (error) {
-    return res.json(error).statusCode(400); //400?
+    return res.status(400).json({ error });
   }
 });
 
@@ -45,9 +45,9 @@ prestamosRouter.delete("/prestamos/:id", async (req, res) => {
 
   try {
     const resultado = await eliminarPrestamo(id);
-    return res.json(resultado).statusCode(200);
+    return res.status(200).json(resultado);
   } catch (error) {
-    return res.json(error).statusCode(400); //400?
+    return res.status(400).json({ error });
   }
 });
 
@@ -64,9 +64,9 @@ prestamosRouter.patch("/prestamos/:prestamo", async (req, res) => {
     };
 
     const resultado = await modificarPrestamo(prestamo);
-    return res.json(resultado).statusCode(200); //200->>OK,put/patch
+    return res.status(200).json(resultado);
   } catch (error) {
-    return res.json(error).statusCode(400); //400?
+    return res.status(400).json({ error });
   }
 });
 

@@ -82,6 +82,10 @@ INSERT IGNORE INTO `permisos` (`nombre_permiso`) VALUES
     ('preceptor_ver_asistencias'),
     ('preceptor_gestionar_sanciones'),
     ('preceptor_ver_sanciones'),
+    -- Preceptor nuevos
+    ('preceptor_crear_alumno'),
+    ('preceptor_editar_alumno'),
+    ('preceptor_eliminar_alumno'),
     -- Bibliotecario
     ('biblio_ver_recursos'),
     ('biblio_crear_recurso'),
@@ -176,7 +180,8 @@ INSERT IGNORE INTO `rol_permisos` (`id_rol`, `id_permiso`)
 SELECT 4, id_permiso FROM `permisos` WHERE `nombre_permiso` IN (
     'preceptor_ver_curso','preceptor_ver_alumnos_de_curso','preceptor_ver_perfil_alumno',
     'preceptor_registrar_asistencias','preceptor_ver_asistencias',
-    'preceptor_gestionar_sanciones','preceptor_ver_sanciones'
+    'preceptor_gestionar_sanciones','preceptor_ver_sanciones',
+    'preceptor_crear_alumno','preceptor_editar_alumno','preceptor_eliminar_alumno'
 );
 
 -- Bibliotecario (id_rol=5)
@@ -271,12 +276,15 @@ CREATE TABLE `cursos` (
     `aula`                varchar(20) DEFAULT NULL,
     `turno`               varchar(100) DEFAULT NULL,
     `id_profesor_titular` int(11)   DEFAULT NULL,
+    `id_preceptor`        int(11)   DEFAULT NULL,
     `estado`              ENUM('activo','finalizado','cancelado') DEFAULT 'activo',
     PRIMARY KEY (`id_curso`),
     KEY `idx_ciclo`  (`ciclo_lectivo`),
     KEY `idx_estado` (`estado`),
     KEY `fk_profesor_titular` (`id_profesor_titular`),
-    CONSTRAINT `cursos_ibfk_1` FOREIGN KEY (`id_profesor_titular`) REFERENCES `profesores`(`id_profesor`) ON DELETE SET NULL
+    KEY `fk_preceptor` (`id_preceptor`),
+    CONSTRAINT `cursos_ibfk_1` FOREIGN KEY (`id_profesor_titular`) REFERENCES `profesores`(`id_profesor`) ON DELETE SET NULL,
+    CONSTRAINT `cursos_ibfk_2` FOREIGN KEY (`id_preceptor`) REFERENCES `personal`(`id_personal`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE `alumnos` (
@@ -494,7 +502,8 @@ CREATE TABLE `comunicados` (
     `titulo`            varchar(255) NOT NULL,
     `mensaje`           text         NOT NULL,
     `importancia`       ENUM('baja','media','alta') NOT NULL DEFAULT 'media',
-    `destino`           ENUM('todos','profesores','alumnos','autoridades') NOT NULL DEFAULT 'todos',
+    `destino`           ENUM('todos','profesores','alumnos','autoridades','curso') NOT NULL DEFAULT 'todos',
+    `curso_destino`     varchar(100) DEFAULT NULL,
     `fecha_publicacion` datetime  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `autor_id`          int(11)   DEFAULT NULL,
     PRIMARY KEY (`id_comunicado`),
@@ -523,13 +532,10 @@ CREATE TABLE `codigos_verificacion` (
     `expiracion` DATETIME NOT NULL,
     `usado` BOOLEAN NOT NULL DEFAULT FALSE,
     `fecha_creacion` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `id_alumno` INT NOT NULL,
+    `id_entidad` INT DEFAULT NULL COMMENT 'ID de la entidad asociada (alumno, profesor, etc.). Sin FK porque puede referir a distintas tablas segun rol_asociado.',
+    `rol_asociado` VARCHAR(50) DEFAULT 'alumno' COMMENT 'Rol de la entidad asociada (alumno, profesor, etc.)',
 
     PRIMARY KEY (`id_codigo`),
-
-    CONSTRAINT `fk_codigo_alumno`
-        FOREIGN KEY (`id_alumno`)
-        REFERENCES `alumnos` (`id_alumno`),
 
     INDEX `idx_email` (`email`),
     INDEX `idx_codigo` (`codigo`)

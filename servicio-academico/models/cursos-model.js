@@ -47,6 +47,15 @@ const Curso = sequelize.define("cursos", {
     },
   },
 
+  id_preceptor: {
+    type: DataTypes.INTEGER(11),
+    allowNull: true,
+    references: {
+      model: "personal",
+      key: "id_personal",
+    },
+  },
+
   estado: {
     type: DataTypes.ENUM("activo", "finalizado", "cancelado"),
     allowNull: true,

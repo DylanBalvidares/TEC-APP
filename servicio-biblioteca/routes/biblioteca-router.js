@@ -15,18 +15,18 @@ bibliotecaRouter.get("/biblioteca/:id", async (req, res) => {
 
   try {
     const biblioteca = await obtenerBiblioteca(id);
-    return res.json(biblioteca).statusCode(200);
+    return res.status(200).json(biblioteca);
   } catch (error) {
-    return res.json(error).statusCode(404);
+    return res.status(404).json({ error });
   }
 });
 
 bibliotecaRouter.get("/biblioteca", async (req, res) => {
   try {
     const biblioteca = await obtenerTodosBiblioteca();
-    return res.json(biblioteca).statusCode(200);
+    return res.status(200).json(biblioteca);
   } catch (error) {
-    return res.json(error).statusCode(201); //400?
+    return res.status(400).json({ error });
   }
 });
 
@@ -34,9 +34,9 @@ bibliotecaRouter.post("/biblioteca/:biblioteca", async (req, res) => {
   console.log("== BIBLIOTECA REQUEST:", req.body); //DEBUG
   try {
     const biblioteca = await crearBiblioteca(req.body);
-    return res.json(biblioteca).statusCode(201);
+    return res.status(201).json(biblioteca);
   } catch (error) {
-    return res.json(error).statusCode(400); //400?
+    return res.status(400).json({ error });
   }
 });
 
@@ -45,9 +45,9 @@ bibliotecaRouter.delete("/biblioteca/:id", async (req, res) => {
 
   try {
     const resultado = await eliminarBiblioteca(id);
-    return res.json(resultado).statusCode(200);
+    return res.status(200).json(resultado);
   } catch (error) {
-    return res.json(error).statusCode(400); //400?
+    return res.status(400).json({ error });
   }
 });
 
@@ -62,9 +62,9 @@ bibliotecaRouter.patch("/biblioteca/:biblioteca", async (req, res) => {
     };
 
     const resultado = await modificarBiblioteca(biblioteca);
-    return res.json(resultado).statusCode(200); //200->>OK,put/patch
+    return res.status(200).json(resultado);
   } catch (error) {
-    return res.json(error).statusCode(400); //400?
+    return res.status(400).json({ error });
   }
 });
 

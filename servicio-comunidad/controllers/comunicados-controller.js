@@ -1,15 +1,66 @@
 import { ErrorHandler } from "../ErrorHandler.js";
 import Comunicado from "../models/comunicados-model.js";
 
-export async function obtenerTodosComunicados() {
+import { Op } from "sequelize";
+
+export async function obtenerTodosComunicados(filtros = {}) {
   try {
+    let whereClause = {};
+
+    const rol = filtros.rol ? filtros.rol.toLowerCase() : null;
+
+    if (rol === "alumno") {
+      whereClause = {
+        [Op.or]: [
+          { destino: "todos" },
+          { destino: "alumnos" },
+          {
+            destino: "curso",
+            curso_destino: filtros.curso || null,
+          },
+        ],
+      };
+    } else if (rol === "profesor") {
+      const cursosProfesor = filtros.cursos
+        ? filtros.cursos.split(",").map((c) => c.trim()).filter(Boolean)
+        : [];
+
+      whereClause = {
+        [Op.or]: [
+          { destino: "todos" },
+          { destino: "profesores" },
+          ...(cursosProfesor.length > 0
+            ? [
+                {
+                  destino: "curso",
+                  curso_destino: {
+                    [Op.in]: cursosProfesor,
+                  },
+                },
+              ]
+            : [{ destino: "curso" }]),
+        ],
+      };
+    } else if (rol === "autoridades") {
+      whereClause = {
+        [Op.or]: [
+          { destino: "todos" },
+          { destino: "autoridades" },
+        ],
+      };
+    } else if (rol === "root" || rol === "administrador") {
+      // Administradores/root ven todos los comunicados
+      whereClause = {};
+    }
+    // Si no hay rol o es otro, se aplica el filtro por defecto (todos)
+
+    // Usamos Reflect.ownKeys para detectar TANTO keys string COMO Symbol (como Op.or)
+    const tieneFiltros = Reflect.ownKeys(whereClause).length > 0;
+
     const comunicados = await Comunicado.findAll({
+      where: tieneFiltros ? whereClause : undefined,
       order: [["fecha_publicacion", "DESC"]],
     });
-
-    if (!comunicados.length) {
-      throw new ErrorHandler(404, "No se encontraron comunicados");
-    }
 
     return comunicados;
   } catch (error) {
@@ -45,7 +96,7 @@ export async function obtenerComunicado(id) {
 
 export async function crearComunicado(datos) {
   try {
-    const { titulo, mensaje, importancia, destino, autor_id } = datos;
+    const { titulo, mensaje, importancia, destino, curso_destino, autor_id } = datos;
 
     if (!titulo || !mensaje) {
       throw new ErrorHandler(400, "Título y mensaje son requeridos");
@@ -56,6 +107,7 @@ export async function crearComunicado(datos) {
       mensaje,
       importancia: importancia || "media",
       destino: destino || "todos",
+      curso_destino: destino === "curso" ? curso_destino : null,
       autor_id,
       fecha_publicacion: new Date(),
     });
@@ -100,9 +152,9 @@ export async function actualizarComunicado(id, datos) {
       throw new ErrorHandler(400, "ID de comunicado inválido");
     }
 
-    const { titulo, mensaje, importancia, destino } = datos;
+    const { titulo, mensaje, importancia, destino, curso_destino } = datos;
 
-    if (!titulo && !mensaje && !importancia && !destino) {
+    if (!titulo && !mensaje && !importancia && !destino && !curso_destino) {
       throw new ErrorHandler(400, "Al menos un campo debe ser actualizado");
     }
 
@@ -112,6 +164,8 @@ export async function actualizarComunicado(id, datos) {
         ...(mensaje && { mensaje }),
         ...(importancia && { importancia }),
         ...(destino && { destino }),
+        ...(destino === "curso" && curso_destino && { curso_destino }),
+        ...(destino !== "curso" && destino && { curso_destino: null }),
       },
       { where: { id_comunicado: id } },
     );

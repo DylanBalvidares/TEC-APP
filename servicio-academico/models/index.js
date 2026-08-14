@@ -18,6 +18,16 @@ Profesor.hasMany(Curso, {
   as: "cursosAsignados",
 });
 
+Curso.belongsTo(Personal, {
+  foreignKey: "id_preceptor",
+  as: "preceptorAsignado",
+});
+
+Personal.hasMany(Curso, {
+  foreignKey: "id_preceptor",
+  as: "cursosPreceptor",
+});
+
 // ==========================================
 // Relaciones: Curso <-> Alumno
 // ==========================================

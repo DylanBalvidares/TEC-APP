@@ -2,11 +2,11 @@ FROM node:alpine
 
 WORKDIR /app
 
-COPY ./api-gateway/package*.json ./
+COPY ./package.json ./
 
 RUN npm install
 
-COPY ./api-gateway ./
+COPY ./backend-tecApp/api-gateway ./
 
 EXPOSE 9000
 

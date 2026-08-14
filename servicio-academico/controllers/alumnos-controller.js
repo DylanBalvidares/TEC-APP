@@ -237,6 +237,16 @@ async function eliminarAlumno(id) {
     if (error instanceof ErrorHandler) {
       throw error;
     }
+
+    // Capturar error de FK: el alumno tiene asistencias/notas registradas
+    if (error.name === "SequelizeForeignKeyConstraintError") {
+      throw new ErrorHandler(
+        409,
+        "No se puede eliminar el alumno porque tiene registros de asistencias o notas vinculados. " +
+        "Primero eliminá sus registros de asistencia y calificaciones."
+      );
+    }
+
     console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en eliminarAlumno:", error);
     throw new ErrorHandler(500, "Error interno del servidor");
   }
@@ -326,6 +336,35 @@ async function modificarAlumno(alumno) {
   }
 }
 
+async function darDeBajaAlumno(id) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: darDeBajaAlumno");
+  try {
+    // Soft delete: cambia el estado a 'baja' en vez de borrar físicamente
+    // Esto preserva asistencias, notas y demás registros relacionados
+    const [filasAfectadas] = await Alumno.update(
+      { estado: "baja" },
+      {
+        where: {
+          id_alumno: id,
+        },
+      },
+    );
+
+    if (filasAfectadas === 0) {
+      throw new ErrorHandler(404, "No se encontro el alumno especificado");
+    }
+
+    return { mensaje: "Alumno dado de baja correctamente", id_alumno: id };
+  } catch (error) {
+    if (error instanceof ErrorHandler) {
+      throw error;
+    }
+
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en darDeBajaAlumno:", error);
+    throw new ErrorHandler(500, "Error interno al dar de baja al alumno");
+  }
+}
+
 export {
   obtenerTodosAlumnos,
   obtenerAlumnosCurso,
@@ -337,4 +376,5 @@ export {
   sincronizarUsuarioAlumno,
   eliminarAlumno,
   modificarAlumno,
+  darDeBajaAlumno,
 };

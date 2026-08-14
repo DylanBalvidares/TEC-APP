@@ -36,9 +36,10 @@ const codigoVerificacion = sequelize.define(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
-    id_alumno: {
+    id_entidad: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
+      comment: "ID de la entidad asociada (alumno, profesor, etc.). Sin FK porque puede referir a distintas tablas segun rol_asociado.",
     },
     rol_asociado: {
       type: DataTypes.STRING(50),

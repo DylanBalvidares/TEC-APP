@@ -11,16 +11,11 @@ export async function obtenerTodasNoticias() {
       throw new ErrorHandler(404, "No se encontraron noticias");
     }
 
-    const imagenUrl = `http://servicio-comunidad:3305/uploads/${noticias.imagen}`;
-
     return {
-      //esto funciona, y no se que hace, esta escrito de forma rara,
-      //pero funciona y devulve la url por cada noticia
       noticias: noticias.map((n) => ({
         ...n.toJSON(),
-        //imagen_url: `http://servicio-comunidad:3305/uploads/${n.imagen}`,
-        // //ESTO SE DEBE REEMPLAZAR POR VARIABLES DE ENTORNO(.env), ya que esta todo hardcodeado
-        imagen_url: `http://localhost:9000/api/comunidad/uploads/${n.imagen}`,
+        // Ruta relativa: el navegador usará el mismo origen desde donde se sirve la página
+        imagen_url: n.imagen ? `/api/comunidad/uploads/${n.imagen}` : null,
       })),
     };
   } catch (error) {
@@ -78,13 +73,9 @@ export async function crearNoticia(datos, archivo) {
       fecha: new Date(),
     });
 
-    const imagenUrl = nombreImagen
-      ? `http://servicio-comunidad:3305/uploads/${nombreImagen}`
-      : null;
-
     return {
       noticia,
-      imagen_url: imagenUrl,
+      imagen_url: nombreImagen ? `/api/comunidad/uploads/${nombreImagen}` : null,
     };
   } catch (error) {
     if (error instanceof ErrorHandler) {

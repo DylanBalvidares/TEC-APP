@@ -10,9 +10,11 @@ import {
   modificarAlumno,
   validarIdentidadAlumno,
   obtenerInfoParaAlumno,
+  darDeBajaAlumno,
 } from "../controllers/alumnos-controller.js";
 
 import comprobarPermiso from "../middlewares/comprobarPermisos.js";
+import validarCursoPreceptor from "../middlewares/validarCursoPreceptor.js";
 
 const alumnosRouter = Router();
 
@@ -31,7 +33,7 @@ alumnosRouter.get(
       const alumno = await obtenerInfoParaAlumno(req.params.id);
       return res.status(200).json(alumno);
     } catch (error) {
-      return res.status(error.status).json(error.message);
+      return res.status(error.status).json({ message: error.message });
     }
   },
 );
@@ -44,7 +46,7 @@ alumnosRouter.post("/alumnos/validar-identidad", async (req, res) => {
     return res.status(200).json(alumno);
   } catch (error) {
     console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m VALIDAR-IDENTIDAD ERROR:", error);
-    return res.status(error.status).json(error.message);
+    return res.status(error.status).json({ message: error.message });
   }
 });
 
@@ -56,20 +58,21 @@ alumnosRouter.patch("/alumnos/sincronizar-usuario-alumno", async (req, res) => {
     return res.status(200).json(alumno);
   } catch (error) {
     console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m VALIDAR-IDENTIDAD ERROR:", error);
-    return res.status(error.status).json(error.message);
+    return res.status(error.status).json({ message: error.message });
   }
 });
 
 alumnosRouter.get(
   "/alumnos/:id",
-  comprobarPermiso("administrativo_ver_todos_alumnos"),
+  comprobarPermiso(["administrativo_ver_todos_alumnos", "preceptor_ver_perfil_alumno"]),
+  validarCursoPreceptor,
   async (req, res) => {
     
     try {
       const alumno = await obtenerAlumno(req.params.id);
       return res.status(200).json(alumno);
     } catch (error) {
-      return res.status(error.status).json(error.message);
+      return res.status(error.status).json({ message: error.message });
     }
   },
 );
@@ -83,21 +86,22 @@ alumnosRouter.get(
       const alumnos = await obtenerTodosAlumnos();
       return res.status(200).json(alumnos);
     } catch (error) {
-      return res.status(error.status).json(error.message);
+      return res.status(error.status).json({ message: error.message });
     }
   },
 );
 
 alumnosRouter.get(
   "/alumnos/curso/:id",
-  comprobarPermiso(["administrativo_ver_todos_alumnos", "profesor_ver_curso"]),
+  comprobarPermiso(["administrativo_ver_todos_alumnos", "preceptor_ver_alumnos_de_curso"]),
+  validarCursoPreceptor,
   async (req, res) => {
     
     try {
       const alumnos = await obtenerAlumnosCurso(req.params.id);
       return res.status(200).json(alumnos);
     } catch (error) {
-      return res.status(error.status).json(error.message);
+      return res.status(error.status).json({ message: error.message });
     }
   },
 );
@@ -108,14 +112,15 @@ alumnosRouter.get("/alumnos/mi-curso/:id", comprobarPermiso("alumno_ver_mi_curso
     const alumnos = await obtenerAlumnosCursoParaAlumno(req.params.id);
     return res.status(200).json(alumnos);
   } catch (error) {
-    return res.status(error.status).json(error.message);
+    return res.status(error.status).json({ message: error.message });
   }
 },
 );
 
 alumnosRouter.post(
   "/alumnos",
-  comprobarPermiso("administrativo_crear_alumno"),
+  comprobarPermiso(["administrativo_crear_alumno", "preceptor_crear_alumno"]),
+  validarCursoPreceptor,
   async (req, res) => {
     
     console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m ALUMNO REQUEST:", req.body); //DEBUG
@@ -123,14 +128,15 @@ alumnosRouter.post(
       const alumno = await crearAlumno(req.body);
       return res.status(201).json(alumno);
     } catch (error) {
-      return res.status(error.status).json(error.message);
+      return res.status(error.status).json({ message: error.message });
     }
   },
 );
 
 alumnosRouter.delete(
   "/alumnos/:id",
-  comprobarPermiso("administrativo_eliminar_alumno"),
+  comprobarPermiso(["administrativo_eliminar_alumno", "preceptor_eliminar_alumno"]),
+  validarCursoPreceptor,
   async (req, res) => {
     
     const id = req.params.id;
@@ -138,21 +144,36 @@ alumnosRouter.delete(
       const resultado = await eliminarAlumno(id);
       return res.status(200).json(resultado);
     } catch (error) {
-      return res.status(error.status).json(error.message);
+      return res.status(error.status).json({ message: error.message });
+    }
+  },
+);
+
+alumnosRouter.patch(
+  "/alumnos/dar-de-baja/:id",
+  comprobarPermiso("administrativo_eliminar_alumno"),
+  async (req, res) => {
+    const id = req.params.id;
+    try {
+      const resultado = await darDeBajaAlumno(id);
+      return res.status(200).json(resultado);
+    } catch (error) {
+      return res.status(error.status).json({ message: error.message });
     }
   },
 );
 
 alumnosRouter.patch(
   "/alumnos",
-  comprobarPermiso("administrativo_editar_alumno"),
+  comprobarPermiso(["administrativo_editar_alumno", "preceptor_editar_alumno"]),
+  validarCursoPreceptor,
   async (req, res) => {
     
     try {
       const resultado = await modificarAlumno(req.body);
       return res.status(200).json(resultado);
     } catch (error) {
-      return res.status(error.status).json(error.message);
+      return res.status(error.status).json({ message: error.message });
     }
   },
 );

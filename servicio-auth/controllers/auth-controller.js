@@ -16,7 +16,7 @@ dotenv.config();
 
 const USER_SERVICE_URL = process.env.USER_SERVICE_URL || "http://servicio-usuarios:3310";
 const JWT_SECRET = process.env.JWT_SECRET || "clave_secreta_super_segura";
-const JWT_EXPIRES_IN = "2h";
+const JWT_EXPIRES_IN = "8h";
 
 /**
  * Genera un token JWT estandarizado basado en la información del usuario y sus permisos
@@ -247,7 +247,7 @@ async function iniciarRegistro(datosUsuario) {
       email,
       codigo,
       tipo: "registro",
-      id_alumno: id_asociado,
+      id_entidad: id_asociado,
       rol_asociado: existe.rol,
       expiracion: new Date(Date.now() + 15 * 60 * 1000),
     };

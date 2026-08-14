@@ -4,6 +4,7 @@ import {
   obtenerAsignacion,
   obtenerTodasAsignaciones,
   obtenerAsignacionesProfesor,
+  obtenerAsignacionesCurso,
   eliminarAsignacion,
   modificarAsignacion,
 } from "../controllers/asignaciones-controller.js";
@@ -13,6 +14,19 @@ import comprobarPermiso from "../middlewares/comprobarPermisos.js";
 const asignacionesRouter = Router();
 
 asignacionesRouter.get(
+  "/asignaciones/curso/:id",
+  comprobarPermiso(["alumno_ver_mi_curso", "administrativo_ver_todos_asignaciones"]),
+  async (req, res) => {
+    try {
+      const asignaciones = await obtenerAsignacionesCurso(req.params.id);
+      return res.status(200).json(asignaciones);
+    } catch (error) {
+      return res.status(error.status).json({ message: error.message });
+    }
+  },
+);
+
+asignacionesRouter.get(
   "/asignaciones/:id",
   comprobarPermiso("administrativo_ver_todos_asignaciones"),
   async (req, res) => {
@@ -20,7 +34,7 @@ asignacionesRouter.get(
       const asignacion = await obtenerAsignacion(req.params.id);
       return res.status(200).json(asignacion);
     } catch (error) {
-      return res.status(error.status).json(error.message);
+      return res.status(error.status).json({ message: error.message });
     }
   },
 );
@@ -30,7 +44,7 @@ asignacionesRouter.get("/asignaciones", comprobarPermiso("administrativo_ver_tod
     const asignaciones = await obtenerTodasAsignaciones();
     return res.status(200).json(asignaciones);
   } catch (error) {
-    return res.status(error.status).json(error.message);
+    return res.status(error.status).json({ message: error.message });
   }
 });
 
@@ -42,7 +56,7 @@ asignacionesRouter.get("/asignaciones/profesor/:id", comprobarPermiso("profesor_
     console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m RESULTADO ->", asignaciones);
     return res.status(200).json(asignaciones);
   } catch (error) {
-    return res.status(error.status).json(error.message);
+    return res.status(error.status).json({ message: error.message });
   }
 });
 
@@ -51,7 +65,7 @@ asignacionesRouter.post("/asignaciones", comprobarPermiso("administrativo_crear_
     const asignacion = await crearAsignacion(req.body);
     return res.status(201).json(asignacion);
   } catch (error) {
-    return res.status(error.status).json(error.message);
+    return res.status(error.status).json({ message: error.message });
   }
 });
 
@@ -63,7 +77,7 @@ asignacionesRouter.delete(
       const resultado = await eliminarAsignacion(req.params.id);
       return res.status(200).json(resultado);
     } catch (error) {
-      return res.status(error.status).json(error.message);
+      return res.status(error.status).json({ message: error.message });
     }
   },
 );
@@ -81,7 +95,7 @@ asignacionesRouter.patch("/asignaciones", comprobarPermiso("administrativo_edita
     const resultado = await modificarAsignacion(asignacion);
     return res.status(200).json(resultado);
   } catch (error) {
-    return res.status(error.status).json(error.message);
+    return res.status(error.status).json({ message: error.message });
   }
 });
 

@@ -1,15 +1,15 @@
 FROM node:20-alpine
 
-WORKDIR /servicio-comunidad
+WORKDIR /app
 
-COPY ./servicio-comunidad/package*.json ./
+COPY ./package.json ./
 
-RUN npm install 
+RUN npm install
 
-COPY ./db ./db
+COPY ./backend-tecApp/servicio-comunidad ./
 
-COPY ./servicio-comunidad ./
+COPY ./backend-tecApp/db ./db
 
 EXPOSE 3305
 
-CMD ["npm", "start"]
+CMD ["node","main.js"]

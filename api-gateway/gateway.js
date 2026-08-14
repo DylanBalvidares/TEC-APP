@@ -34,8 +34,17 @@ function verificarToken(req, res, next) {
 const app = express();
 const PORT = 9000;
 
-app.use(cors());
+app.use(cors());//solo utilizar en entorno de desarrollo localhost,etc
 
+// Configuración de CORS permitiendo tu IP pública
+/*
+app.use(cors({
+  origin: 'http://186.0.171.84:7070', // Tu IP y puerto donde está el frontend
+  methods: ['GET', 'POST', 'PUT', 'PATCH','DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+*/
 //RUTAS PUBLICAS, antes del middleware de verificarToken
 app.use(
   "/api/auth",

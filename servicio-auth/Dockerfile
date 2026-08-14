@@ -2,13 +2,13 @@ FROM node:alpine
 
 WORKDIR /app
 
-COPY ./db ./db
-
-COPY ./servicio-auth/package*.json ./
+COPY ./package.json ./
 
 RUN npm install
 
-COPY ./servicio-auth ./
+COPY ./backend-tecApp/servicio-auth ./
+
+COPY ./backend-tecApp/db ./db
 
 EXPOSE 3308
 

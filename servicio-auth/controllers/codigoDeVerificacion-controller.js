@@ -73,7 +73,7 @@ async function verificarCodigoVerificacion(data) {
 
     return {
       valido: true,
-      id_alumno: verificarCodigo.id_alumno,
+      id_entidad: verificarCodigo.id_entidad,
       rol_asociado: verificarCodigo.rol_asociado,
       email: verificarCodigo.email,
       tipo: verificarCodigo.tipo,

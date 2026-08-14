@@ -2,11 +2,11 @@ FROM node:alpine
 
 WORKDIR /app
 
-COPY ./servicio-biblioteca/package*.json ./
+COPY ./package.json ./
 
 RUN npm install
 
-COPY ./servicio-biblioteca ./
+COPY ./backend-tecApp/servicio-biblioteca ./
 
 EXPOSE 3309
 

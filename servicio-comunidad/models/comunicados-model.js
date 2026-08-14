@@ -24,9 +24,13 @@ const Comunicado = sequelize.define(
       defaultValue: "media",
     },
     destino: {
-      type: DataTypes.ENUM("todos", "profesores", "alumnos", "autoridades"),
+      type: DataTypes.ENUM("todos", "profesores", "alumnos", "autoridades", "curso"),
       allowNull: false,
       defaultValue: "todos",
+    },
+    curso_destino: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
     },
     fecha_publicacion: {
       type: DataTypes.DATE,

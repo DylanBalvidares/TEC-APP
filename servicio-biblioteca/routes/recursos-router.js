@@ -15,18 +15,18 @@ recursosRouter.get("/recursos/:id", async (req, res) => {
 
   try {
     const recurso = await obtenerRecurso(id);
-    return res.json(recurso).statusCode(200);
+    return res.status(200).json(recurso);
   } catch (error) {
-    return res.json(error).statusCode(404);
+    return res.status(404).json({ error });
   }
 });
 
 recursosRouter.get("/recursos", async (req, res) => {
   try {
     const recursos = await obtenerTodosRecursos();
-    return res.json(recursos).statusCode(200);
+    return res.status(200).json(recursos);
   } catch (error) {
-    return res.json(error).statusCode(201); //400?
+    return res.status(400).json({ error });
   }
 });
 
@@ -34,9 +34,9 @@ recursosRouter.post("/recursos/:recurso", async (req, res) => {
   console.log("== RECURSOS REQUEST:", req.body); //DEBUG
   try {
     const recurso = await crearRecurso(req.body);
-    return res.json(recurso).statusCode(201);
+    return res.status(201).json(recurso);
   } catch (error) {
-    return res.json(error).statusCode(400); //400?
+    return res.status(400).json({ error });
   }
 });
 
@@ -45,9 +45,9 @@ recursosRouter.delete("/recursos/:id", async (req, res) => {
 
   try {
     const resultado = await eliminarRecurso(id);
-    return res.json(resultado).statusCode(200);
+    return res.status(200).json(resultado);
   } catch (error) {
-    return res.json(error).statusCode(400); //400?
+    return res.status(400).json({ error });
   }
 });
 
@@ -64,9 +64,9 @@ recursosRouter.patch("/recursos/:recurso", async (req, res) => {
     };
 
     const resultado = await modificarRecurso(recurso);
-    return res.json(resultado).statusCode(200); //200->>OK,put/patch
+    return res.status(200).json(resultado);
   } catch (error) {
-    return res.json(error).statusCode(400); //400?
+    return res.status(400).json({ error });
   }
 });
 

@@ -11,7 +11,7 @@ rolPermisosRouter.get("/permisos/:id", async (req, res) => {
 
     return res.status(200).json(permisos);
   } catch (error) {
-    return res.status(error.status).json(error.message);
+    return res.status(error.status).json({ message: error.message });
   }
 });
 
@@ -26,7 +26,7 @@ rolPermisosRouter.get("/permisos", async (req, res) => {
     const permisos = await obtenerPermisosDeRol(idRol);
     return res.status(200).json(permisos);
   } catch (error) {
-    return res.status(error.status).json(error.message);
+    return res.status(error.status).json({ message: error.message });
   }
 });
 

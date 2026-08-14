@@ -94,8 +94,37 @@ async function eliminarPersonal(id) {
     return filasBorradas;
   } catch (error) {
     if (error instanceof ErrorHandler) throw error;
+
+    if (error.name === "SequelizeForeignKeyConstraintError") {
+      throw new ErrorHandler(
+        409,
+        "No se puede eliminar el personal porque tiene registros vinculados. " +
+        "Usá 'Dar de baja' para marcarlo como inactivo."
+      );
+    }
+
     console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en eliminarPersonal:", error);
     throw new ErrorHandler(500, "Error interno del servidor");
+  }
+}
+
+async function darDeBajaPersonal(id) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: darDeBajaPersonal");
+  try {
+    const [filasAfectadas] = await Personal.update(
+      { estado: "baja" },
+      { where: { id_personal: id } },
+    );
+
+    if (filasAfectadas === 0) {
+      throw new ErrorHandler(404, "No se encontró el personal especificado");
+    }
+
+    return { mensaje: "Personal dado de baja correctamente", id_personal: id };
+  } catch (error) {
+    if (error instanceof ErrorHandler) throw error;
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en darDeBajaPersonal:", error);
+    throw new ErrorHandler(500, "Error interno al dar de baja al personal");
   }
 }
 
@@ -181,4 +210,5 @@ export {
   crearPersonal,
   eliminarPersonal,
   modificarPersonal,
+  darDeBajaPersonal,
 };

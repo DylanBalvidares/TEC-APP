@@ -108,8 +108,37 @@ async function eliminarProfesor(id) {
     if (error instanceof ErrorHandler) {
       throw error;
     }
+
+    if (error.name === "SequelizeForeignKeyConstraintError") {
+      throw new ErrorHandler(
+        409,
+        "No se puede eliminar el profesor porque tiene cursos o asignaciones vinculadas. " +
+        "Usá 'Dar de baja' para marcarlo como inactivo sin perder sus registros."
+      );
+    }
+
     console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en eliminarProfesor:", error);
     throw new ErrorHandler(500, "Error interno al eliminar profesor");
+  }
+}
+
+async function darDeBajaProfesor(id) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: darDeBajaProfesor");
+  try {
+    const [filasAfectadas] = await Profesor.update(
+      { estado: "baja" },
+      { where: { id_profesor: id } },
+    );
+
+    if (filasAfectadas === 0) {
+      throw new ErrorHandler(404, "No se encontró el profesor especificado");
+    }
+
+    return { mensaje: "Profesor dado de baja correctamente", id_profesor: id };
+  } catch (error) {
+    if (error instanceof ErrorHandler) throw error;
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en darDeBajaProfesor:", error);
+    throw new ErrorHandler(500, "Error interno al dar de baja al profesor");
   }
 }
 
@@ -231,4 +260,5 @@ export {
   modificarProfesor,
   sincronizarUsuarioProfesor,
   obtenerInfoParaProfesor,
+  darDeBajaProfesor,
 };
