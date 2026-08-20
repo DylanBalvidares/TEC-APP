@@ -1,4 +1,5 @@
 //CONFIGURACIONES GLOBALES DE EXPRESS
+import "dotenv/config.js";
 import express from "express";
 import cors from "cors";
 
@@ -15,7 +16,7 @@ import cargosRouter from "./routes/cargos-router.js";
 
 const app = express();
 
-const PORT = 3307;
+const PORT = process.env.PORT || 3307;
 
 app.use(cors());
 app.use(express.json());

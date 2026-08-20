@@ -4,7 +4,7 @@ import authRouter from "./routes/auth-router.js";
 
 const app = express();
 
-const PORT = 3308;
+const PORT = process.env.PORT || 3308;
 
 app.use(express.json());
 // Middleware de log de peticiones

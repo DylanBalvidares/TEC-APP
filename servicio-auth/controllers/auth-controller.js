@@ -15,6 +15,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const USER_SERVICE_URL = process.env.USER_SERVICE_URL || "http://servicio-usuarios:3310";
+const ACADEMICO_SERVICE_URL = process.env.ACADEMICO_SERVICE_URL || "http://servicio-academico:3307";
 const JWT_SECRET = process.env.JWT_SECRET || "clave_secreta_super_segura";
 const JWT_EXPIRES_IN = "8h";
 
@@ -114,8 +115,8 @@ async function login(infoLogin) {
 
 // Definimos los endpoints de los servicios académicos que tienen padrones
 const PADRON_SERVICES = [
-  { url: "http://servicio-academico:3307/alumnos/validar-identidad", rol: "alumno" },
-  { url: "http://servicio-academico:3307/profesores/validar-identidad", rol: "profesor" },
+  { url: `${ACADEMICO_SERVICE_URL}/alumnos/validar-identidad`, rol: "alumno" },
+  { url: `${ACADEMICO_SERVICE_URL}/profesores/validar-identidad`, rol: "profesor" },
   //{ url: "http://servicio-personal:3308/administrativos/validar-identidad", rol: "administrativo" },
 ];
 
@@ -152,7 +153,7 @@ async function sincronizarUsuarioAlumno(idAlumno, idUsuario) {
       idAlumno,
       idUsuario,
     };
-    const response = await axios.patch(`http://servicio-academico:3307/alumnos/sincronizar-usuario-alumno`, payload);
+    const response = await axios.patch(`${ACADEMICO_SERVICE_URL}/alumnos/sincronizar-usuario-alumno`, payload);
 
     if (!response.data) {
       throw new ErrorHandler(400, "No se pudo sincronizar tu usuario con tu respectivo alumno");
@@ -172,7 +173,7 @@ async function sincronizarUsuarioProfesor(idProfesor, idUsuario) {
       idProfesor,
       idUsuario,
     };
-    const response = await axios.patch(`http://servicio-academico:3307/profesores/sincronizar-usuario-profesor`, payload);
+    const response = await axios.patch(`${ACADEMICO_SERVICE_URL}/profesores/sincronizar-usuario-profesor`, payload);
 
     if (!response.data) {
       throw new ErrorHandler(400, "No se pudo sincronizar tu usuario con tu respectivo profesor");

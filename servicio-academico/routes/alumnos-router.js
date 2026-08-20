@@ -13,6 +13,8 @@ import {
   darDeBajaAlumno,
 } from "../controllers/alumnos-controller.js";
 
+import { enviarEmailAAlumno } from "../controllers/email-controller.js";
+
 import comprobarPermiso from "../middlewares/comprobarPermisos.js";
 import validarCursoPreceptor from "../middlewares/validarCursoPreceptor.js";
 
@@ -174,6 +176,25 @@ alumnosRouter.patch(
       return res.status(200).json(resultado);
     } catch (error) {
       return res.status(error.status).json({ message: error.message });
+    }
+  },
+);
+
+// ============== ENVIAR EMAIL A ALUMNO ==============
+alumnosRouter.post(
+  "/alumnos/enviar-email/:id_alumno",
+  comprobarPermiso("preceptor_enviar_email_alumno"),
+  async (req, res) => {
+    try {
+      const idUsuarioPreceptor = req.headers["id_usuario"];
+      const resultado = await enviarEmailAAlumno(
+        req.params.id_alumno,
+        req.body,
+        idUsuarioPreceptor,
+      );
+      return res.status(200).json(resultado);
+    } catch (error) {
+      return res.status(error.status || 500).json({ message: error.message });
     }
   },
 );

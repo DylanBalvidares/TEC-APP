@@ -1,3 +1,4 @@
+import "dotenv/config.js";
 import express from "express";
 
 import bibliotecaRouter from "./routes/biblioteca-router.js"
@@ -6,7 +7,7 @@ import recursosRouter from "./routes/recursos-router.js"
 
 const app = express();
 
-const PORT = 3309;
+const PORT = process.env.PORT || 3309;
 
 app.use(express.json());
 

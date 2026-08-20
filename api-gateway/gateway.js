@@ -2,6 +2,8 @@ import jwt from "jsonwebtoken";
 import express from "express";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import cors from "cors";
+import dotenv from "dotenv";
+dotenv.config();
 
 console.log("=== GATEWAY SECRET:", process.env.JWT_SECRET);
 
@@ -32,7 +34,7 @@ function verificarToken(req, res, next) {
 }
 
 const app = express();
-const PORT = 9000;
+const PORT = process.env.PORT || 9000;
 
 app.use(cors());//solo utilizar en entorno de desarrollo localhost,etc
 
@@ -45,11 +47,17 @@ app.use(cors({
   credentials: true
 }));
 */
+const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || "http://servicio-auth:3308";
+const ACADEMICO_SERVICE_URL = process.env.ACADEMICO_SERVICE_URL || "http://servicio-academico:3307";
+const COMUNIDAD_SERVICE_URL = process.env.COMUNIDAD_SERVICE_URL || "http://servicio-comunidad:3305";
+const BIBLIOTECA_SERVICE_URL = process.env.BIBLIOTECA_SERVICE_URL || "http://servicio-biblioteca:3309";
+const USUARIOS_SERVICE_URL = process.env.USUARIOS_SERVICE_URL || "http://servicio-usuarios:3310";
+
 //RUTAS PUBLICAS, antes del middleware de verificarToken
 app.use(
   "/api/auth",
   createProxyMiddleware({
-    target: "http://servicio-auth:3308",
+    target: AUTH_SERVICE_URL,
     changeOrigin: true,
     pathRewrite: { "^/api/auth": "" },
   }),
@@ -58,16 +66,16 @@ app.use(
 app.use(
   "/api/comunidad/uploads",
   createProxyMiddleware({
-    target: "http://servicio-comunidad:3305/uploads", // Apunta directo al handler estático
+    target: `${COMUNIDAD_SERVICE_URL}/uploads`,
     changeOrigin: true,
-    pathRewrite: { "^/api/comunidad/uploads": "" }, // Deja solo el nombre del archivo (ej: /foto.png)
+    pathRewrite: { "^/api/comunidad/uploads": "" },
   }),
 );
 
 app.use(
   "/api/comunidad",
   createProxyMiddleware({
-    target: "http://servicio-comunidad:3305",
+    target: COMUNIDAD_SERVICE_URL,
     changeOrigin: true,
     pathRewrite: { "^/api/comunidad": "" },
   }),
@@ -78,7 +86,7 @@ app.use(verificarToken); //apartir de aca, todo requiere token
 app.use(
   "/api/academico",
   createProxyMiddleware({
-    target: "http://servicio-academico:3307",
+    target: ACADEMICO_SERVICE_URL,
     changeOrigin: true,
     pathRewrite: { "^/api/academico": "" },
   }),
@@ -87,7 +95,7 @@ app.use(
 app.use(
   "/api/biblioteca",
   createProxyMiddleware({
-    target: "http://servicio-biblioteca:3309",
+    target: BIBLIOTECA_SERVICE_URL,
     changeOrigin: true,
     pathRewrite: { "^/api/biblioteca": "" },
   }),
@@ -96,7 +104,7 @@ app.use(
 app.use(
   "/api/usuarios",
   createProxyMiddleware({
-    target: "http://servicio-usuarios:3310",
+    target: USUARIOS_SERVICE_URL,
     changeOrigin: true,
     pathRewrite: { "^/api/usuarios": "" },
   }),

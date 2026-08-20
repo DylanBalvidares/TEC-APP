@@ -11,7 +11,7 @@ import { Noticia, Comunicado, ObjetoPerdido } from "./models/index.js";
 
 const app = express();
 
-const PORT = process.env.COMUNIDAD_PORT || 3305;
+const PORT = process.env.PORT || 3305;
 
 app.use(cors());
 

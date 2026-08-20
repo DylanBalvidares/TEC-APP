@@ -1,3 +1,4 @@
+import "dotenv/config.js";
 import express from "express";
 
 import usuariosRouter from "./routes/usuarios-router.js";
@@ -6,7 +7,7 @@ import rolesRouter from "./routes/roles-router.js";
 
 const app = express();
 
-const PORT = 3310;
+const PORT = process.env.PORT || 3310;
 
 app.use(express.json());
 // Middleware de log de peticiones

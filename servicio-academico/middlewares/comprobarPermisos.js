@@ -1,6 +1,8 @@
 import ErrorHandler from "../ErrorHandler.js";
 import axios from "axios";
 
+const USUARIOS_SERVICE_URL = process.env.USUARIOS_SERVICE_URL || "http://servicio-usuarios:3310";
+
 const comprobarPermiso = (permisoRequerido) => {
   return async (req, res, next) => {
     console.log("[DEBUG] HEADERS(comprobarPermisos):", Object.keys(req.headers)); //DEBUG
@@ -22,7 +24,7 @@ const comprobarPermiso = (permisoRequerido) => {
       //const idRolUsuario = req.headers["id_rol"]; // intenta obtener el rol desde ambos lugares
 
       const rolConPermisos = await axios.get(
-        `http://servicio-usuarios:3310/permisos/${rol}`,
+        `${USUARIOS_SERVICE_URL}/permisos/${rol}`,
       );
 
       if (!rolConPermisos.data) {
