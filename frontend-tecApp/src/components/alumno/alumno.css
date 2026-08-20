@@ -1,0 +1,142 @@
+/* variables y utilidades globales para el módulo alumno */
+:root {
+    /* Paleta base (TecApp) */
+    --primary: #c0152a;
+    --primary-hover: #a81124;
+    --primary-soft: rgba(192, 21, 42, 0.1);
+    
+    /* Neutros y Fondos */
+    --surface: #ffffff;
+    --surface-2: #f8fafc;
+    --bg-app: #f1f5f9;
+    --line: #e2e8f0;
+    
+    /* Textos */
+    --text: #0f172a;
+    --muted: #64748b;
+    --light-text: #f8fafc;
+    
+    /* Semántica */
+    --danger: #dc2626;
+    --danger-soft: #fef2f2;
+    --success: #16a34a;
+    --success-soft: #f0fdf4;
+    --warning: #d97706;
+    --warning-soft: #fffbeb;
+    --info: #2563eb;
+    --info-soft: #eff6ff;
+    
+    /* Sombras Elevación */
+    --elev-1: 0 4px 14px rgba(15, 23, 42, 0.05);
+    --elev-2: 0 10px 25px rgba(15, 23, 42, 0.08);
+    --elev-3: 0 20px 40px rgba(15, 23, 42, 0.12);
+    
+    /* Radios */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 18px;
+    --radius-xl: 24px;
+}
+
+/* Layout Común */
+.view-container {
+    padding: 24px 32px;
+    background: var(--bg-app);
+    min-height: calc(100vh - 70px);
+}
+
+/* Tipografía Básica */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text);
+    margin: 0;
+    font-weight: 700;
+}
+
+p {
+    color: var(--muted);
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Botones genéricos estilo Premium */
+.tb-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    text-decoration: none;
+}
+
+.tb-btn.primary {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 4px 12px var(--primary-soft);
+}
+
+.tb-btn.primary:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(192, 21, 42, 0.2);
+}
+
+.tb-btn.outline {
+    background: transparent;
+    border: 2px solid var(--line);
+    color: var(--muted);
+}
+
+.tb-btn.outline:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-soft);
+}
+
+.tb-btn.sm {
+    padding: 8px 14px;
+    font-size: 0.85rem;
+}
+
+/* Tarjetas Genéricas (Widgets) */
+.widget-card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--elev-1);
+    border: 1px solid var(--line);
+    padding: 24px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.widget-card:hover {
+    box-shadow: var(--elev-2);
+    transform: translateY(-2px);
+}
+
+/* Badges / Etiquetas */
+.badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Animaciones */
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
