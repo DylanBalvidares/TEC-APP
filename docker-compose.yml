@@ -1,0 +1,164 @@
+services:
+  mysql-db:
+    env_file:
+      - ./backend-tecApp/db/.env 
+    image: mysql:8.0
+    container_name: mysql-gestion
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=root_pass
+      - MYSQL_DATABASE=gestion_tecnica2
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./backend-tecApp/db/gestion_tecnica2.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./backend-tecApp/db/mysql_data:/var/lib/mysql
+    networks:
+      - app-network
+
+  servicio-academico:
+    build:
+      context: .
+      dockerfile: ./backend-tecApp/servicio-academico/Dockerfile
+    container_name: servicio-academico
+    restart: unless-stopped
+    ports:
+      - "3307:3307"
+    env_file:
+      - ./backend-tecApp/servicio-academico/.env
+    environment:
+      PORT: 3307
+      DATABASE_URL: "mysql://root:root_pass@mysql-db:3306/gestion_tecnica2"
+      USUARIOS_SERVICE_URL: "http://servicio-usuarios:3310"
+      EMAIL_USER: "gestion.escolar.tec2@gmail.com"
+      EMAIL_PASS: "cazt llea luwl eoui"
+    depends_on:
+      - mysql-db
+      - servicio-usuarios
+    networks:
+      - app-network
+
+  servicio-auth:
+    env_file:
+      - ./backend-tecApp/servicio-auth/.env
+    build:
+      context: .
+      dockerfile: ./backend-tecApp/servicio-auth/Dockerfile
+    container_name: servicio-auth
+    restart: unless-stopped
+    ports:
+      - "3308:3308"
+    environment:
+      PORT: 3308
+      DATABASE_URL: "mysql://root:root_pass@mysql-db:3306/gestion_tecnica2"
+      USER_SERVICE_URL: "http://servicio-usuarios:3310"
+      ACADEMICO_SERVICE_URL: "http://servicio-academico:3307"
+    depends_on:
+      - mysql-db
+    networks:
+      - app-network
+
+  #servicio-biblioteca aun no integrado
+  
+  servicio-biblioteca:
+    build:
+      context: .
+      dockerfile: ./backend-tecApp/servicio-biblioteca/Dockerfile
+    container_name: servicio-biblioteca
+    #restart: unless-stopped
+    ports:
+      - "3309:3309"
+    env_file:
+      - ./backend-tecApp/servicio-biblioteca/.env
+    environment:
+      PORT: 3309
+      DATABASE_URL: "mysql://root:root_pass@mysql-db:3306/gestion_tecnica2"
+    depends_on:
+      - mysql-db
+    networks:
+      - app-network
+
+  servicio-usuarios:
+    env_file:
+      - ./backend-tecApp/servicio-auth/.env
+    build:
+      context: .
+      dockerfile: ./backend-tecApp/servicio-usuarios/Dockerfile
+    container_name: servicio-usuarios
+    restart: unless-stopped
+    ports:
+      - "3310:3310"
+    environment:
+      PORT: 3310
+      DATABASE_URL: "mysql://root:root_pass@mysql-db:3306/gestion_tecnica2"
+    depends_on:
+      - mysql-db
+    networks:
+      - app-network
+
+  servicio-comunidad:
+    build:
+      context: .
+      dockerfile: ./backend-tecApp/servicio-comunidad/Dockerfile
+    container_name: servicio-comunidad
+    restart: unless-stopped
+    ports:
+      - "3305:3305"
+    volumes:
+      - ./backend-tecApp/almacenamiento:/app/uploads
+    env_file:
+      - ./backend-tecApp/servicio-comunidad/.env
+    environment:
+      PORT: 3305
+      DATABASE_URL: "mysql://root:root_pass@mysql-db:3306/gestion_tecnica2"
+    depends_on:
+      - mysql-db
+    networks:
+      - app-network
+
+  api-gateway:
+    env_file:
+      - ./backend-tecApp/servicio-auth/.env
+    build:
+      context: .
+      dockerfile: ./backend-tecApp/api-gateway/Dockerfile
+    container_name: api-gateway
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    environment:
+      PORT: 9000
+      JWT_SECRET: "e40bfee55a03ffe69a2a3ecb930df395"
+      AUTH_SERVICE_URL: "http://servicio-auth:3308"
+      ACADEMICO_SERVICE_URL: "http://servicio-academico:3307"
+      USUARIOS_SERVICE_URL: "http://servicio-usuarios:3310"
+      COMUNIDAD_SERVICE_URL: "http://servicio-comunidad:3305"
+      BIBLIOTECA_SERVICE_URL: "http://servicio-biblioteca:3309"
+    networks:
+      - app-network
+
+  # --- FRONTEND ---
+  frontend-app:
+    build:
+      context: ./frontend-tecApp # <- Contexto en la carpeta del frontend
+      dockerfile: Dockerfile     # <- Busca el Dockerfile ahí dentro
+    container_name: frontend-tecApp
+    restart: unless-stopped
+    ports:
+      - "5173:5173" # Reemplazar por "80:80" si en producción usás Nginx dentro de este Dockerfile
+    volumes:
+      # Monta el código fuente como bind mount para hot-reload sin rebuild
+      - ./frontend-tecApp:/frontend
+      # Anónimo: preserva node_modules del contenedor y evita que el mount lo sobrescriba
+      - /frontend/node_modules
+    networks:
+      - app-network
+    depends_on:
+      - api-gateway # Se asegura de levantar después de que el Gateway esté listo
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  db_data:
