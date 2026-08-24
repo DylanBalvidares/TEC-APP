@@ -82,6 +82,7 @@ INSERT IGNORE INTO `permisos` (`nombre_permiso`) VALUES
     ('preceptor_ver_asistencias'),
     ('preceptor_gestionar_sanciones'),
     ('preceptor_ver_sanciones'),
+    ('preceptor_enviar_email_alumno'),
     -- Preceptor nuevos
     ('preceptor_crear_alumno'),
     ('preceptor_editar_alumno'),
@@ -181,7 +182,8 @@ SELECT 4, id_permiso FROM `permisos` WHERE `nombre_permiso` IN (
     'preceptor_ver_curso','preceptor_ver_alumnos_de_curso','preceptor_ver_perfil_alumno',
     'preceptor_registrar_asistencias','preceptor_ver_asistencias',
     'preceptor_gestionar_sanciones','preceptor_ver_sanciones',
-    'preceptor_crear_alumno','preceptor_editar_alumno','preceptor_eliminar_alumno'
+    'preceptor_crear_alumno','preceptor_editar_alumno','preceptor_eliminar_alumno',
+    'preceptor_enviar_email_alumno',
 );
 
 -- Bibliotecario (id_rol=5)
