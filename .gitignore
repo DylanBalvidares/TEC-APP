@@ -2,11 +2,19 @@ node_modules
 
 package-lock.json
 
-package.json
+backend-tecApp/package-lock.json
+
+backend-tecApp/package.json
+
+frontend-tecApp/package-lock.json
+
+frontend-tecApp/package.json
 
 .env
 
 info.txt
+
+docu-proyecto.txt
 
 mysql_data
 
