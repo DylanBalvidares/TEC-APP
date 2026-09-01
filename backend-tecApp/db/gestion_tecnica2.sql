@@ -183,7 +183,7 @@ SELECT 4, id_permiso FROM `permisos` WHERE `nombre_permiso` IN (
     'preceptor_registrar_asistencias','preceptor_ver_asistencias',
     'preceptor_gestionar_sanciones','preceptor_ver_sanciones',
     'preceptor_crear_alumno','preceptor_editar_alumno','preceptor_eliminar_alumno',
-    'preceptor_enviar_email_alumno',
+    'preceptor_enviar_email_alumno'
 );
 
 -- Bibliotecario (id_rol=5)
@@ -268,6 +268,51 @@ CREATE TABLE `profesores` (
     CONSTRAINT `profesores_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios`(`id_usuario`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- ============================================================
+-- PERSONAL INSTITUCIONAL
+-- ============================================================
+
+-- CORRECCIÓN: agregado ENGINE e InnoDB
+CREATE TABLE `cargos` (
+    `id_cargo`     int(11)      NOT NULL AUTO_INCREMENT,
+    `nombre_cargo` varchar(100) NOT NULL,
+    `descripcion`  text         DEFAULT NULL,
+    PRIMARY KEY (`id_cargo`),
+    UNIQUE KEY `uq_cargo` (`nombre_cargo`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO `cargos` (`nombre_cargo`, `descripcion`) VALUES
+    ('Director',       'Máxima autoridad institucional'),
+    ('Vicedirector',   'Asiste al director'),
+    ('Secretario',     'Gestión administrativa'),
+    ('Preceptor',      'Seguimiento de alumnos'),
+    ('Bibliotecario',  'Gestión de biblioteca'),
+    ('Administrativo', 'Tareas administrativas'),
+    ('Auxiliar',       'Personal auxiliar');
+
+-- CORRECCIÓN: agregado ENGINE e InnoDB
+CREATE TABLE `personal` (
+    `id_personal`      int(11)      NOT NULL AUTO_INCREMENT,
+    `nombre`           varchar(100) NOT NULL,
+    `apellido`         varchar(100) NOT NULL,
+    `dni`              varchar(20)  NOT NULL,
+    `fecha_nacimiento` date         NOT NULL,
+    `domicilio`        varchar(255) NOT NULL,
+    `telefono`         varchar(20)  NOT NULL,
+    `email`            varchar(100) NOT NULL,
+    `fecha_ingreso`    date         NOT NULL,
+    `estado`           ENUM('activo','licencia','baja') DEFAULT 'activo',
+    `id_usuario`       int(11)      DEFAULT NULL,
+    `id_cargo`         int(11)      NOT NULL,
+    PRIMARY KEY (`id_personal`),
+    UNIQUE KEY `uq_personal_dni`     (`dni`),
+    UNIQUE KEY `uq_personal_email`   (`email`),
+    UNIQUE KEY `uq_personal_usuario` (`id_usuario`),
+    KEY `idx_personal_cargo` (`id_cargo`),
+    CONSTRAINT `personal_ibfk_cargo` FOREIGN KEY (`id_cargo`)   REFERENCES `cargos`  (`id_cargo`),
+    CONSTRAINT `personal_ibfk_1`     FOREIGN KEY (`id_usuario`) REFERENCES `usuarios`(`id_usuario`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 -- CORRECCIÓN: cursos.nivel → ENUM en lugar de VARCHAR libre
 CREATE TABLE `cursos` (
     `id_curso`            int(11)   NOT NULL AUTO_INCREMENT,
@@ -344,50 +389,6 @@ CREATE TABLE `notas` (
     CONSTRAINT `fk_nota_asig`   FOREIGN KEY (`id_asignacion`) REFERENCES `asignaciones`(`id_asignacion`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ============================================================
--- PERSONAL INSTITUCIONAL
--- ============================================================
-
--- CORRECCIÓN: agregado ENGINE e InnoDB
-CREATE TABLE `cargos` (
-    `id_cargo`     int(11)      NOT NULL AUTO_INCREMENT,
-    `nombre_cargo` varchar(100) NOT NULL,
-    `descripcion`  text         DEFAULT NULL,
-    PRIMARY KEY (`id_cargo`),
-    UNIQUE KEY `uq_cargo` (`nombre_cargo`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-INSERT INTO `cargos` (`nombre_cargo`, `descripcion`) VALUES
-    ('Director',       'Máxima autoridad institucional'),
-    ('Vicedirector',   'Asiste al director'),
-    ('Secretario',     'Gestión administrativa'),
-    ('Preceptor',      'Seguimiento de alumnos'),
-    ('Bibliotecario',  'Gestión de biblioteca'),
-    ('Administrativo', 'Tareas administrativas'),
-    ('Auxiliar',       'Personal auxiliar');
-
--- CORRECCIÓN: agregado ENGINE e InnoDB
-CREATE TABLE `personal` (
-    `id_personal`      int(11)      NOT NULL AUTO_INCREMENT,
-    `nombre`           varchar(100) NOT NULL,
-    `apellido`         varchar(100) NOT NULL,
-    `dni`              varchar(20)  NOT NULL,
-    `fecha_nacimiento` date         NOT NULL,
-    `domicilio`        varchar(255) NOT NULL,
-    `telefono`         varchar(20)  NOT NULL,
-    `email`            varchar(100) NOT NULL,
-    `fecha_ingreso`    date         NOT NULL,
-    `estado`           ENUM('activo','licencia','baja') DEFAULT 'activo',
-    `id_usuario`       int(11)      DEFAULT NULL,
-    `id_cargo`         int(11)      NOT NULL,
-    PRIMARY KEY (`id_personal`),
-    UNIQUE KEY `uq_personal_dni`     (`dni`),
-    UNIQUE KEY `uq_personal_email`   (`email`),
-    UNIQUE KEY `uq_personal_usuario` (`id_usuario`),
-    KEY `idx_personal_cargo` (`id_cargo`),
-    CONSTRAINT `personal_ibfk_cargo` FOREIGN KEY (`id_cargo`)   REFERENCES `cargos`  (`id_cargo`),
-    CONSTRAINT `personal_ibfk_1`     FOREIGN KEY (`id_usuario`) REFERENCES `usuarios`(`id_usuario`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ============================================================
 -- ASISTENCIAS
