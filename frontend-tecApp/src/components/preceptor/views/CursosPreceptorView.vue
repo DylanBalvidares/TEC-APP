@@ -1,4 +1,4 @@
-```vue
+
 <template>
   <div class="cursos-view">
 
@@ -497,4 +497,3 @@ onMounted(() => {
 
 }
 </style>
-```
