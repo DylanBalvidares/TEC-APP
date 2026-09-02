@@ -1,7 +1,7 @@
 services:
   mysql-db:
     env_file:
-      - ./backend-tecApp/db/.env 
+      - ./backend-tecApp/db/.env
     image: mysql:8.0
     container_name: mysql-gestion
     restart: unless-stopped
@@ -10,9 +10,12 @@ services:
       - MYSQL_DATABASE=gestion_tecnica2
     ports:
       - "3306:3306"
+
     volumes:
-      - ./backend-tecApp/db/gestion_tecnica2.sql:/docker-entrypoint-initdb.d/init.sql
-      - db_data:/var/lib/mysql
+    - ./backend-tecApp/db/gestion_tecnica2.sql:/docker-entrypoint-initdb.d/gestion_tecnica2.sql:ro
+    - ./backend-tecApp/db/prueba.sql:/docker-entrypoint-initdb.d/prueba.sql:ro
+    - db_data:/var/lib/mysql  
+
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_pass"]
       interval: 5s
@@ -21,152 +24,28 @@ services:
     networks:
       - app-network
 
-  servicio-academico:
+  backend:
+    env_file:
+    - ./backend-tecApp/db/.env
     build:
-      context: .
-      dockerfile: ./backend-tecApp/servicio-academico/Dockerfile
-    container_name: servicio-academico
+      context: ./backend-tecApp
+      dockerfile: Dockerfile
+    container_name: backend-tec-app
     restart: unless-stopped
     ports:
-      - "3307:3307"
-    env_file:
-      - ./backend-tecApp/servicio-academico/.env
-    environment:
-      PORT: 3307
-      DATABASE_URL: "mysql://root:root_pass@mysql-db:3306/gestion_tecnica2"
-      USUARIOS_SERVICE_URL: "http://servicio-usuarios:3310"
-      EMAIL_USER: "gestion.escolar.tec2@gmail.com"
-      EMAIL_PASS: "cazt llea luwl eoui"
-    depends_on:
-      mysql-db:
-        condition: service_healthy
-      servicio-usuarios:
-        condition: service_started
+    - "9000:9000"
+    
     networks:
-      - app-network
-
-  servicio-auth:
-    env_file:
-      - ./backend-tecApp/servicio-auth/.env
-    build:
-      context: .
-      dockerfile: ./backend-tecApp/servicio-auth/Dockerfile
-    container_name: servicio-auth
-    restart: unless-stopped
-    ports:
-      - "3308:3308"
-    environment:
-      PORT: 3308
-      DATABASE_URL: "mysql://root:root_pass@mysql-db:3306/gestion_tecnica2"
-      USER_SERVICE_URL: "http://servicio-usuarios:3310"
-      ACADEMICO_SERVICE_URL: "http://servicio-academico:3307"
+    - app-network
     depends_on:
-      mysql-db:
-        condition: service_healthy
-      servicio-usuarios:
-        condition: service_started
-    networks:
-      - app-network
-
-  #servicio-biblioteca aun no integrado
-  
-  servicio-biblioteca:
-    build:
-      context: .
-      dockerfile: ./backend-tecApp/servicio-biblioteca/Dockerfile
-    container_name: servicio-biblioteca
-    #restart: unless-stopped
-    ports:
-      - "3309:3309"
-    env_file:
-      - ./backend-tecApp/servicio-biblioteca/.env
-    environment:
-      PORT: 3309
-      DATABASE_URL: "mysql://root:root_pass@mysql-db:3306/gestion_tecnica2"
-    depends_on:
-      mysql-db:
-        condition: service_healthy
-    networks:
-      - app-network
-
-  servicio-usuarios:
-    env_file:
-      - ./backend-tecApp/servicio-usuarios/.env
-    build:
-      context: .
-      dockerfile: ./backend-tecApp/servicio-usuarios/Dockerfile
-    container_name: servicio-usuarios
-    restart: unless-stopped
-    ports:
-      - "3310:3310"
-    environment:
-      PORT: 3310
-      DATABASE_URL: "mysql://root:root_pass@mysql-db:3306/gestion_tecnica2"
-    depends_on:
-      mysql-db:
-        condition: service_healthy
-    networks:
-      - app-network
-
-  servicio-comunidad:
-    build:
-      context: .
-      dockerfile: ./backend-tecApp/servicio-comunidad/Dockerfile
-    container_name: servicio-comunidad
-    restart: unless-stopped
-    ports:
-      - "3305:3305"
-    volumes:
-      - ./backend-tecApp/almacenamiento:/app/uploads
-    env_file:
-      - ./backend-tecApp/servicio-comunidad/.env
-    environment:
-      PORT: 3305
-      DATABASE_URL: "mysql://root:root_pass@mysql-db:3306/gestion_tecnica2"
-    depends_on:
-      mysql-db:
-        condition: service_healthy
-    networks:
-      - app-network
-
-  api-gateway:
-    env_file:
-      - ./backend-tecApp/api-gateway/.env
-    build:
-      context: .
-      dockerfile: ./backend-tecApp/api-gateway/Dockerfile
-    container_name: api-gateway
-    restart: unless-stopped
-    ports:
-      - "9000:9000"
-    environment:
-      PORT: 9000
-      JWT_SECRET: "e40bfee55a03ffe69a2a3ecb930df395"
-      AUTH_SERVICE_URL: "http://servicio-auth:3308"
-      ACADEMICO_SERVICE_URL: "http://servicio-academico:3307"
-      USUARIOS_SERVICE_URL: "http://servicio-usuarios:3310"
-      COMUNIDAD_SERVICE_URL: "http://servicio-comunidad:3305"
-      BIBLIOTECA_SERVICE_URL: "http://servicio-biblioteca:3309"
-    depends_on:
-      servicio-auth:
-        condition: service_started
-      servicio-academico:
-        condition: service_started
-      servicio-usuarios:
-        condition: service_started
-      servicio-comunidad:
-        condition: service_started
-      servicio-biblioteca:
-        condition: service_started
-    networks:
-      - app-network
-
+    - mysql-db
+ 
   # --- FRONTEND ---
-  frontend-app:
+  frontend:
     build:
       context: ./frontend-tecApp # <- Contexto en la carpeta del frontend
       dockerfile: Dockerfile     # <- Busca el Dockerfile ahí dentro
-    container_name: frontend-tecApp
+    container_name: frontend-tec-app
     restart: unless-stopped
     ports:
       - "5173:5173" # Reemplazar por "80:80" si en producción usás Nginx dentro de este Dockerfile
@@ -178,8 +57,21 @@ services:
     networks:
       - app-network
     depends_on:
-      - api-gateway # Se asegura de levantar después de que el Gateway esté listo
-
+      - backend # Se asegura de levantar después de que el backend esté listo
+  
+  # --- PhpMyAdmin---
+  phpmyadmin:
+    depends_on:
+    - mysql-db
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    ports:
+      - "8000:80"
+    environment:
+    -   PMA_ARBITRARY=1
+    networks:
+      - app-network
+    
 networks:
   app-network:
     driver: bridge
