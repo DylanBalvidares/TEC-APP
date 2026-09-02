@@ -88,7 +88,7 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`\x1b[1m\x1b[32m[SUCCESS]\x1b[0m BACKEND MONOLÍTICO CORRIENDO EN PUERTO ${PORT}`);
+  console.log(`\x1b[1m\x1b[32m[SUCCESS]\x1b[0m BACKEND CORRIENDO EN PUERTO ${PORT}`);
 });
 
 export default app;
