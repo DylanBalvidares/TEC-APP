@@ -10,7 +10,7 @@ const ALUMNOS_API_URL = `${import.meta.env.VITE_API_URL}/academico`;
 
 const ROL_ROUTES = {
   root: "/dashboard-administrador",
-  preceptor: "/dashboard-preceptor",
+  preceptor: "/preceptor",
   profesor: "/profesor",
   alumno: "/alumno/inicio",
 };

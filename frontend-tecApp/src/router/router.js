@@ -34,6 +34,11 @@ import NoticiasViewProfesor from "../components/profesores/views/NoticiasView.vu
 import CursosViewProfesor from "../components/profesores/views/CursosView.vue";
 import ComunicadosViewProfesor from "../components/profesores/views/ComunicadosView.vue";
 
+// Preceptores
+import DashboardPreceptor from "../components/preceptor/DashboardPreceptor.vue"
+import AlumnosView from "../components/preceptor/views/AlumnosView.vue"
+import CursosPreceptor from "../components/preceptor/views/CursosPreceptorView.vue"
+
 const routes = [
   { path: "/", component: Inicio },
   { path: "/login", component: Login },
@@ -97,6 +102,16 @@ const routes = [
       { path: "asistencias", component: AsistenciasView },
       { path: "", redirect: "/profesor/inicio" }, // Si entran a /alumno, van a inicio
     ],
+  },
+  
+  {
+    path: "/preceptor",
+    component: DashboardPreceptor,
+    meta: { requiresAuth: true, role: "preceptor"},
+    children: [
+      { path: "alumnos", component: AlumnosView},
+      { path: "cursos", component: CursosView}
+    ]
   },
 
   { path: "/:pathMatch(.*)*", redirect: "/" },
