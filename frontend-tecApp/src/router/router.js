@@ -35,9 +35,9 @@ import CursosViewProfesor from "../components/profesores/views/CursosView.vue";
 import ComunicadosViewProfesor from "../components/profesores/views/ComunicadosView.vue";
 
 // Preceptores
-import DashboardPreceptor from "../components/preceptor/DashboardPreceptor.vue";
-import CursosPreceptorView from "../components/preceptor/views/CursosPreceptorView.vue";
-import AlumnosView from "../components/preceptor/views/AlumnosView.vue";
+import DashboardPreceptor from "../components/preceptores/DashboardPreceptor.vue";
+import CursosPreceptorView from "../components/preceptores/views/CursosPreceptorView.vue";
+import AlumnosView from "../components/preceptores/views/AlumnosView.vue";
 
 const routes = [
   { path: "/", component: Inicio },
@@ -105,20 +105,22 @@ const routes = [
   },
 
   // --- PRECEPTOR ---
-  {
-  path: "/preceptor",
-  component: DashboardPreceptor,
-  meta: { requiresAuth: true, role: "preceptor" },
+{
+    path: "/preceptor",
+    component: DashboardPreceptor,
 
     children: [
+
       {
         path: "cursos",
         component: CursosPreceptorView,
       },
+
       {
-        path: "alumnos/:idCurso",
+        path: "alumnos/:id_curso",
         component: AlumnosView,
       },
+
     ],
   },
   
