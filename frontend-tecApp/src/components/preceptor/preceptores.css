@@ -1,0 +1,513 @@
+/* =========================================================
+   PRECEPTOR — ESTILOS GENERALES
+========================================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   HEADER DE LA SECCIÓN
+========================================================= */
+
+.boletines-header {
+    margin-bottom: 25px;
+}
+
+.boletines-header h1 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+    color: #333;
+}
+
+.boletines-header p {
+    margin-top: 8px;
+    color: #777;
+    font-size: 15px;
+}
+
+
+/* =========================================================
+   CONTENEDOR DE CURSOS
+========================================================= */
+
+.cursos-container {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    width: 100%;
+}
+
+
+/* =========================================================
+   TARJETA DE CURSO
+========================================================= */
+
+.curso-card {
+    width: 100%;
+    min-height: 230px;
+
+    background: #ffffff;
+
+    border-radius: 18px;
+
+    padding: 22px;
+
+    border-left: 5px solid #a4a4a5;
+
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+
+    display: flex;
+    flex-direction: column;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.curso-card:hover {
+    transform: translateY(-4px);
+
+    box-shadow:
+        0 8px 22px rgba(0, 0, 0, 0.12);
+}
+
+
+/* =========================================================
+   PARTE SUPERIOR DE LA TARJETA
+========================================================= */
+
+.curso-card-top {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 15px;
+}
+
+
+/* =========================================================
+   ICONO DEL CURSO
+========================================================= */
+
+.curso-icon {
+    width: 52px;
+    height: 52px;
+
+    border-radius: 15px;
+
+    background: #f0e3ff;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    font-size: 25px;
+
+    flex-shrink: 0;
+}
+
+
+/* =========================================================
+   TURNO
+========================================================= */
+
+.curso-turno {
+    font-size: 13px;
+
+    color: #777;
+
+    background: #f5f5f5;
+
+    padding: 6px 10px;
+
+    border-radius: 20px;
+
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   INFORMACIÓN DEL CURSO
+========================================================= */
+
+.curso-info {
+    margin-top: 20px;
+}
+
+.curso-info h2 {
+    margin: 0;
+
+    font-size: 25px;
+
+    font-weight: 700;
+
+    color: #333;
+}
+
+.curso-info p {
+    margin-top: 10px;
+
+    color: #666;
+
+    font-size: 15px;
+}
+
+
+/* =========================================================
+   BOTÓN VER ALUMNOS
+========================================================= */
+
+.curso-btn {
+    margin-top: auto;
+
+    width: 100%;
+
+    border-radius: 12px;
+
+    padding: 11px;
+
+    background: white;
+
+    border: 1px solid #860808;
+
+    color: #860808;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    transition:
+        transform 0.2s ease,
+        background 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.curso-btn:hover {
+    transform: translateY(-1px);
+
+    background: #860808;
+
+    border-color: #860808;
+
+    color: #ffffff;
+}
+
+.curso-btn:active {
+    transform: translateY(0);
+}
+
+
+/* =========================================================
+   BOTÓN VOLVER A CURSOS
+========================================================= */
+
+.volver-cursos {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    padding: 0;
+
+    margin-bottom: 25px;
+
+    border: none;
+
+    background: transparent;
+
+    color: #666;
+
+    font-family: inherit;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    text-decoration: underline;
+
+    text-underline-offset: 4px;
+
+    cursor: pointer;
+
+    transition: color 0.2s ease;
+}
+
+.volver-cursos:hover {
+    color: #c0152a;
+}
+
+
+/* =========================================================
+   LISTADO DE ALUMNOS
+========================================================= */
+
+.alumnos-container {
+    width: 100%;
+
+    background: #ffffff;
+
+    border-radius: 18px;
+
+    box-shadow:
+        0 4px 15px rgba(0, 0, 0, 0.08);
+
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   ENCABEZADO Y FILAS
+========================================================= */
+
+.alumnos-header,
+.alumno-fila {
+    display: grid;
+
+    grid-template-columns:
+        minmax(250px, 1.5fr)
+        1fr
+        150px;
+
+    align-items: center;
+
+    gap: 20px;
+}
+
+
+/* =========================================================
+   ENCABEZADO DE LA TABLA
+========================================================= */
+
+.alumnos-header {
+    padding: 15px 22px;
+
+    background: #f7f7f7;
+
+    color: #777;
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    text-transform: uppercase;
+}
+
+
+/* =========================================================
+   FILA DEL ALUMNO
+========================================================= */
+
+.alumno-fila {
+    padding: 16px 22px;
+
+    border-top: 1px solid #eeeeee;
+
+    transition: background 0.2s ease;
+}
+
+.alumno-fila:hover {
+    background: #fafafa;
+}
+
+
+/* =========================================================
+   INFORMACIÓN DEL ALUMNO
+========================================================= */
+
+.alumno-info {
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    min-width: 0;
+}
+
+
+/* =========================================================
+   AVATAR / INICIALES
+========================================================= */
+
+.alumno-avatar {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #f0e3ff;
+
+    color: #6f3fa3;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    flex-shrink: 0;
+}
+
+
+.alumno-info strong {
+    font-size: 14px;
+
+    color: #333;
+}
+
+
+/* =========================================================
+   DNI
+========================================================= */
+
+.alumno-dni {
+    color: #777;
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   ESTADO DEL ALUMNO
+========================================================= */
+
+.alumno-estado {
+    justify-self: start;
+
+    padding: 6px 11px;
+
+    border-radius: 20px;
+
+    background: #f5f5f5;
+
+    color: #777;
+
+    font-size: 12px;
+
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   MENSAJES DE ESTADO
+========================================================= */
+
+.mensaje-estado {
+    width: 100%;
+
+    padding: 50px 20px;
+
+    text-align: center;
+
+    color: #777;
+
+    font-size: 15px;
+}
+
+.mensaje-estado i {
+    margin-right: 8px;
+}
+
+.mensaje-estado.error {
+    color: #c0152a;
+}
+
+
+/* =========================================================
+   RESPONSIVE — TABLET
+========================================================= */
+
+@media (max-width: 1000px) {
+
+    .cursos-container {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+
+/* =========================================================
+   RESPONSIVE — CELULAR
+========================================================= */
+
+@media (max-width: 800px) {
+
+    .boletines-header h1 {
+        font-size: 24px;
+    }
+
+    .alumnos-header {
+        display: none;
+    }
+
+    .alumno-fila {
+        grid-template-columns: 1fr;
+
+        gap: 8px;
+
+        padding: 18px;
+    }
+
+    .alumno-estado {
+        justify-self: start;
+    }
+
+}
+
+
+/* =========================================================
+   CELULAR PEQUEÑO
+========================================================= */
+
+@media (max-width: 500px) {
+
+    .cursos-container {
+        gap: 15px;
+    }
+
+    .curso-card {
+        min-height: 215px;
+
+        padding: 18px;
+    }
+
+    .curso-info h2 {
+        font-size: 22px;
+    }
+
+    .curso-icon {
+        width: 48px;
+        height: 48px;
+
+        font-size: 22px;
+    }
+
+    .curso-turno {
+        font-size: 12px;
+    }
+
+    .alumno-fila {
+        padding: 16px;
+    }
+
+}
