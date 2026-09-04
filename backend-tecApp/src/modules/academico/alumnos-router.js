@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   crearAlumno,
+  crearAlumnosEnLote,
   sincronizarUsuarioAlumno,
   obtenerAlumno,
   obtenerTodosAlumnos,
@@ -117,6 +118,21 @@ alumnosRouter.get("/alumnos/mi-curso/:id", comprobarPermiso("alumno_ver_mi_curso
     return res.status(error.status || 500).json({ message: error.message });
   }
 },
+);
+
+alumnosRouter.post(
+  "/alumnos/lote",
+  comprobarPermiso(["administrativo_crear_alumno", "preceptor_crear_alumno"]),
+  validarCursoPreceptor,
+  async (req, res) => {
+    console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m ALUMNOS LOTE REQUEST:", req.body);
+    try {
+      const resultado = await crearAlumnosEnLote(req.body);
+      return res.status(201).json(resultado);
+    } catch (error) {
+      return res.status(error.status || 500).json({ message: error.message });
+    }
+  },
 );
 
 alumnosRouter.post(

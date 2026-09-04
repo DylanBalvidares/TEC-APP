@@ -1,5 +1,6 @@
 import ErrorHandler from "../../utils/ErrorHandler.js";
 import { Alumno, Curso } from "../../db/models/index.js";
+import sequelize from "../../db/conexionDB.js";
 
 async function validarIdentidadAlumno(data) {
   console.log("\x1b[1m\x1b[34m[CTRL]\x1b[0m Ejecutando controlador: validarIdentidadAlumno");
@@ -364,6 +365,150 @@ async function darDeBajaAlumno(id) {
   }
 }
 
+async function crearAlumnosEnLote(payload) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: crearAlumnosEnLote");
+
+  const listaAlumnos = Array.isArray(payload)
+    ? payload
+    : Array.isArray(payload?.alumnos)
+    ? payload.alumnos
+    : null;
+
+  if (!listaAlumnos || !Array.isArray(listaAlumnos) || listaAlumnos.length === 0) {
+    throw new ErrorHandler(400, "Debe proporcionar una lista no vacía de alumnos para registrar");
+  }
+
+  // 1. Validar campos obligatorios por alumno
+  const erroresFormato = [];
+  const dnisVistos = new Set();
+  const dnisDuplicadosEnLote = new Set();
+  const dnisValidos = [];
+
+  listaAlumnos.forEach((alumno, index) => {
+    const pos = index + 1;
+    const { nombre, apellido, dni, fecha_nacimiento, nombre_tutor, domicilio } = alumno;
+
+    const camposFaltantes = [];
+    if (!nombre || typeof nombre !== "string" || !nombre.trim()) camposFaltantes.push("nombre");
+    if (!apellido || typeof apellido !== "string" || !apellido.trim()) camposFaltantes.push("apellido");
+    if (!dni || (typeof dni !== "string" && typeof dni !== "number")) camposFaltantes.push("dni");
+    if (!fecha_nacimiento) camposFaltantes.push("fecha_nacimiento");
+    if (!nombre_tutor || typeof nombre_tutor !== "string" || !nombre_tutor.trim()) camposFaltantes.push("nombre_tutor");
+    if (!domicilio || typeof domicilio !== "string" || !domicilio.trim()) camposFaltantes.push("domicilio");
+
+    if (camposFaltantes.length > 0) {
+      erroresFormato.push(`Alumno #${pos}: Faltan campos obligatorios: ${camposFaltantes.join(", ")}`);
+    }
+
+    if (dni) {
+      const dniStr = String(dni).trim();
+      if (dnisVistos.has(dniStr)) {
+        dnisDuplicadosEnLote.add(dniStr);
+      } else {
+        dnisVistos.add(dniStr);
+        dnisValidos.push(dniStr);
+      }
+    }
+  });
+
+  if (erroresFormato.length > 0) {
+    throw new ErrorHandler(400, `Errores de validación en el lote:\n${erroresFormato.join("\n")}`);
+  }
+
+  if (dnisDuplicadosEnLote.size > 0) {
+    throw new ErrorHandler(
+      400,
+      `Existen DNIs duplicados dentro de la misma lista enviada: ${Array.from(dnisDuplicadosEnLote).join(", ")}`
+    );
+  }
+
+  // 2. Verificar si existen los DNIs en la base de datos
+  const alumnosExistentesBD = await Alumno.findAll({
+    where: { dni: dnisValidos },
+    attributes: ["dni"],
+  });
+
+  if (alumnosExistentesBD.length > 0) {
+    const dnisExistentesBD = alumnosExistentesBD.map((a) => a.dni);
+    throw new ErrorHandler(
+      400,
+      `Los siguientes DNIs ya están registrados en el sistema: ${dnisExistentesBD.join(", ")}`
+    );
+  }
+
+  // 3. Verificar si existen los cursos especificados en la base de datos
+  const idsCursos = [
+    ...new Set(
+      listaAlumnos
+        .map((a) => a.id_curso)
+        .filter((id) => id !== null && id !== undefined && id !== "")
+    ),
+  ];
+
+  if (idsCursos.length > 0) {
+    const cursosExistentes = await Curso.findAll({
+      where: { id_curso: idsCursos },
+      attributes: ["id_curso"],
+    });
+    const idsCursosExistentes = new Set(cursosExistentes.map((c) => c.id_curso));
+    const cursosInexistentes = idsCursos.filter((id) => !idsCursosExistentes.has(Number(id)));
+
+    if (cursosInexistentes.length > 0) {
+      throw new ErrorHandler(
+        400,
+        `Los siguientes IDs de curso no existen en la base de datos: ${cursosInexistentes.join(", ")}`
+      );
+    }
+  }
+
+  // 4. Formatear y realizar inserción masiva dentro de una transacción de Sequelize
+  const alumnosParaGuardar = listaAlumnos.map((a) => ({
+    nombre: a.nombre.trim(),
+    apellido: a.apellido.trim(),
+    dni: String(a.dni).trim(),
+    fecha_nacimiento: a.fecha_nacimiento,
+    nombre_tutor: a.nombre_tutor.trim(),
+    telefono_tutor: a.telefono_tutor ? String(a.telefono_tutor).trim() : null,
+    domicilio: a.domicilio.trim(),
+    estado: a.estado || "activo",
+    id_curso: a.id_curso ? Number(a.id_curso) : null,
+    id_usuario: a.id_usuario ? Number(a.id_usuario) : null,
+  }));
+
+  const transaction = await sequelize.transaction();
+  try {
+    const alumnosCreados = await Alumno.bulkCreate(alumnosParaGuardar, {
+      transaction,
+      validate: true,
+    });
+
+    await transaction.commit();
+
+    return {
+      mensaje: `Se registraron ${alumnosCreados.length} alumnos correctamente`,
+      cantidad: alumnosCreados.length,
+      alumnos: alumnosCreados,
+    };
+  } catch (error) {
+    await transaction.rollback();
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en crearAlumnosEnLote:", error);
+
+    if (error.name === "SequelizeUniqueConstraintError") {
+      throw new ErrorHandler(400, "Un DNI o ID de usuario en el lote ya está registrado en el sistema");
+    }
+
+    if (error.name === "SequelizeForeignKeyConstraintError") {
+      throw new ErrorHandler(400, "Uno de los cursos o usuarios especificados no existe");
+    }
+
+    if (error.name === "SequelizeValidationError") {
+      throw new ErrorHandler(400, `Error de validación de datos: ${error.message}`);
+    }
+
+    throw new ErrorHandler(500, "Error interno al crear alumnos en lote");
+  }
+}
+
 export {
   obtenerTodosAlumnos,
   obtenerAlumnosCurso,
@@ -372,6 +517,7 @@ export {
   obtenerAlumnosCursoParaAlumno,
   obtenerAlumno,
   crearAlumno,
+  crearAlumnosEnLote,
   sincronizarUsuarioAlumno,
   eliminarAlumno,
   modificarAlumno,

@@ -36,8 +36,32 @@ const validarCursoPreceptor = async (req, res, next) => {
 
     let idCursoObjetivo = null;
 
-    if (req.method === "POST" && req.body.id_curso) {
-      idCursoObjetivo = parseInt(req.body.id_curso);
+    if (req.method === "POST") {
+      const listaAlumnos = Array.isArray(req.body)
+        ? req.body
+        : Array.isArray(req.body?.alumnos)
+        ? req.body.alumnos
+        : null;
+
+      if (listaAlumnos) {
+        const cursosEnLote = listaAlumnos
+          .map((a) => a.id_curso)
+          .filter((c) => c !== undefined && c !== null)
+          .map((c) => parseInt(c));
+
+        for (const cursoId of cursosEnLote) {
+          if (!idsCursosAsignados.includes(cursoId)) {
+            return next(
+              new ErrorHandler(
+                403,
+                `Acceso denegado: No tenés permiso sobre el curso ID ${cursoId} en el lote`,
+              ),
+            );
+          }
+        }
+      } else if (req.body.id_curso) {
+        idCursoObjetivo = parseInt(req.body.id_curso);
+      }
     } else if (req.method === "PATCH") {
       const idAlumno = req.body.id_alumno || req.body.id;
       if (!idAlumno) {

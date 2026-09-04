@@ -307,6 +307,16 @@ export const crearAlumno = async (alumnoData) => {
   }
 };
 
+export const crearAlumnosEnLote = async (alumnosData) => {
+  try {
+    const payload = Array.isArray(alumnosData) ? { alumnos: alumnosData } : alumnosData;
+    const response = await axios.post(`${API_URL}/alumnos/lote`, payload, getConfig());
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "Error al registrar alumnos en lote");
+  }
+};
+
 export const modificarAlumno = async (alumnoData) => {
   try {
     const payload = {
