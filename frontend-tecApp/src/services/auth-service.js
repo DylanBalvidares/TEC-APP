@@ -2,11 +2,8 @@ import axios from "axios";
 import { useAuthStore } from "../stores/auth";
 import router from "../router/router.js";
 
-const API_URL = `${import.meta.env.VITE_API_URL}/auth`;
-const ALUMNOS_API_URL = `${import.meta.env.VITE_API_URL}/academico`;
-
-//const API_URL = "/api/auth";
-//const ALUMNOS_API_URL = "/api/academico";
+const API_URL = "/api/auth";
+const ALUMNOS_API_URL = "/api/academico";
 
 const ROL_ROUTES = {
   root: "/dashboard-administrador",

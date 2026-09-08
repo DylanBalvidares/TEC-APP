@@ -20,7 +20,7 @@ export default defineConfig({
       // Redirige llamadas /api/* al API Gateway cuando se corre con npm run dev
       proxy: {
         '/api': {
-          target: 'http://localhost:9000',
+          target: 'http://backend:9000',
           changeOrigin: true,
         },
       },

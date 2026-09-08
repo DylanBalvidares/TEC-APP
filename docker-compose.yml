@@ -28,8 +28,8 @@ services:
     env_file:
     - ./backend-tecApp/db/.env
     build:
-      context: ./backend-tecApp
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend-tecApp/Dockerfile
     container_name: backend-tec-app
     restart: unless-stopped
     ports:
@@ -43,8 +43,8 @@ services:
   # --- FRONTEND ---
   frontend:
     build:
-      context: ./frontend-tecApp # <- Contexto en la carpeta del frontend
-      dockerfile: Dockerfile     # <- Busca el Dockerfile ahí dentro
+      context: .
+      dockerfile: frontend-tecApp/Dockerfile
     container_name: frontend-tec-app
     restart: unless-stopped
     ports:

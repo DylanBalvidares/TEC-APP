@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useAuthStore } from "../stores/auth.js";
 
-const API_URL = `${import.meta.env.VITE_API_URL}/usuarios`;
+const API_URL = "/api/usuarios";
 
 const getConfig = () => {
   const authStore = useAuthStore();

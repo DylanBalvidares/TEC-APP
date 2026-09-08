@@ -5,7 +5,7 @@ import { useAuthStore } from "../stores/auth.js";
 //      CONFIGURACIÓN Y HELPERS
 // ==========================================
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = "/api";
 /**
  * Genera dinámicamente los headers con el token actualizado de Pinia.
  * @param {boolean} isMultipart - True si se envía FormData (archivos), omite el Content-Type JSON.

@@ -2,11 +2,11 @@ FROM node:20-alpine
 
 WORKDIR /frontend
 
-COPY package*.json ./
+COPY frontend-tecApp/package*.json ./
 
 RUN npm install
 
-COPY . .
+COPY frontend-tecApp/. .
 
 EXPOSE 5173
 
