@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "scripts": {
+    "start": "docker compose up",
+    "down" : "docker compose down",
+    "start -d": "docker compose up -d"
+  },
   "description": "tec-app",
   "dependencies": {
     "axios": "1.16.1",
@@ -17,4 +22,5 @@
     "nodemailer": "9.0.1",
     "sequelize": "6.37.8"
   }
+  
 }
