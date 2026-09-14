@@ -17,7 +17,7 @@ router.get("/noticias", async (req, res) => {
     const noticias = await noticiasCtrl.obtenerTodasNoticias();
     return res.status(200).json(noticias);
   } catch (error) {
-    return res.status(error.status || 500).json({ message: error.message });
+    return res.status(error.statusCode || 500).json({ message: error.message });
   }
 });
 
@@ -26,7 +26,7 @@ router.get("/noticias/:id", async (req, res) => {
     const noticia = await noticiasCtrl.obtenerNoticia(req.params.id);
     return res.status(200).json(noticia);
   } catch (error) {
-    return res.status(error.status || 500).json({ message: error.message });
+    return res.status(error.statusCode || 500).json({ message: error.message });
   }
 });
 
@@ -39,7 +39,7 @@ router.post("/noticias", comprobarPermisos(), upload.single("imagen"), async (re
     const noticia = await noticiasCtrl.crearNoticia(req.body, req.file);
     return res.status(201).json(noticia);
   } catch (error) {
-    return res.status(error.status || 500).json({ message: error.message });
+    return res.status(error.statusCode || 500).json({ message: error.message });
   }
 });
 
@@ -52,7 +52,7 @@ router.patch("/noticias/:id", comprobarPermisos(), upload.single("imagen"), asyn
     );
     return res.status(200).json({ mensaje: "Noticia actualizada", resultado });
   } catch (error) {
-    return res.status(error.status || 500).json({ message: error.message });
+    return res.status(error.statusCode || 500).json({ message: error.message });
   }
 });
 
@@ -61,7 +61,7 @@ router.delete("/noticias/:id", comprobarPermisos(), async (req, res) => {
     const resultado = await noticiasCtrl.eliminarNoticia(req.params.id);
     return res.status(200).json({ mensaje: "Noticia eliminada", resultado });
   } catch (error) {
-    return res.status(error.status || 500).json({ message: error.message });
+    return res.status(error.statusCode || 500).json({ message: error.message });
   }
 });
 
@@ -71,7 +71,7 @@ router.get("/comunicados", async (req, res) => {
     const comunicados = await comunicadosCtrl.obtenerTodosComunicados(req.query);
     return res.status(200).json(comunicados);
   } catch (error) {
-    return res.status(error.status || 500).json({ message: error.message });
+    return res.status(error.statusCode || 500).json({ message: error.message });
   }
 });
 
@@ -80,7 +80,7 @@ router.get("/comunicados/:id", async (req, res) => {
     const comunicado = await comunicadosCtrl.obtenerComunicado(req.params.id);
     return res.status(200).json(comunicado);
   } catch (error) {
-    return res.status(error.status || 500).json({ message: error.message });
+    return res.status(error.statusCode || 500).json({ message: error.message });
   }
 });
 
@@ -89,7 +89,7 @@ router.post("/comunicados", comprobarPermisos(), async (req, res) => {
     const comunicado = await comunicadosCtrl.crearComunicado(req.body);
     return res.status(201).json(comunicado);
   } catch (error) {
-    return res.status(error.status || 500).json({ message: error.message });
+    return res.status(error.statusCode || 500).json({ message: error.message });
   }
 });
 
@@ -103,7 +103,7 @@ router.put("/comunicados/:id", comprobarPermisos(), async (req, res) => {
       .status(200)
       .json({ mensaje: "Comunicado actualizado", resultado });
   } catch (error) {
-    return res.status(error.status || 500).json({ message: error.message });
+    return res.status(error.statusCode || 500).json({ message: error.message });
   }
 });
 
@@ -112,7 +112,7 @@ router.delete("/comunicados/:id", comprobarPermisos(), async (req, res) => {
     const resultado = await comunicadosCtrl.eliminarComunicado(req.params.id);
     return res.status(200).json({ mensaje: "Comunicado eliminado", resultado });
   } catch (error) {
-    return res.status(error.status || 500).json({ message: error.message });
+    return res.status(error.statusCode || 500).json({ message: error.message });
   }
 });
 
@@ -122,7 +122,7 @@ router.get("/objetos-perdidos", async (req, res) => {
     const objetos = await objetosCtrl.obtenerTodosObjetos();
     return res.status(200).json(objetos);
   } catch (error) {
-    return res.status(error.status || 500).json({ message: error.message });
+    return res.status(error.statusCode || 500).json({ message: error.message });
   }
 });
 
@@ -131,7 +131,7 @@ router.get("/objetos-perdidos/:id", async (req, res) => {
     const objeto = await objetosCtrl.obtenerObjeto(req.params.id);
     return res.status(200).json(objeto);
   } catch (error) {
-    return res.status(error.status || 500).json({ message: error.message });
+    return res.status(error.statusCode || 500).json({ message: error.message });
   }
 });
 
@@ -140,7 +140,7 @@ router.post("/objetos-perdidos", comprobarPermisos(), async (req, res) => {
     const objeto = await objetosCtrl.reportarObjeto(req.body);
     return res.status(201).json(objeto);
   } catch (error) {
-    return res.status(error.status || 500).json({ message: error.message });
+    return res.status(error.statusCode || 500).json({ message: error.message });
   }
 });
 
@@ -152,7 +152,7 @@ router.put("/objetos-perdidos/:id", comprobarPermisos(), async (req, res) => {
     );
     return res.status(200).json({ mensaje: "Estado actualizado", resultado });
   } catch (error) {
-    return res.status(error.status || 500).json({ message: error.message });
+    return res.status(error.statusCode || 500).json({ message: error.message });
   }
 });
 
@@ -161,7 +161,7 @@ router.delete("/objetos-perdidos/:id", comprobarPermisos(), async (req, res) => 
     const resultado = await objetosCtrl.eliminarObjeto(req.params.id);
     return res.status(200).json({ mensaje: "Objeto eliminado", resultado });
   } catch (error) {
-    return res.status(error.status || 500).json({ message: error.message });
+    return res.status(error.statusCode || 500).json({ message: error.message });
   }
 });
 
