@@ -1,0 +1,1655 @@
+/* =========================================================
+   ALUMNOS - ESTILOS PROPIOS DE LA VISTA
+   El navbar, sidebar y perfil pertenecen a preceptores.css
+========================================================= */
+
+
+/* =========================================================
+   1. CONTENEDOR PRINCIPAL
+========================================================= */
+
+.alumnos-page {
+    width: 100%;
+    min-width: 0;
+}
+
+.alumnos-contenido {
+    width: 100%;
+    max-width: 1250px;
+    margin: 0 auto;
+}
+
+
+
+/* =========================================================
+   2. BOTÓN VOLVER A CURSOS
+========================================================= */
+
+.volver-cursos-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 0;
+    border: none;
+    background: transparent;
+    color: #777;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+}
+
+.volver-cursos-btn i {
+    font-size: 13px;
+    transition: transform 0.2s ease;
+}
+
+.volver-cursos-btn {
+
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: 4px;
+
+}
+
+.volver-cursos-btn:hover {
+    color: #ca0d0d;
+    text-decoration-color: #ca0d0d;
+
+}
+
+.volver-cursos-btn:hover i {
+    transform: translateX(-4px);
+
+}
+
+
+/* =========================================================
+   3. HEADER
+========================================================= */
+
+.alumnos-header {
+    margin-bottom: 25px;
+}
+
+.alumnos-header h1 {
+    font-size: 32px;
+    color: #2f2f2f;
+
+    margin: 0 0 6px 0;
+}
+
+.alumnos-header p {
+    margin: 0;
+
+    color: #666;
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   4. MENSAJE DE ERROR GENERAL
+========================================================= */
+
+.mensaje-error {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    width: 100%;
+
+    padding: 13px 16px;
+
+    margin-bottom: 15px;
+
+    border: 1px solid #f0c5c5;
+    border-radius: 10px;
+
+    background: #fff3f3;
+
+    color: #b42323;
+
+    font-size: 13px;
+}
+
+.mensaje-error i {
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+
+/* =========================================================
+   5. BARRA DE HERRAMIENTAS
+========================================================= */
+
+.alumnos-toolbar {
+    background: white;
+
+    border-radius: 15px;
+
+    padding: 16px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+
+    margin-bottom: 15px;
+}
+
+
+/* =========================================================
+   BUSCADOR
+========================================================= */
+
+.buscador-alumnos {
+    position: relative;
+
+    flex: 1;
+
+    min-width: 0;
+}
+
+.buscador-alumnos i {
+    position: absolute;
+
+    left: 15px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    color: #999;
+
+    font-size: 14px;
+}
+
+.buscador-alumnos input {
+    width: 100%;
+    height: 45px;
+
+    border: 1px solid #ddd;
+    border-radius: 10px;
+
+    padding: 0 15px 0 42px;
+
+    outline: none;
+
+    font-size: 14px;
+    color: #333;
+
+    background: white;
+
+    transition: 0.2s ease;
+}
+
+.buscador-alumnos input::placeholder {
+    color: #aaa;
+}
+
+.buscador-alumnos input:focus {
+    border-color: #ca0d0d;
+
+    box-shadow:
+        0 0 0 3px rgba(202, 13, 13, 0.08);
+}
+
+
+/* =========================================================
+   ACCIONES DE LA TOOLBAR
+========================================================= */
+
+.toolbar-acciones {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    flex-shrink: 0;
+}
+
+
+/* =========================================================
+   BOTÓN COMUNICAR AL CURSO
+========================================================= */
+
+.btn-comunicar-curso {
+    height: 45px;
+
+    padding: 0 18px;
+
+    border: 1px solid #d8c5e8;
+    border-radius: 10px;
+
+    background: #f6effc;
+    color: #7b3fb3;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    transition: 0.25s ease;
+}
+
+.btn-comunicar-curso:hover {
+    background: #eadcf5;
+
+    border-color: #b995d3;
+
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   BOTÓN AGREGAR ALUMNO
+========================================================= */
+
+.btn-cargar-alumno {
+    height: 45px;
+
+    padding: 0 20px;
+
+    border: none;
+    border-radius: 10px;
+
+    background: #ca0d0d;
+    color: white;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    transition: 0.25s ease;
+}
+
+.btn-cargar-alumno:hover {
+    background: #a90909;
+
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   6. CONTADOR
+========================================================= */
+
+.alumnos-contador {
+    margin: 5px 0 10px 3px;
+
+    color: #666;
+
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   7. LISTA DE ALUMNOS
+========================================================= */
+
+.alumnos-lista {
+    width: 100%;
+
+    background: white;
+
+    border-radius: 15px;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    box-shadow:
+        0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+
+/* =========================================================
+   CABECERA
+========================================================= */
+
+.alumnos-lista-header {
+    display: grid;
+
+    grid-template-columns:
+        2fr
+        1.1fr
+        1.3fr
+        1.5fr
+        1.3fr
+        1.8fr
+        1fr
+        110px;
+
+    align-items: center;
+
+    min-width: 1200px;
+
+    padding: 16px 22px;
+
+    background: #fafafa;
+
+    border-bottom: 1px solid #eee;
+
+    color: #777;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.4px;
+}
+
+
+/* =========================================================
+   FILAS
+========================================================= */
+
+.alumno-fila {
+    display: grid;
+
+    grid-template-columns:
+        2fr
+        1.1fr
+        1.3fr
+        1.5fr
+        1.3fr
+        1.8fr
+        1fr
+        110px;
+
+    align-items: center;
+
+    min-width: 1200px;
+    min-height: 72px;
+
+    padding: 12px 22px;
+
+    border-bottom: 1px solid #eeeeee;
+
+    transition: 0.2s ease;
+}
+
+.alumno-fila:last-child {
+    border-bottom: none;
+}
+
+.alumno-fila:hover {
+    background: #fffafa;
+}
+
+
+/* =========================================================
+   8. INFORMACIÓN DEL ALUMNO
+========================================================= */
+
+.alumno-nombre {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    min-width: 0;
+
+    color: #333;
+
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.alumno-nombre span {
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   AVATAR
+========================================================= */
+
+.alumno-avatar {
+    width: 42px;
+    height: 42px;
+
+    border-radius: 50%;
+
+    background: #f9dede;
+    color: #ca0d0d;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    flex-shrink: 0;
+}
+
+
+/* =========================================================
+   DATOS
+========================================================= */
+
+.alumno-dni,
+.alumno-fecha,
+.alumno-tutor,
+.alumno-telefono,
+.alumno-domicilio {
+    color: #666;
+
+    font-size: 14px;
+}
+
+.alumno-tutor,
+.alumno-domicilio {
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   9. ESTADO
+========================================================= */
+
+.alumno-estado {
+    display: flex;
+    align-items: center;
+}
+
+.estado-alumno {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 5px 10px;
+
+    border-radius: 20px;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    text-transform: capitalize;
+
+    white-space: nowrap;
+}
+
+.estado-alumno.activo {
+    background: #e5f8e9;
+    color: #27853d;
+}
+
+.estado-alumno.condicional {
+    background: #fff3cd;
+    color: #9a7200;
+}
+
+.estado-alumno.inactivo {
+    background: #f1f1f1;
+    color: #777;
+}
+
+
+/* =========================================================
+   10. ACCIONES
+========================================================= */
+
+.alumno-acciones {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+}
+
+
+/* BOTÓN BASE */
+
+.accion-btn {
+    width: 35px;
+    height: 35px;
+
+    border-radius: 8px;
+
+    background: white;
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    transition: 0.2s ease;
+}
+
+
+/* EDITAR */
+
+.accion-btn.editar {
+    border: 1px solid #ddd;
+
+    color: #555;
+}
+
+.accion-btn.editar:hover {
+    background: #f5f5f5;
+
+    border-color: #bbb;
+}
+
+
+/* ELIMINAR */
+
+.accion-btn.eliminar {
+    border: 1px solid #e4c1c1;
+
+    color: #ca0d0d;
+}
+
+.accion-btn.eliminar:hover {
+    background: #fff0f0;
+
+    border-color: #ca0d0d;
+}
+
+
+/* EMAIL */
+
+.accion-btn.email {
+    border: 1px solid #d8c5e8;
+
+    background: #f6effc;
+
+    color: #7b3fb3;
+}
+
+.accion-btn.email:hover {
+    background: #eadcf5;
+
+    border-color: #b995d3;
+}
+
+
+/* =========================================================
+   11. SIN ALUMNOS / CARGANDO
+========================================================= */
+
+.sin-alumnos {
+    min-width: 1200px;
+
+    padding: 60px 20px;
+
+    text-align: center;
+
+    color: #888;
+
+    font-size: 14px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    gap: 8px;
+}
+
+.sin-alumnos i {
+    font-size: 26px;
+
+    color: #bbb;
+
+    margin-bottom: 5px;
+}
+
+.sin-alumnos strong {
+    color: #666;
+
+    font-size: 14px;
+}
+
+.sin-alumnos span {
+    color: #999;
+
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   12. MODALES
+========================================================= */
+
+.modal {
+    position: fixed;
+
+    inset: 0;
+
+    background: rgba(0, 0, 0, 0.45);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    z-index: 2000;
+}
+
+
+/* =========================================================
+   CONTENIDO DEL MODAL
+========================================================= */
+
+.modal-contenido {
+    width: 100%;
+
+    max-width: 500px;
+
+    max-height: 90vh;
+
+    background: white;
+
+    border-radius: 20px;
+
+    box-shadow:
+        0 10px 35px rgba(0, 0, 0, 0.2);
+
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    animation: aparecerModal 0.2s ease;
+}
+
+@keyframes aparecerModal {
+
+    from {
+        opacity: 0;
+
+        transform:
+            translateY(-10px)
+            scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+
+        transform:
+            translateY(0)
+            scale(1);
+    }
+}
+
+
+/* =========================================================
+   HEADER DEL MODAL
+========================================================= */
+
+.modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 22px 24px;
+
+    border-bottom: 1px solid #eee;
+}
+
+.modal-header h2 {
+    font-size: 21px;
+
+    color: #333;
+
+    margin: 0 0 5px 0;
+}
+
+.modal-header p {
+    font-size: 13px;
+
+    color: #777;
+
+    margin: 0;
+
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   BOTÓN CERRAR
+========================================================= */
+
+.cerrar-modal {
+    width: 35px;
+    height: 35px;
+
+    flex-shrink: 0;
+
+    border: none;
+
+    border-radius: 9px;
+
+    background: #f5f5f5;
+
+    color: #666;
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    transition: 0.2s ease;
+}
+
+.cerrar-modal:hover {
+    background: #eeeeee;
+
+    color: #333;
+}
+
+
+/* =========================================================
+   13. PASOS DEL MODAL
+========================================================= */
+
+.pasos-modal {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    margin: 20px 24px 25px;
+
+    padding: 0;
+}
+
+.paso {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    color: #a0a0a0;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    white-space: nowrap;
+}
+
+.paso-numero {
+    width: 30px;
+    height: 30px;
+
+    flex-shrink: 0;
+
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #eeeeee;
+
+    color: #777777;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    transition: 0.2s ease;
+}
+
+.paso.activo {
+    color: #333333;
+}
+
+.paso.activo .paso-numero {
+    background: #f85757;
+
+    color: #ffffff;
+}
+
+.paso.completado {
+    color: #555555;
+}
+
+.paso.completado .paso-numero {
+    background: #fa8484;
+
+    color: #ffffff;
+}
+
+.paso-linea {
+    flex: 1;
+
+    height: 2px;
+
+    background: #eeeeee;
+
+    min-width: 15px;
+}
+
+
+/* =========================================================
+   14. ERROR DE FORMULARIO
+========================================================= */
+
+.formulario-error {
+    display: flex;
+    align-items: center;
+
+    gap: 9px;
+
+    margin: 0 24px 18px;
+
+    padding: 11px 13px;
+
+    border: 1px solid #f0c5c5;
+
+    border-radius: 9px;
+
+    background: #fff3f3;
+
+    color: #b42323;
+
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   15. PASOS DEL FORMULARIO
+========================================================= */
+
+.form-paso {
+    display: block;
+
+    padding: 0 24px;
+}
+
+
+/* =========================================================
+   SECCIONES
+========================================================= */
+
+.modal-seccion {
+    margin-bottom: 22px;
+}
+
+.modal-seccion h3 {
+    margin: 0 0 5px 0;
+
+    color: #333;
+
+    font-size: 17px;
+}
+
+.modal-seccion p {
+    margin: 0;
+
+    color: #777;
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   FILA DE FORMULARIO
+========================================================= */
+
+.form-fila {
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 12px;
+}
+
+
+/* =========================================================
+   16. CAMPOS
+========================================================= */
+
+.form-grupo {
+    display: flex;
+    flex-direction: column;
+
+    gap: 7px;
+
+    margin-bottom: 17px;
+}
+
+.form-grupo label {
+    font-size: 13px;
+
+    font-weight: 600;
+
+    color: #444;
+}
+
+.form-grupo input,
+.form-grupo select {
+    width: 100%;
+
+    height: 44px;
+
+    border: 1px solid #ddd;
+
+    border-radius: 9px;
+
+    padding: 0 13px;
+
+    font-family: 'Segoe UI', sans-serif;
+
+    font-size: 14px;
+
+    color: #333;
+
+    background: white;
+
+    outline: none;
+
+    transition: 0.2s ease;
+}
+
+.form-grupo input::placeholder,
+.form-grupo textarea::placeholder {
+    color: #aaa;
+}
+
+.form-grupo input:focus,
+.form-grupo select:focus,
+.form-grupo textarea:focus {
+    border-color: #ca0d0d;
+
+    box-shadow:
+        0 0 0 3px rgba(202, 13, 13, 0.08);
+}
+
+.form-grupo input:disabled {
+    background: #f7f7f7;
+
+    color: #777;
+
+    cursor: not-allowed;
+}
+
+
+/* =========================================================
+   TEXTAREA
+========================================================= */
+
+.form-grupo textarea {
+    width: 100%;
+
+    min-height: 130px;
+
+    border: 1px solid #ddd;
+
+    border-radius: 9px;
+
+    padding: 12px 13px;
+
+    font-family: 'Segoe UI', sans-serif;
+
+    font-size: 14px;
+
+    color: #333;
+
+    background: white;
+
+    outline: none;
+
+    resize: vertical;
+
+    transition: 0.2s ease;
+}
+
+
+/* =========================================================
+   17. ACCIONES DEL MODAL
+========================================================= */
+
+.modal-acciones {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+
+    margin-top: 25px;
+
+    padding: 0 24px 24px;
+}
+
+
+/* =========================================================
+   BOTÓN CANCELAR / ATRÁS
+========================================================= */
+
+.btn-cancelar {
+    height: 42px;
+
+    padding: 0 18px;
+
+    border: 1px solid #ddd;
+
+    border-radius: 9px;
+
+    background: white;
+
+    color: #666;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    transition: 0.2s ease;
+}
+
+.btn-cancelar:hover {
+    background: #f5f5f5;
+}
+
+
+/* =========================================================
+   BOTÓN SIGUIENTE
+========================================================= */
+
+.btn-siguiente {
+    height: 42px;
+
+    padding: 0 18px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background: #f85757;
+
+    color: white;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    transition: 0.2s ease;
+}
+
+.btn-siguiente:hover {
+    background: #e84949;
+
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   BOTÓN GUARDAR
+========================================================= */
+
+.btn-guardar {
+    height: 42px;
+
+    padding: 0 18px;
+
+    border: none;
+
+    border-radius: 9px;
+
+    background: #ca0d0d;
+
+    color: white;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    transition: 0.2s ease;
+}
+
+.btn-guardar:hover {
+    background: #a90909;
+}
+
+.btn-guardar:disabled {
+    opacity: 0.65;
+
+    cursor: not-allowed;
+
+    transform: none;
+}
+
+
+/* =========================================================
+   18. MODAL EMAIL
+========================================================= */
+
+.modal-email {
+    max-width: 520px;
+}
+
+
+/* DESTINATARIO */
+
+.email-destinatario {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    margin: 20px 24px 5px;
+
+    padding: 14px 16px;
+
+    background: #fafafa;
+
+    border: 1px solid #eeeeee;
+
+    border-radius: 12px;
+}
+
+.email-icono {
+    width: 38px;
+    height: 38px;
+
+    flex-shrink: 0;
+
+    border-radius: 10px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #f6effc;
+
+    color: #7b3fb3;
+}
+
+.email-destinatario span {
+    display: block;
+
+    color: #888;
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+    margin-bottom: 3px;
+}
+
+.email-destinatario strong {
+    display: block;
+
+    color: #333;
+
+    font-size: 14px;
+}
+
+
+/* ERROR EMAIL */
+
+.email-error {
+    display: flex;
+    align-items: center;
+
+    gap: 9px;
+
+    margin: 15px 24px 0;
+
+    padding: 11px 13px;
+
+    border-radius: 9px;
+
+    border: 1px solid #f0c5c5;
+
+    background: #fff3f3;
+
+    color: #b42323;
+
+    font-size: 13px;
+}
+
+
+/* ÉXITO EMAIL */
+
+.email-exito {
+    display: flex;
+    align-items: center;
+
+    gap: 9px;
+
+    margin: 15px 24px 0;
+
+    padding: 11px 13px;
+
+    border-radius: 9px;
+
+    border: 1px solid #bde5c6;
+
+    background: #effaf1;
+
+    color: #27853d;
+
+    font-size: 13px;
+}
+
+
+/* FORM EMAIL */
+
+.form-email {
+    padding-top: 20px;
+}
+
+
+/* =========================================================
+   BOTÓN ENVIAR EMAIL
+========================================================= */
+
+.btn-enviar-email {
+    height: 42px;
+
+    padding: 0 18px;
+
+    border: none;
+
+    border-radius: 9px;
+
+    background: #7b3fb3;
+
+    color: white;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    transition: 0.2s ease;
+}
+
+.btn-enviar-email:hover {
+    background: #69339b;
+
+    transform: translateY(-1px);
+}
+
+.btn-enviar-email:disabled {
+    opacity: 0.65;
+
+    cursor: not-allowed;
+
+    transform: none;
+}
+
+
+/* =========================================================
+   19. MODAL COMUNICADO
+========================================================= */
+
+.modal-comunicado {
+    max-width: 560px;
+    padding: 10px;
+}
+
+
+/* DESTINO */
+
+.comunicado-destino {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    margin: 20px 24px 5px;
+
+    padding: 14px 16px;
+
+    background: #fafafa;
+
+    border: 1px solid #eeeeee;
+
+    border-radius: 12px;
+}
+
+.comunicado-icono {
+    width: 38px;
+    height: 38px;
+
+    flex-shrink: 0;
+
+    border-radius: 10px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #f9dede;
+
+    color: #ca0d0d;
+}
+
+.comunicado-destino span {
+    display: block;
+
+    color: #888;
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+    margin-bottom: 3px;
+}
+
+.comunicado-destino strong {
+    display: block;
+
+    color: #333;
+
+    font-size: 14px;
+}
+
+
+/* ERROR */
+
+.comunicado-error {
+    display: flex;
+    align-items: center;
+
+    gap: 9px;
+
+    margin: 15px 24px 0;
+
+    padding: 11px 13px;
+
+    border-radius: 9px;
+
+    border: 1px solid #f0c5c5;
+
+    background: #fff3f3;
+
+    color: #b42323;
+
+    font-size: 13px;
+}
+
+
+/* ÉXITO */
+
+.comunicado-exito {
+    display: flex;
+    align-items: center;
+
+    gap: 9px;
+
+    margin: 15px 24px 0;
+
+    padding: 11px 13px;
+
+    border-radius: 9px;
+
+    border: 1px solid #bde5c6;
+
+    background: #effaf1;
+
+    color: #27853d;
+
+    font-size: 13px;
+}
+
+
+/* FORM COMUNICADO */
+
+.form-comunicado {
+    padding-top: 20px;
+}
+
+
+/* =========================================================
+   BOTÓN PUBLICAR COMUNICADO
+========================================================= */
+
+.btn-enviar-comunicado {
+    height: 42px;
+
+    padding: 0 18px;
+
+    border: none;
+
+    border-radius: 9px;
+
+    background: #ca0d0d;
+
+    color: white;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    transition: 0.2s ease;
+}
+
+.btn-enviar-comunicado:hover {
+    background: #a90909;
+
+    transform: translateY(-1px);
+}
+
+.btn-enviar-comunicado:disabled {
+    opacity: 0.65;
+
+    cursor: not-allowed;
+
+    transform: none;
+}
+
+
+/* =========================================================
+   20. RESPONSIVE
+========================================================= */
+
+@media (max-width: 1100px) {
+
+    .alumnos-lista-header,
+    .alumno-fila {
+        min-width: 1100px;
+    }
+
+    .alumnos-lista-header,
+    .alumno-fila {
+        grid-template-columns:
+            1.8fr
+            1fr
+            1.2fr
+            1.4fr
+            1.2fr
+            1.6fr
+            1fr
+            110px;
+    }
+
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+
+    .alumnos-toolbar {
+        flex-wrap: wrap;
+    }
+
+    .buscador-alumnos {
+        width: 100%;
+
+        flex: none;
+    }
+
+    .toolbar-acciones {
+        width: 100%;
+    }
+
+    .btn-comunicar-curso,
+    .btn-cargar-alumno {
+        flex: 1;
+    }
+
+}
+
+
+/* =========================================================
+   MÓVIL
+========================================================= */
+
+@media (max-width: 700px) {
+
+    .alumnos-header h1 {
+        font-size: 27px;
+    }
+
+    .alumnos-toolbar {
+        flex-direction: column;
+
+        align-items: stretch;
+    }
+
+    .toolbar-acciones {
+        flex-direction: column;
+    }
+
+    .btn-comunicar-curso,
+    .btn-cargar-alumno {
+        width: 100%;
+
+        flex: none;
+    }
+
+    .alumnos-lista {
+        overflow-x: auto;
+    }
+
+    .alumnos-lista-header,
+    .alumno-fila {
+        min-width: 1200px;
+    }
+
+
+    /* MODALES */
+
+    .modal {
+        padding: 12px;
+    }
+
+    .modal-contenido {
+        max-height: 94vh;
+
+        border-radius: 16px;
+    }
+
+    .modal-header {
+        padding: 18px;
+    }
+
+    .modal-header h2 {
+        font-size: 19px;
+    }
+
+    .pasos-modal {
+        margin: 18px 18px 22px;
+
+        gap: 6px;
+    }
+
+    .paso {
+        font-size: 11px;
+
+        gap: 5px;
+    }
+
+    .paso-numero {
+        width: 27px;
+        height: 27px;
+
+        font-size: 12px;
+    }
+
+    .form-paso {
+        padding: 0 18px;
+    }
+
+    .form-fila {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .modal-acciones {
+        padding: 0 18px 18px;
+    }
+
+    .email-destinatario,
+    .comunicado-destino {
+        margin-left: 18px;
+        margin-right: 18px;
+    }
+
+    .email-error,
+    .email-exito,
+    .comunicado-error,
+    .comunicado-exito {
+        margin-left: 18px;
+        margin-right: 18px;
+    }
+
+}

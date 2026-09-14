@@ -223,19 +223,14 @@
 
           <!-- CURSOS -->
 
-          <li @click="sidebarAbierto = false">
-
-            <RouterLink
-              to="/preceptor/cursos"
-              active-class="active"
-            >
-
-              <i class="fas fa-user-friends"></i>
-
-              Cursos a cargo
-
-            </RouterLink>
-
+          <li>
+              <RouterLink
+                  to="/preceptor/cursos"
+                  active-class="active"
+              >
+                  <i class="fas fa-user-friends"></i>
+                  Cursos a cargo
+              </RouterLink>
           </li>
 
 
@@ -562,4 +557,4 @@ onUnmounted(
 </script>
 
 
-<style scoped src="./preceptores.css"></style>
+<style src="./preceptores.css"></style>
