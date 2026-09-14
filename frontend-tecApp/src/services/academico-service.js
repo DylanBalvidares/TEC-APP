@@ -355,6 +355,28 @@ export const darDeBajaAlumno = async (id) => {
   }
 };
 
+export const enviarEmailAlumno = async (idAlumno, emailData) => {
+  try {
+    const payload = {
+      asunto: emailData.asunto,
+      mensaje: emailData.mensaje,
+    };
+
+    const response = await axios.post(
+      `${API_URL}/alumnos/enviar-email/${idAlumno}`,
+      payload,
+      getConfig()
+    );
+
+    return {
+      success: true,
+      data: response.data,
+    };
+  } catch (error) {
+    return manejarErrorApi(error, "No se pudo enviar el email al alumno.");
+  }
+};
+
 // ==========================================
 //               ASISTENCIAS
 // ==========================================
