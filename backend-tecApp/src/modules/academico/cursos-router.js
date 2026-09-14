@@ -34,7 +34,7 @@ cursosRouter.get("/info-curso-alumno/:id", comprobarPermiso("alumno_ver_mi_curso
   }
 });
 
-cursosRouter.get("/cursos", comprobarPermiso("administrativo_ver_todos_cursos"), async (req, res) => {
+cursosRouter.get("/cursos", comprobarPermiso(["administrativo_ver_todos_cursos", "preceptor_ver_curso"]), async (req, res) => {
     
   try {
     const cursos = await obtenerTodosCursos();
