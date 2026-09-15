@@ -74,7 +74,7 @@
 
 <script setup>
 import { ref, reactive } from "vue";
-import { registro, verificarCodigo, redireccionarSegunRol } from "../../services/auth-service.js";
+import { registro, verificarCodigo, redireccionarSegunRol, cargarPerfilAdicional } from "../../services/auth-service.js";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "../../stores/auth.js";
 import { parseDisplayDate } from "../../utils/formatters.js";
@@ -138,7 +138,10 @@ const verificar = async () => {
       const authStore = useAuthStore();
       authStore.login(response.token, response.usuario);
 
-      // 2. Redireccionamos igual que en el login
+      // 2. Cargamos el perfil del alumno/profesor para mostrar su curso al entrar
+      await cargarPerfilAdicional(response.usuario);
+
+      // 3. Redireccionamos igual que en el login
       redireccionarSegunRol(response.usuario.nombre_rol);
     } else {
       errorMessage.value = response.message;

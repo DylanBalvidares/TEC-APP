@@ -670,7 +670,7 @@ const obtenerIdCursoAlumno = async () => {
   // 2. Fallback: obtener desde la API usando el usuario autenticado
   try {
     const authStore = useAuthStore();
-    const userId = authStore.usuario?.id;
+    const userId = authStore.usuario?.id ?? authStore.usuario?.id_usuario;
     if (userId) {
       const response = await axios.get(`${API_URL}/alumnos-mi-info/${userId}`, getConfig());
       const info = response.data;

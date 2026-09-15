@@ -60,15 +60,18 @@ const obtenerInfoProfesor = async (idUsuario) => {
   }
 };
 
-const cargarPerfilAdicional = async (usuario) => {
+export const cargarPerfilAdicional = async (usuario) => {
   if (!usuario || !usuario.nombre_rol) return;
+
+  const idUsuario = usuario.id ?? usuario.id_usuario;
+  if (!idUsuario) return;
 
   const authStore = useAuthStore();
   if (usuario.nombre_rol === "alumno") {
-    const info = await obtenerInfoAlumno(usuario.id);
+    const info = await obtenerInfoAlumno(idUsuario);
     if (info.success) authStore.guardarInfo(info.data);
   } else if (usuario.nombre_rol === "profesor") {
-    const info = await obtenerInfoProfesor(usuario.id);
+    const info = await obtenerInfoProfesor(idUsuario);
     if (info.success) authStore.guardarInfo(info.data);
   }
 };
