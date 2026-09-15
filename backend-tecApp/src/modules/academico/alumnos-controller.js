@@ -152,6 +152,12 @@ async function obtenerInfoParaAlumno(id) {
       },
 
       attributes: ["id_alumno", "nombre", "apellido", "estado", "id_curso"],
+      include: [
+        {
+          model: Curso,
+          attributes: ["id_curso", "nombre_curso"],
+        },
+      ],
     });
 
     console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m OBTENER-INFO-PARA-ALUMNO:", alumno);
@@ -160,7 +166,7 @@ async function obtenerInfoParaAlumno(id) {
       throw new ErrorHandler(404, "No se encontró el alumno especificado");
     }
 
-    return alumno;
+    return alumno.toJSON();
   } catch (error) {
     // Esto está excelente para propagar tus errores personalizados
     if (error instanceof ErrorHandler) {
