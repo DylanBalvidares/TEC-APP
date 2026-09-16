@@ -309,6 +309,9 @@ export const crearAlumno = async (alumnoData) => {
       fecha_nacimiento:
         alumnoData.fecha_nacimiento,
 
+      email:
+        alumnoData.email,
+
       nombre_tutor:
         alumnoData.nombre_tutor,
 
@@ -402,6 +405,13 @@ export const modificarAlumno = async (
     ) {
       payload.fecha_nacimiento =
         alumnoData.fecha_nacimiento;
+    }
+
+    if (
+      alumnoData.email !== undefined
+    ) {
+      payload.email =
+        alumnoData.email;
     }
 
     if (
