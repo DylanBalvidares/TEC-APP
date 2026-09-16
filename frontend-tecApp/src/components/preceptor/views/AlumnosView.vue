@@ -76,6 +76,7 @@
       </div>
 
       <!-- LISTA -->
+    <div class="alumnos-lista-wrapper">
       <div class="alumnos-lista">
 
         <!-- CABECERA -->
@@ -83,6 +84,7 @@
           <div>Alumno</div>
           <div>DNI</div>
           <div>Fecha de nacimiento</div>
+          <div>Gmail</div>
           <div>Tutor</div>
           <div>Teléfono</div>
           <div>Domicilio</div>
@@ -142,6 +144,13 @@
           <!-- FECHA -->
           <div class="alumno-fecha">
             {{ formatearFecha(alumno.fecha_nacimiento) }}
+          </div>
+
+          <div class="alumno-email">
+            <i class="fa-solid fa-envelope"></i>
+            <span :title="alumno.email">
+              {{ alumno.email || "—" }}
+            </span>
           </div>
 
           <!-- TUTOR -->
@@ -204,6 +213,7 @@
         </div>
 
       </div>
+    </div>
     </main>
 
 
@@ -357,6 +367,17 @@
                 type="date"
                 required
               />
+            </div>
+
+            <div class="form-grupo">
+                <label>Gmail *</label>
+
+                <input
+                  v-model="formulario.email"
+                  type="email"
+                  placeholder="Ej. juan.perez@gmail.com"
+                  required
+                />
             </div>
 
           </div>
@@ -893,6 +914,7 @@ const formularioInicial = () => ({
   apellido: "",
   dni: "",
   fecha_nacimiento: "",
+  email: "",
   nombre_tutor: "",
   telefono_tutor: "",
   domicilio: "",
@@ -1101,6 +1123,7 @@ const abrirModalEditar = (alumno) => {
     fecha_nacimiento: alumno.fecha_nacimiento
       ? String(alumno.fecha_nacimiento).substring(0, 10)
       : "",
+    email: alumno.email || "",
     nombre_tutor: alumno.nombre_tutor || "",
     telefono_tutor: alumno.telefono_tutor || "",
     domicilio: alumno.domicilio || "",
@@ -1198,6 +1221,7 @@ const guardarAlumno = async () => {
       apellido: formulario.value.apellido,
       dni: formulario.value.dni,
       fecha_nacimiento: formulario.value.fecha_nacimiento,
+      email: formulario.value.email,
       nombre_tutor: formulario.value.nombre_tutor,
       telefono_tutor: formulario.value.telefono_tutor,
       domicilio: formulario.value.domicilio,
@@ -1211,6 +1235,7 @@ const guardarAlumno = async () => {
       apellido: formulario.value.apellido,
       dni: formulario.value.dni,
       fecha_nacimiento: formulario.value.fecha_nacimiento,
+      email: formulario.value.email,
       nombre_tutor: formulario.value.nombre_tutor,
       telefono_tutor: formulario.value.telefono_tutor,
       domicilio: formulario.value.domicilio,
