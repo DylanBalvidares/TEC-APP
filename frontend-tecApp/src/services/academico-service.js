@@ -295,6 +295,7 @@ export const crearAlumno = async (alumnoData) => {
       apellido: alumnoData.apellido,
       dni: alumnoData.dni,
       fecha_nacimiento: alumnoData.fecha_nacimiento,
+      email: alumnoData.email,
       nombre_tutor: alumnoData.nombre_tutor,
       telefono_tutor: alumnoData.telefono_tutor,
       domicilio: alumnoData.domicilio,
@@ -323,13 +324,13 @@ export const modificarAlumno = async (alumnoData) => {
       id_alumno: alumnoData.id_alumno,
       nombre: alumnoData.nombre,
       apellido: alumnoData.apellido,
-      dni: alumnoData.dni,
+dni: alumnoData.dni,
       fecha_nacimiento: alumnoData.fecha_nacimiento,
+      email: alumnoData.email,
       nombre_tutor: alumnoData.nombre_tutor,
       telefono_tutor: alumnoData.telefono_tutor,
-      domicilio: alumnoData.domicilio,
       id_curso: alumnoData.id_curso,
-    };
+    }; 
     const response = await axios.patch(`${API_URL}/alumnos`, payload, getConfig());
     return { success: true, data: response.data };
   } catch (error) {
@@ -428,7 +429,7 @@ export const crearAsignacion = async (asignacionData) => {
       id_curso: asignacionData.id_curso,
       id_materia: asignacionData.id_materia,
       id_profesor: asignacionData.id_profesor,
-    };
+};
     const response = await axios.post(`${API_URL}/asignaciones`, payload, getConfig());
     return { success: true, data: response.data };
   } catch (error) {
