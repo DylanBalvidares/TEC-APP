@@ -21,6 +21,7 @@ import Noticia from "./noticias-model.js";
 import Comunicado from "./comunicados-model.js";
 import ObjetoPerdido from "./objetos-perdidos-model.js";
 import CodigoDeVerificacion from "./codigoDeVerificacion-model.js";
+import Correo from "./correo-model.js";
 
 // ==========================================
 // Relaciones: Usuarios & RBAC
@@ -107,4 +108,5 @@ export {
   Comunicado,
   ObjetoPerdido,
   CodigoDeVerificacion,
+  Correo,
 };
