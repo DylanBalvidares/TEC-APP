@@ -101,7 +101,7 @@ alumnosRouter.get(
   async (req, res) => {
     
     try {
-      const alumnos = await obtenerAlumnosCurso(req.params.id);
+      const alumnos = await obtenerAlumnosCurso(req.params.id, req.query.fecha || null);
       return res.status(200).json(alumnos);
     } catch (error) {
       return res.status(error.status || 500).json({ message: error.message });

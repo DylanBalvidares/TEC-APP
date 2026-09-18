@@ -17,6 +17,7 @@ import rolesRouter from "./modules/usuarios/roles-router.js";
 import rolPermisosRouter from "./modules/usuarios/rol-permisos-router.js";
 
 import alumnosRouter from "./modules/academico/alumnos-router.js";
+import correosRouter from "./modules/academico/correos-router.js";
 import cursosRouter from "./modules/academico/cursos-router.js";
 import profesoresRouter from "./modules/academico/profesores-router.js";
 import asistenciasRouter from "./modules/academico/asistencias-router.js";
@@ -62,6 +63,7 @@ app.use("/api/usuarios", autenticar, rolesRouter);
 app.use("/api/usuarios", autenticar, rolPermisosRouter);
 
 app.use("/api/academico", autenticar, alumnosRouter);
+app.use("/api/academico", autenticar, correosRouter);
 app.use("/api/academico", autenticar, cursosRouter);
 app.use("/api/academico", autenticar, profesoresRouter);
 app.use("/api/academico", autenticar, asistenciasRouter);

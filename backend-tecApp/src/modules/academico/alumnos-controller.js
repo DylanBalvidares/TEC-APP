@@ -1,5 +1,5 @@
 import ErrorHandler from "../../utils/ErrorHandler.js";
-import { Alumno, Curso } from "../../db/models/index.js";
+import { Alumno, Curso, Asistencia } from "../../db/models/index.js";
 import sequelize from "../../db/conexionDB.js";
 
 async function validarIdentidadAlumno(data) {
@@ -84,7 +84,7 @@ async function obtenerAlumno(id) {
   }
 }
 
-async function obtenerAlumnosCurso(id) {
+async function obtenerAlumnosCurso(id, fecha = null) {
   console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: obtenerAlumnosCurso");
   try {
     if (!id || id < 0) {
@@ -101,7 +101,22 @@ async function obtenerAlumnosCurso(id) {
       throw new ErrorHandler(404, "No se encontraron alumnos asignados");
     }
 
-    return alumnos;
+    let asistenciasPorAlumno = new Map();
+    if (fecha) {
+      const asistencias = await Asistencia.findAll({
+        where: { id_curso: id, fecha },
+      });
+      asistencias.forEach((a) => asistenciasPorAlumno.set(a.id_alumno, a));
+    }
+
+    return alumnos.map((alumno) => {
+      const json = alumno.toJSON();
+      const asistencia = asistenciasPorAlumno.get(alumno.id_alumno);
+      if (asistencia) {
+        json.estado_previo = asistencia.estado;
+      }
+      return json;
+    });
   } catch (error) {
     if (error instanceof ErrorHandler) {
       throw error;
