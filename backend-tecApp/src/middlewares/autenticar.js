@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import obtenerJWTSecret from "../utils/jwtSecret.js";
 
 export function autenticar(req, res, next) {
   const authHeader = req.headers["authorization"];
@@ -9,10 +10,7 @@ export function autenticar(req, res, next) {
   }
 
   try {
-    const payload = jwt.verify(
-      token,
-      process.env.JWT_SECRET || "e40bfee55a03ffe69a2a3ecb930df395"
-    );
+    const payload = jwt.verify(token, obtenerJWTSecret());
     req.user = payload;
     req.headers["id_usuario"] = payload.id || payload.id_usuario;
     req.headers["email"] = payload.email;

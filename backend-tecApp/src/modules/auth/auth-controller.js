@@ -1,5 +1,6 @@
 import ErrorHandler from "../../utils/ErrorHandler.js";
 import jwt from "jsonwebtoken";
+import obtenerJWTSecret from "../../utils/jwtSecret.js";
 
 import {
   crearCodigoVerificacion,
@@ -9,9 +10,9 @@ import {
 import { enviarEmailVerificacion } from "../../utils/sendMail.js";
 import { comprobarContrasenaUsuario, crearUsuario as crearUsuarioDB, modificarUsuario as modificarUsuarioDB } from "../usuarios/usuarios-controller.js";
 import { obtenerPermisosDeRol } from "../../middlewares/comprobarPermisos.js";
-import { Alumno, Profesor } from "../../db/models/index.js";
+import { Alumno, Profesor, Personal } from "../../db/models/index.js";
 
-const JWT_SECRET = process.env.JWT_SECRET || "e40bfee55a03ffe69a2a3ecb930df395";
+const JWT_SECRET = obtenerJWTSecret();
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "8h";
 
 function generarToken(usuario, permisos = null) {
@@ -27,6 +28,30 @@ function generarToken(usuario, permisos = null) {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 }
 
+async function obtenerDniUsuario(idUsuario) {
+  if (!idUsuario) return null;
+
+  const alumno = await Alumno.findOne({
+    where: { id_usuario: idUsuario },
+    attributes: ["dni"],
+  });
+  if (alumno?.dni) return alumno.dni;
+
+  const profesor = await Profesor.findOne({
+    where: { id_usuario: idUsuario },
+    attributes: ["dni"],
+  });
+  if (profesor?.dni) return profesor.dni;
+
+  const personal = await Personal.findOne({
+    where: { id_usuario: idUsuario },
+    attributes: ["dni"],
+  });
+  if (personal?.dni) return personal.dni;
+
+  return null;
+}
+
 async function login(infoLogin) {
   const { email, contrasena } = infoLogin;
 
@@ -39,6 +64,9 @@ async function login(infoLogin) {
 
     const permisosRol = await obtenerPermisosDeRol(datosUsuario.id_rol);
     const token = generarToken(datosUsuario, permisosRol);
+    const dni = await obtenerDniUsuario(
+      datosUsuario.id || datosUsuario.id_usuario,
+    );
 
     return {
       mensaje: "Login exitoso",
@@ -50,6 +78,7 @@ async function login(infoLogin) {
         id_rol: datosUsuario.id_rol,
         nombre_rol: datosUsuario.nombre_rol,
         permisos: permisosRol,
+        ...(dni ? { dni } : {}),
       },
     };
   } catch (error) {

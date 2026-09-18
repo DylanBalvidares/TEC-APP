@@ -39,10 +39,8 @@ export function comprobarPermiso(permisoRequerido) {
         );
       }
 
-      // Root bypass
-      if (Number(rol) === 8 || Number(rol) === 9) {
-        return next();
-      }
+      // Root (rol 8) pasa todos los chequeos: en el seed tiene TODOS los permisos.
+      // No hay bypass hardcodeado por id: se resuelve por permisos como el resto.
 
       const listaDePermisos = await obtenerPermisosDeRol(rol);
 
