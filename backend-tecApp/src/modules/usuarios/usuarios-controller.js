@@ -1,6 +1,34 @@
+import bcrypt from "bcryptjs";
 import ErrorHandler from "../../utils/ErrorHandler.js";
 import { Usuario, Rol } from "../../db/models/index.js";
-import obtenerPermisosDeRol from "./rol-permisos-controller.js";
+import { obtenerPermisosDeRol } from "../../middlewares/comprobarPermisos.js";
+
+const RONDAS_BCRYPT = 10;
+
+function esHashBcrypt(valor) {
+  return typeof valor === "string" && valor.startsWith("$2");
+}
+
+async function hashContrasena(contrasena) {
+  return bcrypt.hash(contrasena, RONDAS_BCRYPT);
+}
+
+// Acepta hashes bcrypt y contraseñas legacy en texto plano (migración progresiva)
+async function verificarContrasena(contrasena, contrasenaGuardada) {
+  if (!contrasenaGuardada) return false;
+  if (esHashBcrypt(contrasenaGuardada)) {
+    return bcrypt.compare(contrasena, contrasenaGuardada).catch(() => false);
+  }
+  return contrasena === contrasenaGuardada;
+}
+
+async function actualizarContrasena(idUsuario, contrasena) {
+  const hash = await hashContrasena(contrasena);
+  await Usuario.update(
+    { contrasena: hash },
+    { where: { id_usuario: idUsuario } },
+  );
+}
 
 async function buscarUsuarioPorEmail(email) {
   console.log("\x1b[1m\x1b[34m[CTRL]\x1b[0m Ejecutando controlador: buscarUsuarioPorEmail");
@@ -62,9 +90,17 @@ async function comprobarContrasenaUsuario(email, contrasena) {
 
     if (!usuario) throw new ErrorHandler(404, "Usuario no encontrado");
 
-    // Comparación directa en texto plano
-    if (usuario.contrasena !== contrasena) {
+    const contrasenaValida = await verificarContrasena(
+      contrasena,
+      usuario.contrasena,
+    );
+    if (!contrasenaValida) {
       throw new ErrorHandler(401, "La contraseña es incorrecta");
+    }
+
+    // Migración progresiva: si la contraseña legacy coincidió, se guarda hasheada
+    if (!esHashBcrypt(usuario.contrasena)) {
+      await actualizarContrasena(usuario.id_usuario, contrasena);
     }
 
     const permisos = await obtenerPermisosDeRol(usuario.id_rol);
@@ -136,7 +172,11 @@ async function crearUsuario(datosUsuario) {
       Rol.findByPk(datosUsuario.id_rol, { attributes: ["nombre_rol"] }),
     ]);
 
-    const nuevoUsuario = await Usuario.create(datosUsuario);
+    const contrasenaHasheada = await hashContrasena(datosUsuario.contrasena);
+    const nuevoUsuario = await Usuario.create({
+      ...datosUsuario,
+      contrasena: contrasenaHasheada,
+    });
     const datosFinales = nuevoUsuario.toJSON();
 
     return {
@@ -189,9 +229,9 @@ async function modificarUsuario(usuario) {
 
     const datosAActualizar = { nombre, apellido, email, id_rol };
 
-    // Si se envía una contraseña, se actualiza directamente sin encriptar
+    // Si se envía una contraseña, se guarda hasheada (bcrypt)
     if (contrasena) {
-      datosAActualizar.contrasena = contrasena;
+      datosAActualizar.contrasena = await hashContrasena(contrasena);
     }
 
     const [filasActualizadas] = await Usuario.update(datosAActualizar, {
