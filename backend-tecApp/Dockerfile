@@ -4,7 +4,8 @@ WORKDIR /app
 
 COPY backend-tecApp/package*.json ./
 
-RUN npm install --production
+# Dev: instala también devDependencies (ej. sequelize-cli) para poder correr migraciones
+RUN npm install
 
 COPY backend-tecApp/. .
 
