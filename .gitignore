@@ -1,11 +1,5 @@
 node_modules
 
-package-lock.json
-
-backend-tecApp/package-lock.json
-
-frontend-tecApp/package-lock.json
-
 .env
 
 info.txt
