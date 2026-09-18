@@ -30,7 +30,7 @@ router.get("/noticias/:id", async (req, res) => {
   }
 });
 
-router.post("/noticias", comprobarPermisos(), upload.single("imagen"), async (req, res) => {
+router.post("/noticias", comprobarPermisos(["delegado_crear_noticia"]), upload.single("imagen"), async (req, res) => {
   console.log("=== Datos recibidos en POST /noticias ===");
   console.log(req.body);
   console.log(req.file);
@@ -43,7 +43,7 @@ router.post("/noticias", comprobarPermisos(), upload.single("imagen"), async (re
   }
 });
 
-router.patch("/noticias/:id", comprobarPermisos(), upload.single("imagen"), async (req, res) => {
+router.patch("/noticias/:id", comprobarPermisos(["delegado_editar_mis_noticias", "root_eliminar_cualquier_contenido"]), upload.single("imagen"), async (req, res) => {
   try {
     const resultado = await noticiasCtrl.actualizarNoticia(
       req.params.id,
@@ -56,7 +56,7 @@ router.patch("/noticias/:id", comprobarPermisos(), upload.single("imagen"), asyn
   }
 });
 
-router.delete("/noticias/:id", comprobarPermisos(), async (req, res) => {
+router.delete("/noticias/:id", comprobarPermisos(["delegado_eliminar_mis_noticias", "root_eliminar_cualquier_contenido"]), async (req, res) => {
   try {
     const resultado = await noticiasCtrl.eliminarNoticia(req.params.id);
     return res.status(200).json({ mensaje: "Noticia eliminada", resultado });
@@ -84,7 +84,7 @@ router.get("/comunicados/:id", async (req, res) => {
   }
 });
 
-router.post("/comunicados", comprobarPermisos(), async (req, res) => {
+router.post("/comunicados", comprobarPermisos("comunicado_crear"), async (req, res) => {
   try {
     const comunicado = await comunicadosCtrl.crearComunicado(req.body);
     return res.status(201).json(comunicado);
@@ -93,7 +93,7 @@ router.post("/comunicados", comprobarPermisos(), async (req, res) => {
   }
 });
 
-router.put("/comunicados/:id", comprobarPermisos(), async (req, res) => {
+router.put("/comunicados/:id", comprobarPermisos("comunicado_editar"), async (req, res) => {
   try {
     const resultado = await comunicadosCtrl.actualizarComunicado(
       req.params.id,
@@ -107,7 +107,7 @@ router.put("/comunicados/:id", comprobarPermisos(), async (req, res) => {
   }
 });
 
-router.delete("/comunicados/:id", comprobarPermisos(), async (req, res) => {
+router.delete("/comunicados/:id", comprobarPermisos("comunicado_eliminar"), async (req, res) => {
   try {
     const resultado = await comunicadosCtrl.eliminarComunicado(req.params.id);
     return res.status(200).json({ mensaje: "Comunicado eliminado", resultado });
