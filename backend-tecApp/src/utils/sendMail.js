@@ -1,19 +1,38 @@
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 import ErrorHandler from "./ErrorHandler.js";
-dotenv.config();
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, "../../db/.env") });
+
+let transporter = null;
+
+function obtenerTransporter() {
+  if (transporter) return transporter;
+
+  const user = process.env.EMAIL_USER;
+  const pass = process.env.EMAIL_PASS;
+
+  if (!user || !pass) {
+    throw new ErrorHandler(
+      500,
+      "Las credenciales de email (EMAIL_USER/EMAIL_PASS) no están configuradas",
+    );
+  }
+
+  transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: { user, pass },
+  });
+
+  return transporter;
+}
 
 export async function enviarEmailVerificacion(codigo, email) {
   try {
-    const info = await transporter.sendMail({
+    const info = await obtenerTransporter().sendMail({
       from: process.env.EMAIL_USER,
       to: email,
       subject: "Código de verificación",
@@ -47,7 +66,7 @@ export async function enviarEmailVerificacion(codigo, email) {
 
 export async function enviarEmailAlumno(asunto, mensaje, emailDestino) {
   try {
-    const info = await transporter.sendMail({
+    const info = await obtenerTransporter().sendMail({
       from: process.env.EMAIL_USER,
       to: emailDestino,
       subject: asunto,
