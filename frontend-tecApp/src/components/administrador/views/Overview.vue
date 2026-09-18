@@ -4,33 +4,22 @@
             <div class="metric-label">
                 <i class="ti ti-school" aria-hidden="true"></i>Alumnos
             </div>
-            <div class="metric-value">248</div>
-            <span class="metric-badge badge-green">
-                <i class="ti ti-arrow-up"></i>+12 este mes
-            </span>
+            <div class="metric-value">{{ totalAlumnos }}</div>
+            <span class="metric-badge badge-gray">Total registrados</span>
         </div>
         <div class="metric-card">
             <div class="metric-label">
                 <i class="ti ti-chalkboard" aria-hidden="true"></i>Docentes
             </div>
-            <div class="metric-value">31</div>
-            <span class="metric-badge badge-gray">3 sin asignación</span>
+            <div class="metric-value">{{ totalProfesores }}</div>
+            <span class="metric-badge badge-gray">Total en plantel</span>
         </div>
-        <div class="metric-card">
+        <div class="metric-card clickable" @click="$emit('cambiar-vista', 'cursos')" style="cursor: pointer">
             <div class="metric-label">
                 <i class="ti ti-book" aria-hidden="true"></i>Cursos activos
             </div>
-            <div class="metric-value">18</div>
-            <span class="metric-badge badge-green">Todos con aula</span>
-        </div>
-        <div class="metric-card">
-            <div class="metric-label">
-                <i class="ti ti-books" aria-hidden="true"></i>Préstamos activos
-            </div>
-            <div class="metric-value">43</div>
-            <span class="metric-badge badge-red">
-                <i class="ti ti-alert-circle"></i>5 vencidos
-            </span>
+            <div class="metric-value">{{ totalCursos }}</div>
+            <span class="metric-badge badge-green">Ver todos →</span>
         </div>
         <div class="metric-card clickable" @click="$emit('cambiar-vista', 'comunicados')" style="cursor: pointer">
             <div class="metric-label">
@@ -45,86 +34,35 @@
         <div class="card">
             <div class="card-header">
                 <div class="card-title">
-                    <i class="ti ti-activity" aria-hidden="true"></i>
-                    Actividad reciente
-                </div>
-                <button class="card-action">Ver todo</button>
-            </div>
-            <div
-                v-for="actividad in actividadReciente"
-                :key="actividad.id"
-                class="activity-item"
-            >
-                <div class="act-icon" :style="{ background: actividad.iconBg }">
-                    <i
-                        :class="`ti ${actividad.icon}`"
-                        :style="{
-                            color: actividad.iconColor,
-                            fontSize: '13px',
-                        }"
-                    ></i>
-                </div>
-                <div>
-                    <div class="act-text">
-                        <strong>{{ actividad.titulo }}</strong>
-                        — {{ actividad.descripcion }}
-                    </div>
-                    <div class="act-time">{{ actividad.tiempo }}</div>
+                    <i class="ti ti-chart-pie" aria-hidden="true"></i>
+                    Asistencia hoy
                 </div>
             </div>
-        </div>
-
-        <div style="display: flex; flex-direction: column; gap: 12px">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">
-                        <i class="ti ti-chart-pie" aria-hidden="true"></i>
-                        Asistencia hoy
+            <div class="progress-row">
+                <div class="prog-item">
+                    <div class="prog-label">
+                        <span>Presentes</span><span>81%</span>
+                    </div>
+                    <div class="prog-bar">
+                        <div class="prog-fill g" style="width: 81%"></div>
                     </div>
                 </div>
-                <div class="progress-row">
-                    <div class="prog-item">
-                        <div class="prog-label">
-                            <span>Presentes</span><span>81%</span>
-                        </div>
-                        <div class="prog-bar">
-                            <div class="prog-fill g" style="width: 81%"></div>
-                        </div>
+                <div class="prog-item">
+                    <div class="prog-label">
+                        <span>Ausentes</span><span>11%</span>
                     </div>
-                    <div class="prog-item">
-                        <div class="prog-label">
-                            <span>Ausentes</span><span>11%</span>
-                        </div>
-                        <div class="prog-bar">
-                            <div class="prog-fill a" style="width: 11%"></div>
-                        </div>
-                    </div>
-                    <div class="prog-item">
-                        <div class="prog-label">
-                            <span>Tardanzas</span><span>8%</span>
-                        </div>
-                        <div class="prog-bar">
-                            <div class="prog-fill" style="width: 8%"></div>
-                        </div>
+                    <div class="prog-bar">
+                        <div class="prog-fill a" style="width: 11%"></div>
                     </div>
                 </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">
-                        <i class="ti ti-search" aria-hidden="true"></i>
-                        Objetos perdidos
+                <div class="prog-item">
+                    <div class="prog-label">
+                        <span>Tardanzas</span><span>8%</span>
+                    </div>
+                    <div class="prog-bar">
+                        <div class="prog-fill" style="width: 8%"></div>
                     </div>
                 </div>
-                <div class="metric-value">7</div>
-                <div class="metric-sub">sin reclamar esta semana</div>
-                <button
-                    class="card-action"
-                    style="margin-top: 8px; display: block"
-                >
-                    Ver listado →
-                </button>
             </div>
         </div>
     </div>
@@ -195,76 +133,60 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { obtenerTodosComunicados } from "../../../services/comunidad-service.js";
+import {
+    obtenerAlumnos,
+    obtenerProfesores,
+    obtenerCursos,
+} from "../../../services/academico-service.js";
 
 defineEmits(["cambiar-vista"]);
 
 const totalComunicados = ref(0);
+const totalAlumnos = ref(0);
+const totalProfesores = ref(0);
+const totalCursos = ref(0);
+const listaAlumnos = ref([]);
+
+const ultimosAlumnos = computed(() =>
+    [...listaAlumnos.value]
+        .sort((a, b) => (b.id_alumno || 0) - (a.id_alumno || 0))
+        .slice(0, 3)
+        .map((a) => ({
+            nombre: `${a.nombre} ${a.apellido || ""}`.trim(),
+            curso: a.curso?.nombre_curso || a.nombre_curso || "—",
+            dni: a.dni || "—",
+        })),
+);
 
 onMounted(async () => {
-  try {
-    const res = await obtenerTodosComunicados();
-    const data = res?.data || res;
-    totalComunicados.value = Array.isArray(data) ? data.length : 0;
-  } catch (e) {
-    totalComunicados.value = 0;
-  }
+    const normalizar = (res) => {
+        const data = res?.data || res;
+        return Array.isArray(data) ? data : data?.data || [];
+    };
+
+    const [comunicados, alumnos, profesores, cursos] = await Promise.allSettled([
+        obtenerTodosComunicados(),
+        obtenerAlumnos(),
+        obtenerProfesores(),
+        obtenerCursos(),
+    ]);
+
+    if (comunicados.status === "fulfilled") {
+        totalComunicados.value = normalizar(comunicados.value).length;
+    }
+    if (alumnos.status === "fulfilled") {
+        listaAlumnos.value = normalizar(alumnos.value);
+        totalAlumnos.value = listaAlumnos.value.length;
+    }
+    if (profesores.status === "fulfilled") {
+        totalProfesores.value = normalizar(profesores.value).length;
+    }
+    if (cursos.status === "fulfilled") {
+        totalCursos.value = normalizar(cursos.value).length;
+    }
 });
-
-const actividadReciente = [
-    {
-        id: 1,
-        iconBg: "#eaf3de",
-        icon: "ti-user-plus",
-        iconColor: "#3b6d11",
-        titulo: "Nuevo alumno registrado",
-        descripcion: "Valentina Ríos, 3°B",
-        tiempo: "Hace 12 min",
-    },
-    {
-        id: 2,
-        iconBg: "#faeeda",
-        icon: "ti-books",
-        iconColor: "#854f0b",
-        titulo: "Préstamo vencido",
-        descripcion: '"Historia Argentina T.2" sin devolver',
-        tiempo: "Hace 1 h",
-    },
-    {
-        id: 3,
-        iconBg: "#fbf0f0",
-        icon: "ti-edit",
-        iconColor: "#a52420",
-        titulo: "Curso modificado",
-        descripcion: "4°A cambió de aula (302→105)",
-        tiempo: "Hace 2 h",
-    },
-    {
-        id: 4,
-        iconBg: "#e6f1fb",
-        icon: "ti-speakerphone",
-        iconColor: "#185fa5",
-        titulo: "Novedad publicada",
-        descripcion: '"Acto 25 de Mayo: resumen"',
-        tiempo: "Ayer, 16:30",
-    },
-    {
-        id: 5,
-        iconBg: "#eaf3de",
-        icon: "ti-user-check",
-        iconColor: "#3b6d11",
-        titulo: "Docente asignado",
-        descripcion: "Prof. Garmendia → Matemáticas 5°A",
-        tiempo: "Ayer, 11:05",
-    },
-];
-
-const ultimosAlumnos = [
-    { nombre: "Valentina Ríos", curso: "3°B", dni: "45.321.098" },
-    { nombre: "Matías Acosta", curso: "1°A", dni: "46.102.774" },
-    { nombre: "Lucía Ferreyra", curso: "2°C", dni: "44.987.001" },
-];
 
 const horariosHoy = [
     {
@@ -358,7 +280,7 @@ const horariosHoy = [
 }
 .row3 {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 1fr;
     gap: 12px;
 }
 
@@ -401,50 +323,6 @@ const horariosHoy = [
 
 .card-action:hover {
     text-decoration: underline;
-}
-
-.activity-item {
-    display: flex;
-    gap: 8px;
-    padding: 7px 0;
-    border-bottom: 0.5px solid var(--color-border-tertiary, #e5e7eb);
-    align-items: flex-start;
-}
-
-.activity-item:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
-}
-.activity-item:first-child {
-    padding-top: 0;
-}
-
-.act-icon {
-    width: 26px;
-    height: 26px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    margin-top: 1px;
-}
-
-.act-text {
-    font-size: 12px;
-    color: var(--color-text-secondary, #4b5563);
-    line-height: 1.4;
-}
-
-.act-text strong {
-    color: var(--color-text-primary, #111827);
-    font-weight: 500;
-}
-
-.act-time {
-    font-size: 10px;
-    color: var(--color-text-tertiary, #6b7280);
-    margin-top: 2px;
 }
 
 .progress-row {
