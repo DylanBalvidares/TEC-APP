@@ -4,7 +4,7 @@
             <img src="/logoEscuela.png" class="brand-logo" alt="Logo Escuela" />
             <div class="brand-divider"></div>
             <div class="brand-text">
-                <h1 class="brand-title">Gestión Escolar</h1>
+                <h1 class="brand-title">Tec-app</h1>
                 <span class="brand-subtitle">{{ currentPage }}</span>
             </div>
         </div>
@@ -84,7 +84,13 @@ const profileMenuRef = ref(null);
 
 // Datos del usuario con fallbacks seguros
 const userName = ref(authStore.usuario?.nombre || "Usuario Invitado");
-const userDni = ref(authStore.usuario?.dni || "No registrado");
+const userDni = computed(() => {
+    const dni = authStore.usuario?.dni;
+    if (dni) return dni;
+    if (authStore.usuario?.nombre_rol === 'root') return 'Cuenta raíz';
+    if (authStore.usuario?.nombre_rol === 'administrativo') return 'Administrativo';
+    return 'No registrado';
+});
 const userRole = ref(authStore.usuario?.nombre_rol || "Alumno"); // Puede ser Alumno, Profesor, Admin
 
 // Avatar dinámico usando el color rojo institucional (cd322c)

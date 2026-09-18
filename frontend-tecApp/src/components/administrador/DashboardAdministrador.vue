@@ -1,18 +1,19 @@
 <template>
-    <div
-        class="dash"
-        role="main"
-        aria-label="Panel de administración del sistema de gestión escolar"
-    >
-        <Sidebar :vista-actual="currentView" @cambiar-vista="setView" />
+    <div class="dash-wrapper" role="main" aria-label="Panel de administración del sistema de gestión escolar">
+        <Topbar :current-page="nombrePagina(currentView)" />
 
-        <div class="main">
-            <Topbar :current-page="nombrePagina(currentView)" />
+        <div class="dash">
+            <Sidebar :vista-actual="currentView" @cambiar-vista="setView" />
 
-            <div class="content">
-                <keep-alive>
-                  <component :is="componentesMap[currentView]" />
-                </keep-alive>
+            <div class="main">
+                <div class="content">
+                    <keep-alive>
+                      <component
+                        :is="componentesMap[currentView]"
+                        @cambiar-vista="setView"
+                      />
+                    </keep-alive>
+                </div>
             </div>
         </div>
     </div>
@@ -23,6 +24,8 @@ import { ref } from "vue";
 
 import Sidebar from "./views/Sidebar.vue";
 import Topbar from "./views/Topbar.vue";
+import Overview from "./views/Overview.vue";
+import RolesView from "./views/RolesView.vue";
 import AlumnosView from "./views/AlumnosView.vue";
 import ProfesoresView from "./views/ProfesoresView.vue";
 import CursosView from "./views/CursosView.vue";
@@ -35,6 +38,8 @@ import UsuariosView from "./views/UsuariosView.vue";
 import AsistenciasView from "./views/AsistenciasView.vue";
 
 const componentesMap = {
+  overview: Overview,
+  roles: RolesView,
   alumnos: AlumnosView,
   profesores: ProfesoresView,
   cursos: CursosView,
@@ -47,6 +52,8 @@ const componentesMap = {
   comunicados: ComunicadosView,
 };
 const pageNames = {
+  overview: "Inicio",
+  roles: "Roles y permisos",
   alumnos: "Alumnos",
   profesores: "Profesores",
   cursos: "Cursos",
@@ -58,7 +65,7 @@ const pageNames = {
   usuarios: "Usuarios",
   asistencias: "Asistencias",
 };
-const currentView = ref("alumnos");
+const currentView = ref("overview");
 
 const nombrePagina = (vista) => pageNames[vista] || "Inicio";
 
@@ -68,20 +75,33 @@ const setView = (vista) => {
 </script>
 
 <style scoped>
+.dash-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    width: 100%;
+    max-width: 100vw;
+    background: var(--color-background-tertiary, #f8f9fa);
+    font-size: 13px;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
 .dash {
     display: grid;
-    grid-template-columns: 200px 1fr;
-    min-height: 600px;
-    background: var(--color-background-tertiary, #f8f9fa);
-    border-radius: var(--border-radius-lg, 12px);
-    border: 0.5px solid var(--color-border-tertiary, #e5e7eb);
-    overflow: hidden;
-    font-size: 13px;
+    grid-template-columns: 220px minmax(0, 1fr);
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    position: relative;
 }
 
 .main {
     display: flex;
     flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    width: 100%;
     overflow: hidden;
 }
 
@@ -89,8 +109,18 @@ const setView = (vista) => {
     padding: 16px 20px;
     flex: 1;
     overflow-y: auto;
+    overflow-x: auto;
     display: flex;
     flex-direction: column;
     gap: 16px;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.content > * {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
 }
 </style>

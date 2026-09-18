@@ -1,14 +1,14 @@
 <template>
     <aside class="sidebar" aria-label="Navegación">
-        <div class="sidebar-header">
-            <div class="sidebar-logo">
-                <div class="logo-title">Tec-app</div>
-                <div class="logo-sub">Panel administrativo</div>
-            </div>
-        </div>
-
         <div class="sidebar-section">General</div>
 
+        <div
+            class="nav-item"
+            :class="{ active: vistaActual === 'overview' }"
+            @click="$emit('cambiar-vista', 'overview')"
+        >
+            <i class="ti ti-home" aria-hidden="true"></i>Inicio
+        </div>
         <div
             class="nav-item"
             :class="{ active: vistaActual === 'alumnos' }"
@@ -88,6 +88,14 @@
         >
             <i class="ti ti-user-shield" aria-hidden="true"></i>Usuarios
         </div>
+
+        <div
+            class="nav-item"
+            :class="{ active: vistaActual === 'roles' }"
+            @click="$emit('cambiar-vista', 'roles')"
+        >
+            <i class="ti ti-lock" aria-hidden="true"></i>Roles y permisos
+        </div>
     </aside>
 </template>
 
@@ -108,30 +116,14 @@ defineEmits(["cambiar-vista"]);
     border-right: 0.5px solid var(--color-border-tertiary, #e5e7eb);
     display: flex;
     flex-direction: column;
-}
-
-.sidebar-header {
-    padding: 16px;
-    border-bottom: 0.5px solid var(--color-border-tertiary, #e5e7eb);
-}
-
-.sidebar-logo {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-
-
-.logo-title {
-    font-size: 12.5px;
-    font-weight: 500;
-    color: var(--color-text-primary, #111827);
-}
-
-.logo-sub {
-    font-size: 10px;
-    color: var(--color-text-tertiary, #6b7280);
+    width: 220px;
+    min-width: 220px;
+    max-width: 220px;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 20;
+    overflow-y: auto;
 }
 
 .sidebar-section {
