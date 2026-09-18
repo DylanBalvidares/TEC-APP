@@ -12,6 +12,12 @@ const Rol = sequelize.define("roles", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+
+  es_sistema: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+  },
 });
 
 export default Rol;

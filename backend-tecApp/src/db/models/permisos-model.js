@@ -8,12 +8,10 @@ const Permisos = sequelize.define("permisos", {
     primaryKey: true,
   },
 
-  id_rol: {
-    type: DataTypes.INTEGER,
-    references: {
-      model: "roles",
-      key: "id_rol",
-    },
+  nombre_permiso: {
+    type: DataTypes.STRING(100),
+    allowNull: false,
+    unique: true,
   },
 });
 
