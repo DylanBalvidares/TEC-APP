@@ -16,7 +16,7 @@ const asistenciasRouter = Router();
 
 asistenciasRouter.get(
   "/asistencias/historial",
-  comprobarPermiso("profesor_gestionar_asistencias"),
+  comprobarPermiso(["profesor_gestionar_asistencias", "preceptor_ver_asistencias"]),
   async (req, res) => {
     try {
       const historial = await obtenerHistorialAsistencias(req.query);
@@ -29,7 +29,7 @@ asistenciasRouter.get(
 
 asistenciasRouter.get(
   "/asistencias/curso/:id",
-  comprobarPermiso("profesor_gestionar_asistencias"),
+  comprobarPermiso(["profesor_gestionar_asistencias", "preceptor_ver_asistencias"]),
   async (req, res) => {
     try {
       const asistencia = await obtenerTodosAsistenciasCurso(req.params.id);
@@ -43,7 +43,7 @@ asistenciasRouter.get(
 
 asistenciasRouter.get(
   "/asistencias/:id",
-  comprobarPermiso("profesor_gestionar_asistencias"),
+  comprobarPermiso(["profesor_gestionar_asistencias", "preceptor_ver_asistencias"]),
   async (req, res) => {
     try {
       const asistencia = await obtenerAsistencia(req.params.id);
@@ -57,7 +57,7 @@ asistenciasRouter.get(
 
 asistenciasRouter.get(
   "/asistencias",
-  comprobarPermiso("profesor_gestionar_asistencias"),
+  comprobarPermiso(["profesor_gestionar_asistencias", "preceptor_ver_asistencias"]),
   async (req, res) => {
     try {
       const asistencias = await obtenerTodosAsistencias();
@@ -71,7 +71,7 @@ asistenciasRouter.get(
 // NUEVA RUTA PARA LOTE
 asistenciasRouter.post(
   "/asistencias/lote",
-  comprobarPermiso("profesor_gestionar_asistencias"),
+  comprobarPermiso(["profesor_gestionar_asistencias", "preceptor_registrar_asistencias"]),
   async (req, res) => {
     console.log(JSON.stringify(req.body, null, 2));
 
@@ -90,7 +90,7 @@ asistenciasRouter.post(
 
 asistenciasRouter.post(
   "/asistencias/:asistencia",
-  comprobarPermiso("profesor_gestionar_asistencias"),
+  comprobarPermiso(["profesor_gestionar_asistencias", "preceptor_registrar_asistencias"]),
   async (req, res) => {
     try {
       const asistencia = await crearAsistencia(req.body);
@@ -103,7 +103,7 @@ asistenciasRouter.post(
 
 asistenciasRouter.delete(
   "/asistencias/:id",
-  comprobarPermiso("profesor_gestionar_asistencias"),
+  comprobarPermiso(["profesor_gestionar_asistencias", "preceptor_registrar_asistencias"]),
   async (req, res) => {
     try {
       const resultado = await eliminarAsistencia(req.params.id);
@@ -116,7 +116,7 @@ asistenciasRouter.delete(
 
 asistenciasRouter.patch(
   "/asistencias/:asistencia",
-  comprobarPermiso("profesor_gestionar_asistencias"),
+  comprobarPermiso(["profesor_gestionar_asistencias", "preceptor_registrar_asistencias"]),
   async (req, res) => {
     const { id_asistencia, fecha, estado, id_alumno } = req.body;
     try {

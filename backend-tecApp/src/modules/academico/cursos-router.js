@@ -12,7 +12,7 @@ import comprobarPermiso from "../../middlewares/comprobarPermisos.js";
 
 const cursosRouter = Router();
 
-cursosRouter.get("/cursos/:id", comprobarPermiso("admin_ver_todos_cursos"), async (req, res) => {
+cursosRouter.get("/cursos/:id", comprobarPermiso(["administrativo_ver_todos_cursos", "profesor_ver_curso"]), async (req, res) => {
     
   try {
     const curso = await obtenerCurso(req.params.id);
@@ -49,7 +49,7 @@ cursosRouter.post("/cursos", comprobarPermiso("administrativo_crear_curso"), asy
   console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m CURSO REQUEST:", req.body); //DEBUG
   try {
     const curso = await crearCurso(req.body);
-    return res.status(201).json(req.body);
+    return res.status(201).json(curso);
   } catch (error) {
     return res.status(error.status || 500).json({ message: error.message });
   }
