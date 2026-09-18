@@ -4,21 +4,18 @@
             🔧
         </div>
 
-```
-    <div class="message">
-        <h1>Sitio en mantenimiento</h1>
+        <div class="message">
+            <h1>Sitio en mantenimiento</h1>
 
-        <p>
-            Estamos realizando mejoras para ofrecerte una mejor experiencia.
-        </p>
+            <p>
+                Estamos realizando mejoras para ofrecerte una mejor experiencia.
+            </p>
 
-        <p class="subtext">
-            El servicio volverá a estar disponible en breve.
-        </p>
+            <p class="subtext">
+                El servicio volverá a estar disponible en breve.
+            </p>
+        </div>
     </div>
-</div>
-```
-
 </template>
 
 <style scoped>

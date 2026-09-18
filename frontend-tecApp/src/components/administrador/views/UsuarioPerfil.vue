@@ -9,7 +9,7 @@
                 <div class="user-info">
                     <h1>{{ authStore.usuario?.nombre || "Usuario" }}</h1>
                     <p class="role-tag">
-                        {{ authStore.usuario?.rol || "Estudiante" }}
+                        {{ authStore.usuario?.nombre_rol || "Estudiante" }}
                     </p>
                 </div>
             </div>

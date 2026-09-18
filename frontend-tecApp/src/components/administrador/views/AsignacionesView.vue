@@ -174,7 +174,7 @@
                 <div class="card-title">
                     <i class="ti ti-clipboard-list"></i>
                     Detalle de Asignación —
-                    {{ asignacionSeleccionada.materia?.nombre_materia }}
+                    {{ asignacionSeleccionada.materiaAsignacion?.nombre_materia }}
                 </div>
                 <button
                     @click="cambiarVista('lista')"
@@ -229,7 +229,7 @@
                     <div class="detail-item">
                         <span class="detail-label">Estado del Curso</span>
                         <span class="detail-value">{{
-                            asignacionSeleccionada.curso?.estado || "Activo"
+                            asignacionSeleccionada.cursoAsignacion?.estado || "Activo"
                         }}</span>
                     </div>
                 </div>
@@ -241,7 +241,7 @@
                         calificaciones y asistencias de los alumnos matriculados
                         en
                         <strong>{{
-                            asignacionSeleccionada.curso?.nombre_curso
+                            asignacionSeleccionada.cursoAsignacion?.nombre_curso
                         }}</strong>
                         para la materia correspondiente.
                     </p>
