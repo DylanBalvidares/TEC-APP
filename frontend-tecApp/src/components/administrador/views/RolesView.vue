@@ -45,7 +45,7 @@
                         :key="rol.id_rol"
                         class="rol-item"
                         :class="{ selected: rolSeleccionado?.id_rol === rol.id_rol }"
-                        @click="seleccionarRol(rol)"
+                        @click="intentarSeleccionarRol(rol)"
                     >
                         <div class="rol-avatar">
                             {{ iniciales(rol.nombre_rol) }}
@@ -61,7 +61,7 @@
                                 </span>
                             </div>
                             <div class="rol-sub">
-                                ID {{ rol.id_rol }}
+                                {{ conteoTexto(rol) }}
                             </div>
                         </div>
                         <div
@@ -128,19 +128,72 @@
                     </div>
 
                     <template v-else>
+                        <div class="permisos-toolbar">
+                            <div class="search-box sm">
+                                <i class="ti ti-search"></i>
+                                <input
+                                    v-model="busquedaPermisos"
+                                    type="text"
+                                    placeholder="Buscar permiso..."
+                                    aria-label="Buscar permiso"
+                                />
+                                <button
+                                    v-if="busquedaPermisos"
+                                    class="search-clear"
+                                    @click="busquedaPermisos = ''"
+                                    aria-label="Limpiar búsqueda"
+                                >
+                                    <i class="ti ti-x"></i>
+                                </button>
+                            </div>
+                            <span class="contador-permisos">
+                                {{ permisosSeleccionados.length }} de
+                                {{ catalogoPermisos.length }} seleccionados
+                            </span>
+                        </div>
+
+                        <div
+                            v-if="gruposPermisos.length === 0"
+                            class="empty-state"
+                        >
+                            <i
+                                class="ti ti-search"
+                                style="font-size: 28px; opacity: 0.4"
+                            ></i>
+                            <p>
+                                Sin resultados para "{{ busquedaPermisos }}".
+                            </p>
+                        </div>
+
                         <div
                             v-for="grupo in gruposPermisos"
-                            :key="grupo.nombre"
+                            :key="grupo.clave"
                             class="permiso-grupo"
                         >
                             <div class="permiso-grupo-titulo">
-                                {{ grupo.nombre }}
+                                <span>{{ grupo.titulo }}</span>
+                                <span class="grupo-acciones">
+                                    <button
+                                        class="link-btn"
+                                        @click="seleccionarGrupo(grupo, true)"
+                                    >
+                                        Todos
+                                    </button>
+                                    <span class="link-sep">·</span>
+                                    <button
+                                        class="link-btn"
+                                        @click="seleccionarGrupo(grupo, false)"
+                                    >
+                                        Ninguno
+                                    </button>
+                                </span>
                             </div>
                             <div class="permiso-grilla">
                                 <label
                                     v-for="permiso in grupo.items"
                                     :key="permiso.id_permiso"
                                     class="permiso-check"
+                                    :title="permiso.nombre_permiso"
                                 >
                                     <input
                                         type="checkbox"
@@ -148,14 +201,21 @@
                                         v-model="permisosSeleccionados"
                                     />
                                     <span class="permiso-nombre">
-                                        {{ formatearPermiso(permiso.nombre_permiso) }}
+                                        {{ permiso.etiqueta }}
                                     </span>
                                 </label>
                             </div>
                         </div>
 
                         <div class="card-footer">
-                            <div v-if="exitoGuardar" class="exito-banner">
+                            <div
+                                v-if="hayCambiosSinGuardar"
+                                class="cambios-banner"
+                            >
+                                <i class="ti ti-alert-circle"></i>
+                                Cambios sin guardar
+                            </div>
+                            <div v-else-if="exitoGuardar" class="exito-banner">
                                 <i class="ti ti-check"></i>
                                 Permisos guardados correctamente.
                             </div>
@@ -295,6 +355,41 @@
                 </div>
             </div>
         </div>
+
+        <!-- ── Modal cambios sin guardar ── -->
+        <div
+            v-if="rolPendiente"
+            class="modal-overlay"
+            @click.self="rolPendiente = null"
+        >
+            <div class="modal-card animate-fade-in">
+                <div class="modal-header">
+                    <i
+                        class="ti ti-alert-triangle"
+                        style="color: #cd322c; font-size: 20px"
+                    ></i>
+                    <h3>Cambios sin guardar</h3>
+                </div>
+
+                <p class="modal-body">
+                    Modificaste los permisos de
+                    <strong>{{ rolSeleccionado?.nombre_rol }}</strong> pero no
+                    los guardaste. Si cambiás de rol, esos cambios se perderán.
+                </p>
+
+                <div class="modal-footer">
+                    <button class="tb-btn outline" @click="rolPendiente = null">
+                        Seguir editando
+                    </button>
+                    <button
+                        class="tb-btn danger"
+                        @click="confirmarCambioRol"
+                    >
+                        Descartar y cambiar
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -315,6 +410,10 @@ const roles = ref([]);
 const catalogoPermisos = ref([]);
 const rolSeleccionado = ref(null);
 const permisosSeleccionados = ref([]);
+const permisosOriginales = ref([]);
+const rolPendiente = ref(null);
+const busquedaPermisos = ref("");
+const conteoPermisos = ref({});
 
 const cargando = ref(false);
 const cargandoPermisos = ref(false);
@@ -333,33 +432,204 @@ const rolAEliminar = ref(null);
 const nombreRolRef = ref(null);
 
 const iniciales = (nombre) =>
-    nombre
+    (nombre || "")
         .split(/[\s_]+/)
         .map((p) => p[0])
         .slice(0, 2)
         .join("")
         .toUpperCase();
 
-const formatearPermiso = (permiso) =>
-    (permiso || "")
-        .split("_")
-        .map((p) => p[0]?.toUpperCase() + p.slice(1))
-        .join(" ");
+// ── Etiquetas amigables para permisos con formato actor_verbo_recurso ────
+const VERBOS = {
+    ver: "Ver",
+    crear: "Crear",
+    editar: "Editar",
+    eliminar: "Eliminar",
+    gestionar: "Gestionar",
+    asignar: "Asignar",
+    registrar: "Registrar",
+    enviar: "Enviar",
+    configurar: "Configurar",
+};
+
+const TITULOS_RECURSO = {
+    alumno: "Alumnos",
+    alumnos: "Alumnos",
+    todos_alumnos: "Todos los alumnos",
+    mis_notas: "Mis notas",
+    notas_hijo: "Notas de mi hijo",
+    nota: "Notas",
+    todos_notas: "Todas las notas",
+    profesor: "Profesores",
+    todos_profesores: "Todos los profesores",
+    curso: "Cursos",
+    cursos: "Cursos",
+    todos_cursos: "Todos los cursos",
+    mi_curso: "Mi curso",
+    alumnos_de_curso: "Alumnos del curso",
+    materia: "Materias",
+    materias: "Materias",
+    todos_materias: "Todas las materias",
+    asignacion: "Asignaciones",
+    asignaciones: "Asignaciones",
+    todos_asignaciones: "Todas las asignaciones",
+    usuario: "Usuarios",
+    asistencias: "Asistencias",
+    mis_asistencias: "Mis asistencias",
+    asistencias_hijo: "Asistencias de mi hijo",
+    perfil: "Perfil",
+    perfil_alumno: "Perfil de alumno",
+    perfil_hijo: "Perfil de mi hijo",
+    noticia: "Noticias",
+    mis_noticias: "Mis noticias",
+    comunicado: "Comunicados",
+    rol: "Roles",
+    roles: "Roles",
+    permisos: "Permisos",
+    prestamo: "Préstamos",
+    prestamos: "Préstamos",
+    recurso: "Recursos",
+    recursos: "Recursos",
+    inventario: "Inventario",
+    devolucion: "Devoluciones",
+    sanciones: "Sanciones",
+    sanciones_hijo: "Sanciones de mi hijo",
+    horario: "Horarios",
+    calendario: "Calendario",
+    reportes: "Reportes",
+    sistema: "Sistema",
+    logs_sistema: "Registros del sistema",
+    email_alumno: "Email de alumnos",
+    cualquier_contenido: "Contenido general",
+};
+
+// Tokens plurales que se fusionan con su forma singular para no duplicar grupos
+const CANON_RECURSO = {
+    prestamos: "prestamo",
+    recursos: "recurso",
+    roles: "rol",
+};
+
+const SINGULAR_RECURSO = {    alumnos: "alumno",
+    todos_alumnos: "todos los alumnos",
+    profesores: "profesor",
+    todos_profesores: "todos los profesores",
+    cursos: "curso",
+    todos_cursos: "todos los cursos",
+    materias: "materia",
+    todos_materias: "todas las materias",
+    asignaciones: "asignación",
+    todos_asignaciones: "todas las asignaciones",
+    usuarios: "usuario",
+    asistencias: "asistencias",
+    notas: "nota",
+    todos_notas: "todas las notas",
+    noticias: "noticia",
+    roles: "rol",
+    prestamos: "préstamo",
+    recursos: "recurso",
+    sanciones: "sanción",
+    horarios: "horario",
+};
+
+const prettify = (token) =>
+    (token || "").replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
+
+function parsearPermiso(nombre) {
+    const partes = (nombre || "").split("_").filter(Boolean);
+    // Caso especial: recurso_verbo (ej. comunicado_crear)
+    if (partes.length === 2 && TITULOS_RECURSO[partes[0]] && VERBOS[partes[1]]) {
+        return { verbo: partes[1], recurso: partes[0] };
+    }
+    if (partes.length >= 3) {
+        return { verbo: partes[1], recurso: partes.slice(2).join("_") };
+    }
+    return { verbo: "", recurso: nombre || "general" };
+}
+
+function tituloRecurso(recurso) {
+    return TITULOS_RECURSO[recurso] || prettify(recurso);
+}
+
+function etiquetaPermiso(nombre) {
+    const { verbo, recurso } = parsearPermiso(nombre);
+    const verboTxt = VERBOS[verbo] || (verbo ? prettify(verbo) : "");
+    const recursoTxt =
+        SINGULAR_RECURSO[recurso] || recurso.replace(/_/g, " ");
+    return verboTxt ? `${verboTxt} ${recursoTxt}` : prettify(nombre);
+}
+
+// Catálogo enriquecido con grupo y etiqueta
+const permisosProcesados = computed(() =>
+    catalogoPermisos.value.map((p) => {
+        const { recurso } = parsearPermiso(p.nombre_permiso);
+        const canon = CANON_RECURSO[recurso] || recurso || "general";
+        return {
+            ...p,
+            claveRecurso: canon,
+            tituloGrupo: tituloRecurso(canon),
+            etiqueta: etiquetaPermiso(
+                p.nombre_permiso.replace(new RegExp(`${recurso}$`), canon),
+            ),
+        };
+    }),
+);
 
 const gruposPermisos = computed(() => {
+    const q = busquedaPermisos.value.trim().toLowerCase();
     const grupos = new Map();
-    for (const permiso of catalogoPermisos.value) {
-        const raw = permiso.nombre_permiso;
-        const nombre = (raw && raw !== "undefined") ? raw : "";
-        const grupo = nombre ? nombre.split("_")[0] : "general";
-        if (!grupos.has(grupo)) grupos.set(grupo, []);
-        grupos.get(grupo).push(permiso);
+    for (const permiso of permisosProcesados.value) {
+        if (
+            q &&
+            !`${permiso.etiqueta} ${permiso.nombre_permiso}`
+                .toLowerCase()
+                .includes(q)
+        ) {
+            continue;
+        }
+        if (!grupos.has(permiso.claveRecurso)) {
+            grupos.set(permiso.claveRecurso, {
+                clave: permiso.claveRecurso,
+                titulo: permiso.tituloGrupo,
+                items: [],
+            });
+        }
+        grupos.get(permiso.claveRecurso).items.push(permiso);
     }
-    return [...grupos.entries()].map(([nombre, items]) => ({
-        nombre: nombre.charAt(0).toUpperCase() + nombre.slice(1),
-        items,
-    }));
+    return [...grupos.values()].sort((a, b) =>
+        a.titulo.localeCompare(b.titulo, "es"),
+    );
 });
+
+const hayCambiosSinGuardar = computed(() => {
+    if (!rolSeleccionado.value) return false;
+    const actual = [...permisosSeleccionados.value].sort((a, b) => a - b);
+    const original = [...permisosOriginales.value].sort((a, b) => a - b);
+    return (
+        actual.length !== original.length ||
+        actual.some((id, i) => id !== original[i])
+    );
+});
+
+const conteoTexto = (rol) => {
+    const n = conteoPermisos.value[rol.id_rol];
+    if (n === undefined) return "";
+    return n === 1 ? "1 permiso" : `${n} permisos`;
+};
+
+const seleccionarGrupo = (grupo, valor) => {
+    const ids = grupo.items.map((p) => p.id_permiso);
+    if (valor) {
+        const set = new Set(permisosSeleccionados.value);
+        ids.forEach((id) => set.add(id));
+        permisosSeleccionados.value = [...set];
+    } else {
+        const quitar = new Set(ids);
+        permisosSeleccionados.value = permisosSeleccionados.value.filter(
+            (id) => !quitar.has(id),
+        );
+    }
+};
 
 const fetchRoles = async () => {
     cargando.value = true;
@@ -368,6 +638,7 @@ const fetchRoles = async () => {
         const res = await obtenerRoles();
         const data = res?.data || res;
         roles.value = Array.isArray(data) ? data : data?.data || [];
+        cargarConteos();
     } catch (e) {
         errorCarga.value =
             e?.response?.data?.message ||
@@ -379,16 +650,50 @@ const fetchRoles = async () => {
     }
 };
 
+const cargarConteos = async () => {
+    const entradas = await Promise.allSettled(
+        roles.value.map(async (rol) => {
+            const res = await obtenerPermisosDeRol(rol.id_rol);
+            const data = res?.data || res;
+            const lista = Array.isArray(data) ? data : data?.data || [];
+            return [rol.id_rol, lista.length];
+        }),
+    );
+    const mapa = {};
+    for (const e of entradas) {
+        if (e.status === "fulfilled") mapa[e.value[0]] = e.value[1];
+    }
+    conteoPermisos.value = mapa;
+};
+
 const fetchCatalogoPermisos = async () => {
     const res = await obtenerTodosPermisos();
     const data = res?.data || res;
     catalogoPermisos.value = Array.isArray(data) ? data : [];
 };
 
+const intentarSeleccionarRol = (rol) => {
+    if (
+        hayCambiosSinGuardar.value &&
+        rol?.id_rol !== rolSeleccionado.value?.id_rol
+    ) {
+        rolPendiente.value = rol;
+        return;
+    }
+    seleccionarRol(rol);
+};
+
+const confirmarCambioRol = async () => {
+    const destino = rolPendiente.value;
+    rolPendiente.value = null;
+    if (destino) await seleccionarRol(destino);
+};
+
 const seleccionarRol = async (rol) => {
     rolSeleccionado.value = rol;
     errorGuardar.value = "";
     exitoGuardar.value = false;
+    busquedaPermisos.value = "";
     cargandoPermisos.value = true;
     try {
         const res = await Promise.race([
@@ -406,8 +711,10 @@ const seleccionarRol = async (rol) => {
         permisosSeleccionados.value = catalogoPermisos.value
             .filter((p) => nombres.includes(p.nombre_permiso))
             .map((p) => p.id_permiso);
+        permisosOriginales.value = [...permisosSeleccionados.value];
     } catch {
         permisosSeleccionados.value = [];
+        permisosOriginales.value = [];
     } finally {
         cargandoPermisos.value = false;
     }
@@ -426,6 +733,11 @@ const guardarPermisos = async () => {
             errorGuardar.value = res?.message || "Error al guardar permisos";
             return;
         }
+        permisosOriginales.value = [...permisosSeleccionados.value];
+        conteoPermisos.value = {
+            ...conteoPermisos.value,
+            [rolSeleccionado.value.id_rol]: permisosSeleccionados.value.length,
+        };
         exitoGuardar.value = true;
         setTimeout(() => (exitoGuardar.value = false), 2500);
     } catch {
@@ -493,6 +805,7 @@ const confirmarEliminar = async () => {
         if (rolSeleccionado.value?.id_rol === rolAEliminar.value.id_rol) {
             rolSeleccionado.value = null;
             permisosSeleccionados.value = [];
+            permisosOriginales.value = [];
         }
         rolAEliminar.value = null;
         await fetchRoles();
@@ -628,10 +941,77 @@ onMounted(async () => {
 .rol-sub {
     font-size: 11px;
     color: #6b7280;
+    min-height: 14px;
 }
 .rol-acciones {
     display: flex;
     gap: 4px;
+}
+
+/* Toolbar de permisos */
+.permisos-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #fff;
+    flex-wrap: wrap;
+}
+.search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 0 10px;
+    background: white;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    flex: 1;
+    min-width: 180px;
+    max-width: 320px;
+}
+.search-box:focus-within {
+    border-color: #cd322c;
+    box-shadow: 0 0 0 2px rgba(205, 50, 44, 0.08);
+}
+.search-box i {
+    color: #9ca3af;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+.search-box input {
+    border: none;
+    outline: none;
+    padding: 7px 0;
+    font-size: 12.5px;
+    flex: 1;
+    background: transparent;
+    color: #111827;
+    min-width: 0;
+}
+.search-box input::placeholder {
+    color: #9ca3af;
+}
+.search-clear {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #9ca3af;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    border-radius: 4px;
+}
+.search-clear:hover {
+    color: #4b5563;
+    background: #f3f4f6;
+}
+.contador-permisos {
+    font-size: 12px;
+    color: #6b7280;
+    margin-left: auto;
+    white-space: nowrap;
 }
 
 /* Permisos */
@@ -640,12 +1020,40 @@ onMounted(async () => {
     border-bottom: 0.5px solid #e5e7eb;
 }
 .permiso-grupo-titulo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
     font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: #6b7280;
     margin-bottom: 8px;
+}
+.grupo-acciones {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: none;
+    letter-spacing: normal;
+}
+.link-btn {
+    background: none;
+    border: none;
+    padding: 2px 4px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #cd322c;
+    cursor: pointer;
+    border-radius: 4px;
+}
+.link-btn:hover {
+    background: #fbf0f0;
+    text-decoration: underline;
+}
+.link-sep {
+    color: #d1d5db;
 }
 .permiso-grilla {
     display: grid;
@@ -696,6 +1104,18 @@ onMounted(async () => {
     background: #eaf3de;
     border: 1px solid #bbf7d0;
     color: #166534;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    margin-right: auto;
+}
+.cambios-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+    color: #92400e;
     padding: 8px 12px;
     border-radius: 6px;
     font-size: 12px;
