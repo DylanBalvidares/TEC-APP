@@ -637,7 +637,13 @@ const fetchRoles = async () => {
     try {
         const res = await obtenerRoles();
         const data = res?.data || res;
-        roles.value = Array.isArray(data) ? data : data?.data || [];
+        const lista = Array.isArray(data) ? data : data?.data || [];
+        // Compat: la tabla roles no tiene columna es_sistema; los 8 roles
+        // del seed (id 1-8) se tratan como sistema.
+        roles.value = lista.map((r) => ({
+            ...r,
+            es_sistema: r?.es_sistema ?? (Number(r?.id_rol) >= 1 && Number(r?.id_rol) <= 8),
+        }));
         cargarConteos();
     } catch (e) {
         errorCarga.value =

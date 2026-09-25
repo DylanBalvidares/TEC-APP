@@ -249,25 +249,33 @@ const cargarDatos = async () => {
         ]);
 
     const fallos = [];
-    if (comunicados.status === "fulfilled" && comunicados.value?.success !== false) {
-        listaComunicados.value = normalizar(comunicados.value);
+    // El 404 significa "sin registros": se muestra como lista vacía, no como error.
+    // Solo 401/403/500 o errores de red cuentan como fallo de carga.
+    const esListaVacia = (settled) => settled.value?.status === 404;
+    const esExito = (settled) =>
+        settled.status === "fulfilled" &&
+        (settled.value?.success !== false || esListaVacia(settled));
+    if (esExito(comunicados)) {
+        listaComunicados.value = esListaVacia(comunicados) ? [] : normalizar(comunicados.value);
         totalComunicados.value = listaComunicados.value.length;
     } else {
         fallos.push("comunicados");
     }
-    if (alumnos.status === "fulfilled" && alumnos.value?.success !== false) {
-        listaAlumnos.value = normalizar(alumnos.value);
+    if (esExito(alumnos)) {
+        listaAlumnos.value = esListaVacia(alumnos) ? [] : normalizar(alumnos.value);
         totalAlumnos.value = listaAlumnos.value.length;
     } else {
         fallos.push("alumnos");
     }
-    if (profesores.status === "fulfilled" && profesores.value?.success !== false) {
-        totalProfesores.value = normalizar(profesores.value).length;
+    if (esExito(profesores)) {
+        totalProfesores.value = esListaVacia(profesores)
+            ? 0
+            : normalizar(profesores.value).length;
     } else {
         fallos.push("docentes");
     }
-    if (cursos.status === "fulfilled" && cursos.value?.success !== false) {
-        totalCursos.value = normalizar(cursos.value).length;
+    if (esExito(cursos)) {
+        totalCursos.value = esListaVacia(cursos) ? 0 : normalizar(cursos.value).length;
     } else {
         fallos.push("cursos");
     }
