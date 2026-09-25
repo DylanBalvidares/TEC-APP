@@ -78,7 +78,7 @@
                     >
                         <thead>
                             <tr>
-                                <th>Título del Comunicado</th>
+                                <th>Título de la Noticia</th>
                                 <th>Fecha</th>
                                 <th class="action-cell">Acciones</th>
                             </tr>
@@ -120,7 +120,7 @@
                                     <button
                                         @click="cambiarVista('editar', noticia)"
                                         class="icon-btn edit"
-                                        title="Editar comunicado"
+                                        title="Editar noticia"
                                     >
                                         <i class="ti ti-edit"></i>
                                     </button>
@@ -144,7 +144,7 @@
                                 style="font-size: 28px; opacity: 0.4"
                             ></i>
                             <p v-if="searchText">No se encontraron noticias que coincidan con "{{ searchText }}".</p>
-                            <p v-else>No hay noticias ni comunicados publicados actualmente.</p>
+                            <p v-else>No hay noticias publicadas actualmente.</p>
                         </div>
                         </div>
                         <Pagination
@@ -164,7 +164,7 @@
             <div class="card-header">
                 <div class="card-title">
                     <i class="ti ti-file-text"></i>
-                    Comunicado Institucional
+                    Noticia Institucional
                 </div>
                 <button
                     @click="cambiarVista('lista')"
@@ -188,13 +188,13 @@
                     </div>
                     <div v-else class="fallback-detail">
                         <i class="ti ti-photo-off"></i>
-                        <span>Comunicado sin imagen adjunta</span>
+                        <span>Noticia sin imagen adjunta</span>
                     </div>
                 </div>
 
                 <div class="detail-grid">
                     <div class="detail-item" style="grid-column: span 2">
-                        <span class="detail-label">Título del Comunicado</span>
+                        <span class="detail-label">Título de la Noticia</span>
                         <span
                             class="detail-value"
                             style="font-size: 16px; font-weight: 600"
@@ -283,7 +283,7 @@
                 <div class="form-row">
                     <div class="form-group" style="grid-column: span 2">
                         <label for="titulo">
-                            Título del Comunicado
+                            Título de la Noticia
                             <span class="required">*</span>
                         </label>
                         <input
@@ -302,7 +302,6 @@
                     </div>
                 </div>
 
-                <!-- FIX: campo fecha agregado — faltaba en el template original -->
                 <div class="form-row">
                     <div class="form-group">
                         <label for="fecha">
@@ -311,8 +310,7 @@
                         <input
                             id="fecha"
                             v-model="form.fecha"
-                            type="text"
-                            placeholder="DD/MM/AAAA"
+                            type="date"
                             :class="{ 'input-error': erroresForm.fecha }"
                             @blur="validarCampo('fecha')"
                             required
@@ -326,10 +324,10 @@
                 <!-- Imagen -->
                 <div class="form-row">
                     <div class="form-group" style="grid-column: span 2">
-                        <label>Imagen del Comunicado (Opcional)</label>
+                        <label>Imagen de la Noticia (Opcional)</label>
                         <div
                             class="file-upload-area"
-                            @click="$refs.inputImagen.click()"
+                            @click="inputImagen?.click()"
                             @dragover.prevent
                             @drop.prevent="manejarDrop"
                         >
@@ -467,7 +465,7 @@
                         class="ti ti-alert-triangle"
                         style="color: #cd322c; font-size: 20px"
                     ></i>
-                    <h3>Eliminar Comunicado</h3>
+                    <h3>Eliminar Noticia</h3>
                 </div>
                 <p class="modal-body">
                     ¿Estás seguro de que querés borrar
@@ -524,8 +522,7 @@ import {
 
 import { useAuthStore } from "../../../stores/auth.js";
 
-import { toDisplayDate, parseDisplayDate } from "../../../utils/formatters.js";
-import { validarFechaFormato } from "../../../utils/validators.js";
+import { toDisplayDate } from "../../../utils/formatters.js";
 import { useTableControls } from "../../../composables/useTableControls.js";
 import Pagination from "../../ui/Pagination.vue";
 
@@ -579,7 +576,7 @@ const formVacio = () => ({
     id_noticia: null,
     titulo: "",
     contenido: "",
-    fecha: toDisplayDate(new Date().toISOString()),
+    fecha: new Date().toISOString().split("T")[0],
     autor_id: null,
     imagen_url: null,
 });
@@ -602,7 +599,7 @@ const REGLAS = {
     },
     fecha(v) {
         if (!v) return "La fecha es obligatoria";
-        return validarFechaFormato(v);
+        return "";
     },
 };
 
@@ -662,9 +659,7 @@ function quitarImagen() {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function formatearFecha(fechaStr) {
     if (!fechaStr) return "-";
-    const parte = fechaStr.split("T")[0];
-    const [year, month, day] = parte.split("-");
-    return `${day}/${month}/${year}`;
+    return toDisplayDate(fechaStr);
 }
 
 // ── Navegación ────────────────────────────────────────────────────────────────
@@ -678,7 +673,7 @@ function cambiarVista(nuevaVista, noticia = null) {
     if (nuevaVista === "editar" && noticia) {
         form.value = {
             ...noticia,
-            fecha: toDisplayDate(noticia.fecha),
+            fecha: (noticia.fecha || "").split("T")[0],
         };
         if (noticia.imagen_url) imagenPreview.value = noticia.imagen_url;
     } else if (nuevaVista === "crear") {
@@ -696,9 +691,8 @@ async function fetchNoticias() {
     errorCarga.value = "";
     try {
         const res = await obtenerNoticias();
-        // CORRECCIÓN: Usar 'res' (o res.data dependiendo de cómo retorne tu Axios) en lugar de 'data' que no existía.
         noticias.value = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
-    } catch (error) { // CORRECCIÓN: Se agregó (error)
+    } catch (error) {
         errorCarga.value =
             error?.response?.data?.message ||
             error?.response?.data?.mensaje ||
@@ -720,12 +714,19 @@ async function guardarNoticia() {
         const payload = new FormData();
         payload.append("titulo", form.value.titulo);
         payload.append("contenido", form.value.contenido);
-        payload.append("fecha", parseDisplayDate(form.value.fecha));
+        payload.append("fecha", form.value.fecha);
 
         const idUsuario =
             form.value.autor_id && form.value.autor_id !== "undefined"
                 ? form.value.autor_id
-                : 1;
+                : (authStore.usuario?.id ?? authStore.usuario?.id_usuario);
+
+        if (!idUsuario) {
+            errorGuardar.value =
+                "No se pudo identificar al autor. Volvé a iniciar sesión e intentá de nuevo.";
+            guardando.value = false;
+            return;
+        }
 
         payload.append("autor_id", idUsuario);
 
@@ -788,7 +789,7 @@ async function confirmarEliminar() {
         );
         noticiaAEliminar.value = null;
     } catch (e) {
-        errorEliminar.value = e?.message || "Ocurrió un error al eliminar el comunicado.";
+        errorEliminar.value = e?.message || "Ocurrió un error al eliminar la noticia.";
     } finally {
         eliminando.value = false;
     }

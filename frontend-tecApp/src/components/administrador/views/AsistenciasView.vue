@@ -78,8 +78,9 @@
                         <tr>
                             <th>Alumno</th>
                             <th>DNI</th>
-                            <th style="width: 160px; text-align: center">Estado</th>
-                            <th>Observaciones (Opcional)</th>
+                            <th style="width: 160px; text-align: center">Estado
+                                <span class="th-legend">P: Presente · A: Ausente · T: Tarde</span>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -100,29 +101,23 @@
                                         :class="['toggle-btn present', alumno.asistencia.estado === 'presente' ? 'active' : '']"
                                         @click="alumno.asistencia.estado = 'presente'"
                                         title="Presente"
+                                        aria-label="Marcar presente"
                                     >P</button>
                                     <button
                                         type="button"
                                         :class="['toggle-btn absent', alumno.asistencia.estado === 'ausente' ? 'active' : '']"
                                         @click="alumno.asistencia.estado = 'ausente'"
                                         title="Ausente"
+                                        aria-label="Marcar ausente"
                                     >A</button>
                                     <button
                                         type="button"
                                         :class="['toggle-btn late', alumno.asistencia.estado === 'tarde' ? 'active' : '']"
                                         @click="alumno.asistencia.estado = 'tarde'"
                                         title="Llegada Tarde"
+                                        aria-label="Marcar llegada tarde"
                                     >T</button>
                                 </div>
-                            </td>
-
-                            <td>
-                                <input
-                                    type="text"
-                                    class="row-input"
-                                    v-model="alumno.asistencia.observaciones"
-                                    placeholder="Ej: Retirado antes de hora..."
-                                />
                             </td>
                         </tr>
                     </tbody>
@@ -281,7 +276,7 @@
                                     <span
                                         class="pct-pill"
                                         :class="pctClass(fila)"
-                                    >{{ calcPct(fila) }}%</span>
+                                    >{{ calcPct(fila) === "—" ? "—" : calcPct(fila) + "%" }}</span>
                                 </td>
                             </tr>
                             <tr v-if="fila.expandido" class="detail-row">
@@ -303,7 +298,7 @@
                                                         (reg.estado === 'tardanza' || reg.estado === 'tarde') ? 'badge-late' : ''
                                                     ]"
                                                 >
-                                                    {{ reg.estado ? reg.estado.toUpperCase() : 'SIN ESTADO' }}
+                                                    {{ etiquetaEstadoAsistencia[reg.estado] || "Sin estado" }}
                                                 </span>
                                             </li>
                                         </ul>
@@ -414,7 +409,6 @@ const cargarPlanilla = async () => {
             ...alumno,
             asistencia: {
                 estado: alumno.estado_previo || "presente",
-                observaciones: alumno.observaciones_previas || "",
             },
         }));
 
@@ -436,10 +430,17 @@ const ocultarPlanilla = () => {
 const confirmarGuardado = async () => {
     errorGuardar.value = "";
     exitoGuardar.value = false;
+
+    const idRegistrante = authStore.usuario?.id ?? authStore.usuario?.id_usuario;
+    if (!idRegistrante) {
+        errorGuardar.value =
+            "No se pudo identificar tu sesión. Volvé a iniciar sesión e intentá de nuevo.";
+        return;
+    }
     guardando.value = true;
 
     const payload = {
-        registrado_por: authStore.usuario.id,
+        registrado_por: idRegistrante,
         id_curso: cursoSeleccionado.value,
         fecha: parseDisplayDate(fecha.value),
         registros: alumnos.value.map((al) => ({
@@ -526,6 +527,14 @@ const formatFecha = (iso) => {
     if (!iso) return "—";
     const [y, m, d] = iso.split("T")[0].split("-");
     return `${d}/${m}/${y}`;
+};
+
+const etiquetaEstadoAsistencia = {
+    presente: "Presente",
+    ausente: "Ausente",
+    tarde: "Tarde",
+    tardanza: "Tarde",
+    justificado: "Justificado",
 };
 
 const calcPct = (fila) => {
@@ -673,6 +682,13 @@ onMounted(() => {
     font-size: 11.5px;
     border-bottom: 1px solid #e5e7eb;
 }
+.th-legend {
+    display: block;
+    font-weight: 400;
+    font-size: 10px;
+    color: #9ca3af;
+    margin-top: 2px;
+}
 .mini td {
     padding: 9px 10px;
     border-bottom: 0.5px solid #e5e7eb;
@@ -794,15 +810,6 @@ onMounted(() => {
 .toggle-btn.present.active      { background: #eaf3de; color: #3b6d11; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
 .toggle-btn.absent.active       { background: #fef2f2; color: #991b1b; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
 .toggle-btn.late.active         { background: #fef08a; color: #a16207; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-
-.row-input {
-    width: 100%; padding: 6px 10px;
-    border: 1px solid transparent; border-radius: 4px;
-    font-size: 11.5px; background: #f9fafb;
-    transition: all 0.15s; outline: none;
-}
-.row-input:focus, .row-input:hover { border-color: #d1d5db; background: #fff; }
-.row-input:focus { border-color: #cd322c; }
 
 /* hist-card top margin */
 .hist-card { margin-top: 14px; }

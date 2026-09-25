@@ -96,20 +96,24 @@
                             <td>
                                 <strong
                                     >{{
-                                        asignacion.profesorAsignacion.apellido
+                                        asignacion.profesorAsignacion?.apellido ||
+                                        ""
                                     }}
-                                    {{ asignacion.profesorAsignacion.nombre }}
+                                    {{
+                                        asignacion.profesorAsignacion?.nombre ||
+                                        "Sin profesor"
+                                    }}
                                 </strong>
                             </td>
                             <td>
                                 {{
                                     asignacion.materiaAsignacion
-                                        .nombre_materia || "N/A"
+                                        ?.nombre_materia || "N/A"
                                 }}
                             </td>
                             <td>
                                 {{
-                                    asignacion.cursoAsignacion.nombre_curso ||
+                                    asignacion.cursoAsignacion?.nombre_curso ||
                                     "Sin asignar"
                                 }}
                             </td>
@@ -192,10 +196,11 @@
                         <span class="detail-value">
                             {{
                                 asignacionSeleccionada.profesorAsignacion
-                                    .apellido
+                                    ?.apellido || ""
                             }}
                             {{
-                                asignacionSeleccionada.profesorAsignacion.nombre
+                                asignacionSeleccionada.profesorAsignacion
+                                    ?.nombre || "Sin profesor"
                             }}
                         </span>
                     </div>
@@ -203,20 +208,21 @@
                         <span class="detail-label">Materia Dictada</span>
                         <span class="detail-value">{{
                             asignacionSeleccionada.materiaAsignacion
-                                .nombre_materia
+                                ?.nombre_materia || "N/A"
                         }}</span>
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">Curso Asignado</span>
                         <span class="detail-value">{{
-                            asignacionSeleccionada.cursoAsignacion.nombre_curso
+                            asignacionSeleccionada.cursoAsignacion
+                                ?.nombre_curso || "Sin asignar"
                         }}</span>
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">Nivel / Turno</span>
                         <span class="detail-value">
-                            {{ asignacionSeleccionada.cursoAsignacion.nivel }}
-                            {{ asignacionSeleccionada.cursoAsignacion.turno }}
+                            {{ asignacionSeleccionada.cursoAsignacion?.nivel }}
+                            {{ asignacionSeleccionada.cursoAsignacion?.turno }}
                         </span>
                     </div>
                     <div class="detail-item">
@@ -572,11 +578,16 @@ const cambiarVista = (nuevaVista, asignacion = null) => {
             id_asignacion: asignacion.id_asignacion,
             id_profesor:
                 asignacion.id_profesor ||
-                asignacion.profesor?.id_profesor ||
+                asignacion.profesorAsignacion?.id_profesor ||
                 "",
             id_materia:
-                asignacion.id_materia || asignacion.materia?.id_materia || "",
-            id_curso: asignacion.id_curso || asignacion.curso?.id_curso || "",
+                asignacion.id_materia ||
+                asignacion.materiaAsignacion?.id_materia ||
+                "",
+            id_curso:
+                asignacion.id_curso ||
+                asignacion.cursoAsignacion?.id_curso ||
+                "",
         };
         limpiarErrores();
     } else if (nuevaVista === "crear") {
@@ -588,54 +599,7 @@ const cambiarVista = (nuevaVista, asignacion = null) => {
     }
 };
 
-const fetchProfesores = async () => {
-    cargando.value = true;
-    errorCarga.value = "";
-    try {
-        const res = await obtenerProfesores();
-        profesoresDisponibles.value = Array.isArray(res.data) ? res.data : [];
-    } catch {
-        errorCarga.value =
-            "Error crítico de red al sincronizar el padrón de profesores.";
-    } finally {
-        cargando.value = false;
-    }
-};
-
-const fetchMaterias = async () => {
-    cargando.value = true;
-    errorCarga.value = "";
-    try {
-        const res = await obtenerMaterias();
-        materiasDisponibles.value = Array.isArray(res.data) ? res.data : [];
-    } catch {
-        errorCarga.value =
-            "Error crítico de red al sincronizar el padrón de materias.";
-    } finally {
-        cargando.value = false;
-    }
-};
-
-const fetchCursos = async () => {
-    try {
-        const res = await obtenerCursos();
-        cursosDisponibles.value = Array.isArray(res.data) ? res.data : [];
-    } catch (e) {
-        console.error("No se pudieron cargar los cursos disponibles:", e);
-    }
-};
-
-const fetchAsignaciones = async () => {
-    try {
-        const res = await obtenerAsignaciones();
-        asignaciones.value = Array.isArray(res.data) ? res.data : [];
-    } catch (e) {
-        console.error("No se pudieron cargar las asignaciones disponibles:", e);
-    }
-};
-
 // ── Controladores CRUD Async ──────────────────────────────────────────────────
-/*
 const fetchDependenciasYDatos = async () => {
     cargando.value = true;
     errorCarga.value = "";
@@ -666,7 +630,6 @@ const fetchDependenciasYDatos = async () => {
         cargando.value = false;
     }
 };
-*/
 
 const guardarAsignacion = async () => {
     errorGuardar.value = "";
@@ -730,11 +693,7 @@ const confirmarEliminar = async () => {
 
 // ── Hooks de entrada ─────────────────────────────────────────────────────────
 onMounted(() => {
-    //fetchDependenciasYDatos();
-    fetchProfesores();
-    fetchMaterias();
-    fetchCursos();
-    fetchAsignaciones();
+    fetchDependenciasYDatos();
 });
 </script>
 

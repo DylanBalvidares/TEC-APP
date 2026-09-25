@@ -87,6 +87,13 @@
                         </tr>
                     </tbody>
                 </table>
+                        <Pagination
+                            :current-page="currentPage"
+                            :total-items="totalItems"
+                            :page-size="pageSize"
+                            @page-change="goToPage"
+                            @page-size-change="setPageSize"
+                        />
                         </template>
 
                         <div v-else class="empty-state">
@@ -95,13 +102,6 @@
                             <p v-else>No hay comunicados registrados todavía.</p>
                         </div>
                         </div>
-                        <Pagination
-                            :current-page="currentPage"
-                            :total-items="totalItems"
-                            :page-size="pageSize"
-                            @page-change="goToPage"
-                            @page-size-change="setPageSize"
-                        />
         </div>
 
         <div v-if="vistaActiva === 'detalles' && comunicadoSeleccionado" class="card animate-fade-in">
@@ -164,9 +164,9 @@
                         </span>
                     </div>
                     <div class="detail-item">
-                        <span class="detail-label">ID Autor</span>
+                        <span class="detail-label">Autor</span>
                         <span class="detail-value">
-                            {{ comunicadoSeleccionado.autor_id || "Sistema" }}
+                            {{ nombreAutor(comunicadoSeleccionado.autor_id) }}
                         </span>
                     </div>
                 </div>
@@ -238,11 +238,29 @@
                     </div>
                     <div class="form-group" v-if="form.destino === 'curso'">
                         <label>Curso Destino</label>
-                        <input v-model="form.curso_destino" type="text" placeholder="Ej: 3 II" required />
+                        <select v-model="form.curso_destino" required>
+                            <option value="" disabled>Seleccione un curso...</option>
+                            <option
+                                v-for="curso in cursosDisponibles"
+                                :key="curso.id_curso || curso.id"
+                                :value="curso.nombre_curso"
+                            >
+                                {{ curso.nombre_curso }}
+                            </option>
+                        </select>
                     </div>
                     <div class="form-group">
-                        <label>ID Autor (Opcional)</label>
-                        <input v-model="form.autor_id" type="number" placeholder="ID Usuario" />
+                        <label>Autor</label>
+                        <select v-model="form.autor_id">
+                            <option :value="null">Sistema (sin autor)</option>
+                            <option
+                                v-for="(nombre, id) in mapaAutores"
+                                :key="id"
+                                :value="Number(id)"
+                            >
+                                {{ nombre }}
+                            </option>
+                        </select>
                     </div>
                 </div>
 
@@ -320,11 +338,15 @@ import {
     actualizarComunicado,
     eliminarComunicado,
 } from "../../../services/comunidad-service.js";
+import { obtenerCursos } from "../../../services/academico-service.js";
+import { obtenerUsuarios } from "../../../services/usuarios-services.js";
 import { useTableControls } from "../../../composables/useTableControls.js";
 import Pagination from "../../ui/Pagination.vue";
 
 // ── Estado ──────────────────────────────────────────────────────────────────
 const comunicados = ref([]);
+const cursosDisponibles = ref([]);
+const mapaAutores = ref({});
 const cargando = ref(false);
 const guardando = ref(false);
 const eliminando = ref(false);
@@ -391,7 +413,12 @@ const formatearFecha = (fecha) => {
         hour: "2-digit",
         minute: "2-digit",
     };
-    return new Date(fecha).toLocaleDateString("es-AR", opciones);
+    return new Date(fecha).toLocaleString("es-AR", opciones);
+};
+
+const nombreAutor = (autorId) => {
+    if (autorId == null || autorId === "") return "Sistema";
+    return mapaAutores.value[autorId] || `ID ${autorId}`;
 };
 
 // ── Navegación entre vistas ──────────────────────────────────────────────────
@@ -437,6 +464,9 @@ const guardarComunicado = async () => {
     try {
         const payload = { ...form.value };
 
+        if (payload.destino !== "curso") payload.curso_destino = null;
+        if (!payload.autor_id) payload.autor_id = null;
+
         // Limpiamos id_comunicado para crear
         if (vistaActiva.value === "crear") {
             delete payload.id_comunicado;
@@ -463,6 +493,38 @@ const pedirConfirmacion = (comunicado) => {
     errorEliminar.value = "";
 };
 
+const fetchCursos = async () => {
+    try {
+        const res = await obtenerCursos();
+        const data = res?.data || res;
+        cursosDisponibles.value = Array.isArray(data) ? data : data?.data || [];
+    } catch {
+        cursosDisponibles.value = [];
+    }
+};
+
+const fetchAutores = async () => {
+    try {
+        const res = await obtenerUsuarios();
+        const lista = res?.data?.data ?? res?.data ?? [];
+        const mapa = {};
+        if (Array.isArray(lista)) {
+            for (const u of lista) {
+                const id = u.id_usuario ?? u.id;
+                if (id != null) {
+                    mapa[id] =
+                        `${u.nombre || ""} ${u.apellido || ""}`.trim() ||
+                        u.email ||
+                        `ID ${id}`;
+                }
+            }
+        }
+        mapaAutores.value = mapa;
+    } catch {
+        mapaAutores.value = {};
+    }
+};
+
 const confirmarEliminar = async () => {
     eliminando.value = true;
     errorEliminar.value = "";
@@ -484,6 +546,8 @@ const confirmarEliminar = async () => {
 // ── Lifecycle ────────────────────────────────────────────────────────────────
 onMounted(() => {
     fetchComunicados();
+    fetchCursos();
+    fetchAutores();
 });
 </script>
 
@@ -804,6 +868,27 @@ onMounted(() => {
 }
 
 /* ── Tablas ── */
+.status-pill {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    display: inline-block;
+    text-transform: capitalize;
+    white-space: nowrap;
+}
+.sp-alta {
+    background: #fee2e2;
+    color: #991b1b;
+}
+.sp-media {
+    background: #fef3c7;
+    color: #92400e;
+}
+.sp-baja {
+    background: #e0f2fe;
+    color: #0369a1;
+}
 .table-responsive {
     width: 100%;
     overflow-x: auto;
