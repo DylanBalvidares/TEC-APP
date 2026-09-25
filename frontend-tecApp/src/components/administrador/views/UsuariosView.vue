@@ -184,10 +184,6 @@
                         </span>
                     </div>
                     <div class="detail-item">
-                        <span class="detail-label">Contraseña</span>
-                        <span class="detail-value"> ******** </span>
-                    </div>
-                    <div class="detail-item">
                         <span class="detail-label">ID Usuario</span>
                         <span class="detail-value">{{
                             usuarioSeleccionado.id_usuario || "No asignado"
@@ -272,7 +268,7 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Rol</label>
+                        <label>Rol <span class="required">*</span></label>
                         <select v-model="form.id_rol" required>
                             <option :value="null" disabled>
                                 Seleccione un rol...
@@ -285,6 +281,7 @@
                                 {{ rol.nombre_rol }}
                             </option>
                         </select>
+                        <span v-if="errorRoles" class="field-error">{{ errorRoles }}</span>
                     </div>
                 </div>
 
@@ -439,6 +436,7 @@ const errorEliminar = ref("");
 
 const errorCarga = ref("");
 const errorGuardar = ref("");
+const errorRoles = ref("");
 const exitoGuardar = ref(false);
 
 const listaRoles = ref([]);
@@ -465,6 +463,9 @@ function getReglasValidacion() {
     };
     if (vistaActiva.value === "crear") {
         reglas.contrasena = (v) => validarContrasena(v, true);
+    } else {
+        // En edición la contraseña es opcional, pero si se escribe debe ser válida
+        reglas.contrasena = (v) => (v ? validarContrasena(v, true) : "");
     }
     return reglas;
 }
@@ -531,12 +532,14 @@ const fetchUsuarios = async () => {
 };
 
 const fetchRoles = async () => {
+    errorRoles.value = "";
     try {
         const res = await obtenerRoles();
         const data = res.data;
         listaRoles.value = Array.isArray(data) ? data : [];
     } catch {
-        console.error("No se pudieron cargar los roles.");
+        errorRoles.value =
+            "No se pudieron cargar los roles. Reintentá en unos momentos.";
     }
 };
 

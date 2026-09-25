@@ -1,30 +1,30 @@
 <template>
-    <aside class="sidebar" aria-label="Navegación">
+    <aside class="sidebar" aria-label="Navegación" @keydown="onTeclaNav">
         <div class="sidebar-section">General</div>
 
         <div
-            class="nav-item"
+            class="nav-item" role="button" tabindex="0"
             :class="{ active: vistaActual === 'overview' }"
             @click="$emit('cambiar-vista', 'overview')"
         >
             <i class="ti ti-home" aria-hidden="true"></i>Inicio
         </div>
         <div
-            class="nav-item"
+            class="nav-item" role="button" tabindex="0"
             :class="{ active: vistaActual === 'alumnos' }"
             @click="$emit('cambiar-vista', 'alumnos')"
         >
             <i class="ti ti-school" aria-hidden="true"></i>Alumnos
         </div>
         <div
-            class="nav-item"
+            class="nav-item" role="button" tabindex="0"
             :class="{ active: vistaActual === 'profesores' }"
             @click="$emit('cambiar-vista', 'profesores')"
         >
             <i class="ti ti-chalkboard" aria-hidden="true"></i>Profesores
         </div>
         <div
-            class="nav-item"
+            class="nav-item" role="button" tabindex="0"
             :class="{ active: vistaActual === 'cursos' }"
             @click="$emit('cambiar-vista', 'cursos')"
         >
@@ -32,41 +32,40 @@
         </div>
 
         <div
-            class="nav-item"
+            class="nav-item" role="button" tabindex="0"
             :class="{ active: vistaActual === 'asistencias' }"
             @click="$emit('cambiar-vista', 'asistencias')"
         >
-            <i class="ti ti-school" aria-hidden="true"></i>Asistencias
+            <i class="ti ti-calendar-check" aria-hidden="true"></i>Asistencias
         </div>
 
         <div
-            class="nav-item"
+            class="nav-item" role="button" tabindex="0"
             :class="{ active: vistaActual === 'materias' }"
             @click="$emit('cambiar-vista', 'materias')"
         >
-            <i class="ti ti-book" aria-hidden="true"></i>Materias
+            <i class="ti ti-books" aria-hidden="true"></i>Materias
         </div>
 
         <div
-            class="nav-item"
+            class="nav-item" role="button" tabindex="0"
             :class="{ active: vistaActual === 'asignaciones' }"
             @click="$emit('cambiar-vista', 'asignaciones')"
         >
-            <i class="ti ti-git-branch" aria-hidden="true"></i>Asignaciones de
-            materias
+            <i class="ti ti-git-branch" aria-hidden="true"></i><span title="Asignaciones de materias">Asignaciones</span>
         </div>
 
         <div class="sidebar-section">Comunicación</div>
         <div
-            class="nav-item"
+            class="nav-item" role="button" tabindex="0"
             :class="{ active: vistaActual === 'noticias' }"
             @click="$emit('cambiar-vista', 'noticias')"
         >
-            <i class="ti ti-speakerphone" aria-hidden="true"></i>Noticias
+            <i class="ti ti-news" aria-hidden="true"></i>Noticias
         </div>
 
         <div
-            class="nav-item"
+            class="nav-item" role="button" tabindex="0"
             :class="{ active: vistaActual === 'comunicados' }"
             @click="$emit('cambiar-vista', 'comunicados')"
         >
@@ -74,7 +73,7 @@
         </div>
         <div class="sidebar-section">Sistema</div>
         <div
-            class="nav-item"
+            class="nav-item" role="button" tabindex="0"
             :class="{ active: vistaActual === 'personal' }"
             @click="$emit('cambiar-vista', 'personal')"
         >
@@ -82,7 +81,7 @@
         </div>
 
         <div
-            class="nav-item"
+            class="nav-item" role="button" tabindex="0"
             :class="{ active: vistaActual === 'usuarios' }"
             @click="$emit('cambiar-vista', 'usuarios')"
         >
@@ -90,11 +89,18 @@
         </div>
 
         <div
-            class="nav-item"
+            class="nav-item" role="button" tabindex="0"
             :class="{ active: vistaActual === 'roles' }"
             @click="$emit('cambiar-vista', 'roles')"
         >
             <i class="ti ti-lock" aria-hidden="true"></i>Roles y permisos
+        </div>
+        <div
+            class="nav-item" role="button" tabindex="0"
+            :class="{ active: vistaActual === 'monitorcorreos' }"
+            @click="$emit('cambiar-vista', 'monitorcorreos')"
+        >
+            <i class="ti ti-envelope" aria-hidden="true"></i>Historial de Emails
         </div>
     </aside>
 </template>
@@ -108,6 +114,15 @@ defineProps({
 });
 
 defineEmits(["cambiar-vista"]);
+
+const onTeclaNav = (e) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    const item = e.target?.closest?.(".nav-item");
+    if (item) {
+        e.preventDefault();
+        item.click();
+    }
+};
 </script>
 
 <style scoped>
@@ -158,46 +173,13 @@ defineEmits(["cambiar-vista"]);
     color: #a52420;
 }
 
+.nav-item:focus-visible {
+    outline: 2px solid #cd322c;
+    outline-offset: -2px;
+}
+
 .nav-item i {
     font-size: 16px;
     flex-shrink: 0;
-}
-
-.sidebar-footer {
-    margin-top: auto;
-    padding: 12px;
-    border-top: 0.5px solid var(--color-border-tertiary, #e5e7eb);
-}
-
-.user-pill {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.user-avatar {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: #cd322c;
-    color: #fff;
-    font-size: 11px;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.user-info p {
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--color-text-primary, #111827);
-    line-height: 1.2;
-}
-
-.user-info span {
-    font-size: 11px;
-    color: var(--color-text-tertiary, #6b7280);
 }
 </style>

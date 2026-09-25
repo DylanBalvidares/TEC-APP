@@ -16,20 +16,36 @@
                 :class="{ 'is-active': menuAbierto }"
                 aria-label="Menú de usuario"
             >
-                <img :src="avatarUrl" alt="Avatar del usuario" />
+                <img
+                    v-if="!avatarError"
+                    :src="avatarUrl"
+                    alt="Avatar del usuario"
+                    @error="avatarError = true"
+                />
+                <span v-else class="avatar-fallback" aria-hidden="true">{{
+                    inicialesUsuario
+                }}</span>
             </button>
 
             <transition name="fade-slide">
                 <div v-if="menuAbierto" class="dropdown-menu">
                     <div class="dropdown-header">
                         <img
+                            v-if="!avatarError"
                             :src="avatarUrl"
                             class="dropdown-avatar"
                             alt="Avatar"
+                            @error="avatarError = true"
                         />
+                        <span
+                            v-else
+                            class="dropdown-avatar avatar-fallback"
+                            aria-hidden="true"
+                            >{{ inicialesUsuario }}</span
+                        >
                         <div class="dropdown-user-info">
                             <p class="user-name">{{ userName }}</p>
-                            <p class="user-email">DNI: {{ userDni }}</p>
+                            <p class="user-email">{{ userDocLine }}</p>
                         </div>
                     </div>
 
@@ -48,7 +64,7 @@
                             class="dropdown-item"
                             @click="menuAbierto = false"
                         >
-                            <i class="fas fa-user-circle"></i> Mi Perfil
+                            <i class="ti ti-user-circle"></i> Mi Perfil
                         </RouterLink>
                     </div>
 
@@ -58,7 +74,7 @@
                         class="dropdown-item text-danger"
                         @click="cerrarSesion"
                     >
-                        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                        <i class="ti ti-logout"></i> Cerrar Sesión
                     </button>
                 </div>
             </transition>
@@ -82,18 +98,49 @@ const authStore = useAuthStore();
 const menuAbierto = ref(false);
 const profileMenuRef = ref(null);
 
-// Datos del usuario con fallbacks seguros
-const userName = ref(authStore.usuario?.nombre || "Usuario Invitado");
-const userDni = computed(() => {
-    const dni = authStore.usuario?.dni;
-    if (dni) return dni;
-    if (authStore.usuario?.nombre_rol === 'root') return 'Cuenta raíz';
-    if (authStore.usuario?.nombre_rol === 'administrativo') return 'Administrativo';
-    return 'No registrado';
+// Datos del usuario con fallbacks seguros (reactivos a la sesión)
+const nombreRolCrudo = computed(
+    () => authStore.usuario?.nombre_rol || "",
+);
+const userName = computed(() => {
+    const u = authStore.usuario;
+    const completo = `${u?.nombre || ""} ${u?.apellido || ""}`.trim();
+    return completo || u?.nombre || "Usuario Invitado";
 });
-const userRole = ref(authStore.usuario?.nombre_rol || "Alumno"); // Puede ser Alumno, Profesor, Admin
+const userDocLine = computed(() => {
+    const u = authStore.usuario;
+    if (u?.dni) return `DNI: ${u.dni}`;
+    if (u?.email) return u.email;
+    return "Cuenta institucional";
+});
+const ETIQUETAS_ROL = {
+    root: "Administrador",
+    administrativo: "Administrativo",
+    profesor: "Profesor",
+    preceptor: "Preceptor",
+    alumno: "Alumno",
+    tutor: "Tutor",
+    delegado: "Delegado",
+    bibliotecario: "Bibliotecario",
+};
+const userRole = computed(() => {
+    const crudo = nombreRolCrudo.value;
+    if (ETIQUETAS_ROL[crudo]) return ETIQUETAS_ROL[crudo];
+    return crudo
+        ? crudo.charAt(0).toUpperCase() + crudo.slice(1)
+        : "Invitado";
+});
 
 // Avatar dinámico usando el color rojo institucional (cd322c)
+const avatarError = ref(false);
+const inicialesUsuario = computed(() =>
+    userName.value
+        .split(/[\s_]+/)
+        .map((p) => p[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase(),
+);
 const avatarUrl = computed(() => {
     const name = userName.value.split(" ").join("+");
     return `https://ui-avatars.com/api/?name=${name}&background=cd322c&color=fff&rounded=true&bold=true`;
@@ -120,14 +167,13 @@ onUnmounted(() => {
 
 // Acción de logout
 const cerrarSesion = () => {
+    if (!window.confirm("¿Seguro que querés cerrar sesión?")) return;
     authStore.logout();
     router.push("/");
 };
 </script>
 
 <style scoped>
-@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css");
-
 /* --- Header Principal --- */
 .topbar {
     display: flex;
@@ -207,6 +253,26 @@ const cerrarSesion = () => {
     width: 36px;
     height: 36px;
     border-radius: 50%;
+}
+
+.avatar-fallback {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #cd322c;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.dropdown-avatar.avatar-fallback {
+    width: 44px;
+    height: 44px;
+    font-size: 15px;
 }
 
 .avatar-btn:hover,
@@ -362,9 +428,16 @@ const cerrarSesion = () => {
 
 /* --- Responsive --- */
 @media (max-width: 600px) {
-    .brand-subtitle,
     .brand-divider {
-        display: none; /* Oculta el subtítulo y divisor en móviles para que no rompa el header */
+        display: none;
+    }
+
+    .brand-subtitle {
+        font-size: 11px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 35vw;
     }
 
     .topbar {

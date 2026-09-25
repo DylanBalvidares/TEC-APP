@@ -50,12 +50,12 @@
               <td>{{ curso.aula }}</td>
               <td>
                 <span :class="['badge', badgeClass(curso.turno)]">
-                  {{ curso.turno }}
+                  {{ curso.turno || "Sin definir" }}
                 </span>
               </td>
               <td>
                 <span :class="['estado-dot', curso.estado]"></span>
-                {{ curso.estado }}
+                {{ etiquetaEstadoCurso[curso.estado] || curso.estado || "Sin estado" }}
               </td>
               <td class="action-cell">
                 <div class="action-buttons">
@@ -111,7 +111,7 @@
             <span class="detail-label">Estado</span>
             <span class="detail-value" style="text-transform: capitalize">
               <span :class="['estado-dot', cursoSeleccionado.estado]" style="margin-right: 4px"></span>
-              {{ cursoSeleccionado.estado }}
+              {{ etiquetaEstadoCurso[cursoSeleccionado.estado] || cursoSeleccionado.estado || "Sin estado" }}
             </span>
           </div>
           <div class="detail-item">
@@ -121,7 +121,7 @@
           <div class="detail-item">
             <span class="detail-label">Turno</span>
             <span :class="['badge', badgeClass(cursoSeleccionado.turno)]">
-              {{ cursoSeleccionado.turno }}
+              {{ cursoSeleccionado.turno || "Sin definir" }}
             </span>
           </div>
 
@@ -130,10 +130,10 @@
             <span class="detail-value">{{ cursoSeleccionado.capacidad_maxima || "No definida" }}</span>
           </div>
           <div class="detail-item">
-            <span class="detail-label">ID Profesor Titular</span>
+            <span class="detail-label">Profesor Titular</span>
             <span class="detail-value"
               >{{ cursoSeleccionado.profesorTitular?.apellido }}
-              {{ cursoSeleccionado.profesorTitular?.nombre }}
+              {{ cursoSeleccionado.profesorTitular?.nombre || "Sin asignar" }}
             </span>
           </div>
 
@@ -168,7 +168,7 @@
               <tr>
                 <th>ID</th>
                 <th>Alumno</th>
-                <th>Contacto / Email</th>
+                <th>Teléfono del tutor</th>
               </tr>
             </thead>
             <tbody>
@@ -349,7 +349,7 @@ import Pagination from "../../ui/Pagination.vue";
 const turnos = ["8:00 a 15:25", "12:00 a 19:00", "8:00 a 12:00", "13:15 a 17:45", "13:15 a 19:00"];
 
 // Podés modificar esto según los niveles que maneje la escuela
-const niveles = ["Ciclo basico", "Ciclo superior"];
+const niveles = ["Ciclo básico", "Ciclo superior"];
 
 // ── Estado ──────────────────────────────────────────────────────────────────
 const cursos = ref([]);
@@ -475,9 +475,14 @@ const fetchProfesores = async () => {
 };
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
+const etiquetaEstadoCurso = {
+  activo: "Activo",
+  finalizado: "Finalizado",
+  cancelado: "Cancelado",
+};
 const badgeClass = (turno = "") => {
-  const hora = parseInt(turno.trim().split(":")[0], 10);
-  if (isNaN(hora)) return "noche";
+  const hora = parseInt((turno || "").trim().split(":")[0], 10);
+  if (isNaN(hora)) return "";
   if (hora < 12) return "manana";
   return "tarde";
 };

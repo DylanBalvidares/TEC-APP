@@ -1,27 +1,38 @@
 <template>
+    <div v-if="errorCarga" class="error-banner" style="margin-bottom: 4px">
+        <i class="ti ti-alert-circle"></i> {{ errorCarga }}
+        <button
+            class="tb-btn sm outline"
+            @click="cargarDatos"
+            style="margin-left: auto"
+        >
+            Reintentar
+        </button>
+    </div>
+
     <div class="metrics">
-        <div class="metric-card">
+        <div class="metric-card clickable" @click="$emit('cambiar-vista', 'alumnos')">
             <div class="metric-label">
                 <i class="ti ti-school" aria-hidden="true"></i>Alumnos
             </div>
             <div class="metric-value">{{ totalAlumnos }}</div>
             <span class="metric-badge badge-gray">Total registrados</span>
         </div>
-        <div class="metric-card">
+        <div class="metric-card clickable" @click="$emit('cambiar-vista', 'profesores')">
             <div class="metric-label">
                 <i class="ti ti-chalkboard" aria-hidden="true"></i>Docentes
             </div>
             <div class="metric-value">{{ totalProfesores }}</div>
             <span class="metric-badge badge-gray">Total en plantel</span>
         </div>
-        <div class="metric-card clickable" @click="$emit('cambiar-vista', 'cursos')" style="cursor: pointer">
+        <div class="metric-card clickable" @click="$emit('cambiar-vista', 'cursos')">
             <div class="metric-label">
                 <i class="ti ti-book" aria-hidden="true"></i>Cursos activos
             </div>
             <div class="metric-value">{{ totalCursos }}</div>
             <span class="metric-badge badge-green">Ver todos →</span>
         </div>
-        <div class="metric-card clickable" @click="$emit('cambiar-vista', 'comunicados')" style="cursor: pointer">
+        <div class="metric-card clickable" @click="$emit('cambiar-vista', 'comunicados')">
             <div class="metric-label">
                 <i class="ti ti-speakerphone" aria-hidden="true"></i>Comunicados
             </div>
@@ -37,32 +48,39 @@
                     <i class="ti ti-chart-pie" aria-hidden="true"></i>
                     Asistencia hoy
                 </div>
+                <span class="metric-badge badge-gray" v-if="asistenciaTotal > 0">
+                    {{ asistenciaTotal }} registros
+                </span>
             </div>
-            <div class="progress-row">
+            <div v-if="asistenciaTotal > 0" class="progress-row">
                 <div class="prog-item">
                     <div class="prog-label">
-                        <span>Presentes</span><span>81%</span>
+                        <span>Presentes</span><span>{{ pctPresentes }}%</span>
                     </div>
                     <div class="prog-bar">
-                        <div class="prog-fill g" style="width: 81%"></div>
+                        <div class="prog-fill g" :style="{ width: pctPresentes + '%' }"></div>
                     </div>
                 </div>
                 <div class="prog-item">
                     <div class="prog-label">
-                        <span>Ausentes</span><span>11%</span>
+                        <span>Ausentes</span><span>{{ pctAusentes }}%</span>
                     </div>
                     <div class="prog-bar">
-                        <div class="prog-fill a" style="width: 11%"></div>
+                        <div class="prog-fill a" :style="{ width: pctAusentes + '%' }"></div>
                     </div>
                 </div>
                 <div class="prog-item">
                     <div class="prog-label">
-                        <span>Tardanzas</span><span>8%</span>
+                        <span>Tardanzas</span><span>{{ pctTardanzas }}%</span>
                     </div>
                     <div class="prog-bar">
-                        <div class="prog-fill" style="width: 8%"></div>
+                        <div class="prog-fill" :style="{ width: pctTardanzas + '%' }"></div>
                     </div>
                 </div>
+            </div>
+            <div v-else class="empty-inline">
+                <i class="ti ti-calendar-off" aria-hidden="true"></i>
+                <span>Sin registros de asistencia para hoy.</span>
             </div>
         </div>
     </div>
@@ -81,13 +99,12 @@
                     Ver todos
                 </button>
             </div>
-            <table class="mini" aria-label="Últimos alumnos registrados">
+            <table v-if="ultimosAlumnos.length > 0" class="mini" aria-label="Últimos alumnos registrados">
                 <thead>
                     <tr>
                         <th>Nombre</th>
                         <th>Curso</th>
                         <th>DNI</th>
-                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -95,38 +112,43 @@
                         <td>{{ alumno.nombre }}</td>
                         <td>{{ alumno.curso }}</td>
                         <td>{{ alumno.dni }}</td>
-                        <td>
-                            <button class="icon-btn" aria-label="Editar">
-                                <i
-                                    class="ti ti-edit"
-                                    style="font-size: 13px"
-                                ></i>
-                            </button>
-                        </td>
                     </tr>
                 </tbody>
             </table>
+            <div v-else class="empty-inline">
+                <i class="ti ti-user-off" aria-hidden="true"></i>
+                <span>Todavía no hay alumnos registrados.</span>
+            </div>
         </div>
 
         <div class="card">
             <div class="card-header">
                 <div class="card-title">
-                    <i class="ti ti-calendar" aria-hidden="true"></i>
-                    Horarios — hoy
+                    <i class="ti ti-speakerphone" aria-hidden="true"></i>
+                    Últimos comunicados
                 </div>
+                <button
+                    class="card-action"
+                    @click="$emit('cambiar-vista', 'comunicados')"
+                >
+                    Ver todos
+                </button>
             </div>
-            <div style="display: flex; flex-direction: column; gap: 6px">
+            <div v-if="ultimosComunicados.length > 0" style="display: flex; flex-direction: column; gap: 6px">
                 <div
-                    v-for="horario in horariosHoy"
-                    :key="horario.hora"
+                    v-for="com in ultimosComunicados"
+                    :key="com.id_comunicado"
                     class="list-item"
                 >
-                    <div class="hora">{{ horario.hora }}</div>
                     <div class="li-info">
-                        <div class="li-name">{{ horario.materia }}</div>
-                        <div class="li-sub">{{ horario.detalle }}</div>
+                        <div class="li-name">{{ com.titulo }}</div>
+                        <div class="li-sub">{{ com.detalle }}</div>
                     </div>
                 </div>
+            </div>
+            <div v-else class="empty-inline">
+                <i class="ti ti-speakerphone" aria-hidden="true"></i>
+                <span>Todavía no hay comunicados publicados.</span>
             </div>
         </div>
     </div>
@@ -139,6 +161,7 @@ import {
     obtenerAlumnos,
     obtenerProfesores,
     obtenerCursos,
+    obtenerHistorialAsistencias,
 } from "../../../services/academico-service.js";
 
 defineEmits(["cambiar-vista"]);
@@ -148,6 +171,9 @@ const totalAlumnos = ref(0);
 const totalProfesores = ref(0);
 const totalCursos = ref(0);
 const listaAlumnos = ref([]);
+const listaComunicados = ref([]);
+const asistenciaHoy = ref([]);
+const errorCarga = ref("");
 
 const ultimosAlumnos = computed(() =>
     [...listaAlumnos.value]
@@ -160,56 +186,110 @@ const ultimosAlumnos = computed(() =>
         })),
 );
 
-onMounted(async () => {
-    const normalizar = (res) => {
-        const data = res?.data || res;
-        return Array.isArray(data) ? data : data?.data || [];
-    };
+const ultimosComunicados = computed(() =>
+    [...listaComunicados.value]
+        .sort(
+            (a, b) =>
+                new Date(b.fecha_publicacion || 0) -
+                new Date(a.fecha_publicacion || 0),
+        )
+        .slice(0, 4)
+        .map((c) => ({
+            id_comunicado: c.id_comunicado,
+            titulo: c.titulo || "Sin título",
+            detalle: `${cap(c.destino)} · ${fechaCorta(c.fecha_publicacion)}`,
+        })),
+);
 
-    const [comunicados, alumnos, profesores, cursos] = await Promise.allSettled([
-        obtenerTodosComunicados(),
-        obtenerAlumnos(),
-        obtenerProfesores(),
-        obtenerCursos(),
-    ]);
+const asistenciaTotal = computed(() => asistenciaHoy.value.length);
+const contar = (estado) =>
+    asistenciaHoy.value.filter((r) => r.estado === estado).length;
+const pct = (n) =>
+    asistenciaTotal.value > 0
+        ? Math.round((n / asistenciaTotal.value) * 100)
+        : 0;
+const pctPresentes = computed(() => pct(contar("presente")));
+const pctAusentes = computed(() => pct(contar("ausente")));
+const pctTardanzas = computed(() =>
+    pct(contar("tarde") + contar("tardanza")),
+);
 
-    if (comunicados.status === "fulfilled") {
-        totalComunicados.value = normalizar(comunicados.value).length;
+const cap = (s) =>
+    s ? String(s).charAt(0).toUpperCase() + String(s).slice(1) : "—";
+
+const fechaCorta = (iso) => {
+    if (!iso) return "sin fecha";
+    const [y, m, d] = String(iso).split("T")[0].split("-");
+    if (!y || !m || !d) return String(iso);
+    return `${d}/${m}/${y}`;
+};
+
+const hoyISO = () => {
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+
+const normalizar = (res) => {
+    const data = res?.data || res;
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.data)) return data.data;
+    if (Array.isArray(data?.lista)) return data.lista;
+    return [];
+};
+
+const cargarDatos = async () => {
+    errorCarga.value = "";
+    const [comunicados, alumnos, profesores, cursos] =
+        await Promise.allSettled([
+            obtenerTodosComunicados(),
+            obtenerAlumnos(),
+            obtenerProfesores(),
+            obtenerCursos(),
+        ]);
+
+    const fallos = [];
+    if (comunicados.status === "fulfilled" && comunicados.value?.success !== false) {
+        listaComunicados.value = normalizar(comunicados.value);
+        totalComunicados.value = listaComunicados.value.length;
+    } else {
+        fallos.push("comunicados");
     }
-    if (alumnos.status === "fulfilled") {
+    if (alumnos.status === "fulfilled" && alumnos.value?.success !== false) {
         listaAlumnos.value = normalizar(alumnos.value);
         totalAlumnos.value = listaAlumnos.value.length;
+    } else {
+        fallos.push("alumnos");
     }
-    if (profesores.status === "fulfilled") {
+    if (profesores.status === "fulfilled" && profesores.value?.success !== false) {
         totalProfesores.value = normalizar(profesores.value).length;
+    } else {
+        fallos.push("docentes");
     }
-    if (cursos.status === "fulfilled") {
+    if (cursos.status === "fulfilled" && cursos.value?.success !== false) {
         totalCursos.value = normalizar(cursos.value).length;
+    } else {
+        fallos.push("cursos");
     }
-});
+    if (fallos.length > 0) {
+        errorCarga.value = `No se pudieron cargar: ${fallos.join(", ")}. Verificá la conexión con el servidor.`;
+    }
 
-const horariosHoy = [
-    {
-        hora: "07:30",
-        materia: "Matemáticas 5°A",
-        detalle: "Aula 102 · Prof. Garmendia",
-    },
-    {
-        hora: "09:00",
-        materia: "Historia 4°B",
-        detalle: "Aula 205 · Prof. Molina",
-    },
-    {
-        hora: "10:30",
-        materia: "Biología 3°A",
-        detalle: "Lab. 1 · Prof. Castro",
-    },
-    {
-        hora: "13:00",
-        materia: "Lengua 2°C",
-        detalle: "Aula 110 · Prof. Suárez",
-    },
-];
+    // Asistencia de hoy (el 404 del backend significa "sin registros", no es error)
+    try {
+        const hoy = hoyISO();
+        const res = await obtenerHistorialAsistencias({
+            fecha_desde: hoy,
+            fecha_hasta: hoy,
+        });
+        asistenciaHoy.value =
+            res?.success === false ? [] : normalizar(res);
+    } catch {
+        asistenciaHoy.value = [];
+    }
+};
+
+onMounted(cargarDatos);
 </script>
 
 <style scoped>
@@ -227,6 +307,16 @@ const horariosHoy = [
     flex-direction: column;
     gap: 4px;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.metric-card.clickable {
+    cursor: pointer;
+    transition: box-shadow 0.15s, transform 0.15s;
+}
+
+.metric-card.clickable:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
 }
 
 .metric-label {
@@ -271,6 +361,44 @@ const horariosHoy = [
 .badge-gray {
     background: var(--color-background-tertiary, #f3f4f6);
     color: var(--color-text-secondary, #4b5563);
+}
+
+.error-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fef2f2;
+    border: 1px solid #fee2e2;
+    color: #991b1b;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+}
+
+.tb-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+}
+.tb-btn.outline {
+    background: white;
+    color: #4b5563;
+    border-color: #d1d5db;
+}
+.tb-btn.outline:hover {
+    background: #f9fafb;
+    color: #111827;
+}
+.tb-btn.sm {
+    padding: 6px 12px;
+    font-size: 12px;
 }
 
 .row2 {
@@ -363,6 +491,19 @@ const horariosHoy = [
     background: #ba7517;
 }
 
+.empty-inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 4px;
+    color: #9ca3af;
+    font-size: 12.5px;
+}
+.empty-inline i {
+    font-size: 18px;
+    opacity: 0.6;
+}
+
 .list-item {
     display: flex;
     align-items: center;
@@ -379,12 +520,6 @@ const horariosHoy = [
     padding-top: 0;
 }
 
-.hora {
-    font-size: 10px;
-    color: var(--color-text-tertiary, #6b7280);
-    min-width: 36px;
-}
-
 .li-info {
     flex: 1;
     min-width: 0;
@@ -394,6 +529,9 @@ const horariosHoy = [
     font-size: 12.5px;
     font-weight: 500;
     color: var(--color-text-primary, #111827);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .li-sub {
@@ -421,22 +559,5 @@ const horariosHoy = [
 }
 .mini tr:last-child td {
     border-bottom: none;
-}
-
-.icon-btn {
-    width: 26px;
-    height: 26px;
-    border-radius: 5px;
-    border: 0.5px solid var(--color-border-tertiary, #e5e7eb);
-    background: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--color-text-secondary, #4b5563);
-}
-
-.icon-btn:hover {
-    background: var(--color-background-secondary, #f3f4f6);
 }
 </style>

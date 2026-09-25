@@ -1,5 +1,5 @@
 <template>
-    <div class="alumnos-wrapper">
+    <div class="materias-wrapper">
         <div v-if="vistaActiva === 'lista'" class="metrics animate-fade-in">
             <div class="metric-card">
                 <div class="metric-label">
@@ -12,11 +12,11 @@
             </div>
             <div class="metric-card">
                 <div class="metric-label">
-                    <i class="ti ti-certificate" aria-hidden="true"></i>Plan de
-                    Estudios
+                    <i class="ti ti-clock" aria-hidden="true"></i>Carga semanal
+                    total
                 </div>
-                <div class="metric-value">General</div>
-                <span class="metric-badge badge-gray">Áreas académicas</span>
+                <div class="metric-value">{{ cargaTotal }} hs</div>
+                <span class="metric-badge badge-gray">Suma de horas cátedra</span>
             </div>
         </div>
 
@@ -194,18 +194,13 @@
                         }}</span>
                     </div>
                     <div class="detail-item">
-                        <span class="detail-label">Área / Departamento</span>
-                        <span class="detail-value">{{
-                            materiaSeleccionada.departamento || "Sin asignar"
-                        }}</span>
-                    </div>
-                    <div class="detail-item">
                         <span class="detail-label">Carga Horaria Semanal</span>
                         <span class="detail-value mono"
                             >{{
-                                materiaSeleccionada.carga_horaria || 0
-                            }}
-                            horas</span
+                                materiaSeleccionada.carga_horaria
+                                    ? `${materiaSeleccionada.carga_horaria} horas`
+                                    : "No definida"
+                            }}</span
                         >
                     </div>
                 </div>
@@ -409,7 +404,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from "vue";
+import { ref, computed, onMounted, nextTick } from "vue";
 // IMPORTANTE: Ajustar esta ruta según la estructura de tus servicios
 import {
     obtenerMaterias,
@@ -428,6 +423,13 @@ import Pagination from "../../ui/Pagination.vue";
 
 // ── Estado Reactivo ──────────────────────────────────────────────────────────
 const materias = ref([]);
+
+const cargaTotal = computed(() =>
+    materias.value.reduce(
+        (acc, m) => acc + (Number(m.carga_horaria) || 0),
+        0,
+    ),
+);
 
 const cargando = ref(false);
 const guardando = ref(false);
@@ -624,7 +626,7 @@ onMounted(() => {
     display: inline-block;
 }
 
-.alumnos-wrapper {
+.materias-wrapper {
     display: flex;
     flex-direction: column;
     gap: 14px;
@@ -755,26 +757,6 @@ onMounted(() => {
     font-family: monospace;
     font-size: 11.5px;
     color: #4b5563;
-}
-
-.status-pill {
-    font-size: 10.5px;
-    padding: 2px 7px;
-    border-radius: 4px;
-    font-weight: 600;
-    display: inline-block;
-}
-.sp-active {
-    background: #eaf3de;
-    color: #3b6d11;
-}
-.sp-pending {
-    background: #fef08a;
-    color: #a16207;
-}
-.sp-inactive {
-    background: #fef2f2;
-    color: #991b1b;
 }
 
 .action-cell {
