@@ -542,6 +542,25 @@ CREATE TABLE `codigos_verificacion` (
     INDEX `idx_email` (`email`),
     INDEX `idx_codigo` (`codigo`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Historial de emails (requerida por GET /api/comunidad/monitoreo y persistirCorreo).
+-- Sin FKs: id_remitente guarda id_usuario e id_destinatario guarda id_alumno.
+CREATE TABLE IF NOT EXISTS `correos_enviados` (
+    `id_correo`       int(11)      NOT NULL AUTO_INCREMENT,
+    `id_remitente`    int(11)      DEFAULT NULL,
+    `id_destinatario` int(11)      DEFAULT NULL,
+    `email_destino`   varchar(255) NOT NULL,
+    `asunto`          varchar(255) NOT NULL,
+    `cuerpo`          text         NOT NULL,
+    `fecha_envio`     datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `estado`          ENUM('enviado','fallido') NOT NULL DEFAULT 'enviado',
+    `message_id`      varchar(255) DEFAULT NULL,
+    `leido`           tinyint(1)   NOT NULL DEFAULT 0,
+    `fecha_lectura`   datetime     DEFAULT NULL,
+    PRIMARY KEY (`id_correo`),
+    KEY `idx_correo_fecha`  (`fecha_envio`),
+    KEY `idx_correo_estado` (`estado`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 -- ============================================================
 -- ÍNDICES DE OPTIMIZACIÓN
 -- ============================================================
