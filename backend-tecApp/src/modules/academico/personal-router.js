@@ -6,6 +6,7 @@ import {
   eliminarPersonal,
   modificarPersonal,
   darDeBajaPersonal,
+  sincronizarUsuarioPersonal,
 } from "./personal-controller.js";
 
 import comprobarPermiso from "../../middlewares/comprobarPermisos.js";
@@ -65,6 +66,20 @@ personalRouter.delete("/personal/:id", comprobarPermiso("root_gestionar_roles"),
     return res.status(error.status || 500).json({ message: error.message });
   }
 });
+
+// Sincronizar usuario con personal
+personalRouter.patch(
+  "/personal/sincronizar-usuario-personal",
+  comprobarPermiso("root_gestionar_roles"),
+  async (req, res) => {
+    try {
+      const resultado = await sincronizarUsuarioPersonal(req.body);
+      return res.status(200).json(resultado);
+    } catch (error) {
+      return res.status(error.status || 500).json({ message: error.message });
+    }
+  },
+);
 
 // Modificar datos de un personal
 personalRouter.patch("/personal", comprobarPermiso("root_gestionar_roles"), async (req, res) => {

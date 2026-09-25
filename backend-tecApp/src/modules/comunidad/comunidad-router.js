@@ -5,6 +5,7 @@ import * as objetosCtrl from "./objetos-perdidos-controller.js";
 import upload from "../../middlewares/uploads.js";
 import autenticar from "../../middlewares/autenticar.js";
 import comprobarPermisos from "../../middlewares/comprobarPermisos.js";
+import { obtenerHistorialGlobal, marcarCorreoLeido } from "./comunidad-service.js";
 
 const router = Router();
 
@@ -162,6 +163,37 @@ router.delete("/objetos-perdidos/:id", comprobarPermisos(), async (req, res) => 
     return res.status(200).json({ mensaje: "Objeto eliminado", resultado });
   } catch (error) {
     return res.status(error.statusCode || 500).json({ message: error.message });
+  }
+});
+
+
+// === RUTAS DE MONITOREO DE EMAILS ===
+router.get("/monitoreo", async (req, res) => {
+  try {
+    const { estado, fecha_desde, fecha_hasta, limit = 50 } = req.query;
+    const result = await obtenerHistorialGlobal({
+      estado: estado || undefined,
+      fecha_desde: fecha_desde || undefined,
+      fecha_hasta: fecha_hasta || undefined,
+      limit: parseInt(limit) || 50,
+    });
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(500).json({ mensaje: result.mensaje });
+    }
+  } catch (error) {
+    res.status(500).json({ mensaje: error.message });
+  }
+});
+
+router.post("/marcar-leido", async (req, res) => {
+  try {
+    const { id_correo } = req.body;
+    const result = await marcarCorreoLeido(id_correo);
+    res.json(result);
+  } catch (error) {
+    res.status(error.statusCode || 500).json({ mensaje: error.message });
   }
 });
 

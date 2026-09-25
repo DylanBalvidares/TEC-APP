@@ -108,6 +108,33 @@ async function eliminarPersonal(id) {
   }
 }
 
+async function sincronizarUsuarioPersonal(payload) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: sincronizarUsuarioPersonal");
+  try {
+    const { idPersonal, idUsuario } = payload;
+
+    if (!idPersonal || idUsuario < 0) {
+      throw new ErrorHandler(400, "ID de personal/usuario inválida");
+    }
+
+    const data = await Personal.update(
+      {
+        id_usuario: idUsuario,
+      },
+      {
+        where: {
+          id_personal: idPersonal,
+        },
+      },
+    );
+
+    return data;
+  } catch (error) {
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en sincronizarPersonal:", error);
+    throw new ErrorHandler(500, "Error interno al sincronizar personal");
+  }
+}
+
 async function darDeBajaPersonal(id) {
   console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: darDeBajaPersonal");
   try {
@@ -211,4 +238,5 @@ export {
   eliminarPersonal,
   modificarPersonal,
   darDeBajaPersonal,
+  sincronizarUsuarioPersonal,
 };
