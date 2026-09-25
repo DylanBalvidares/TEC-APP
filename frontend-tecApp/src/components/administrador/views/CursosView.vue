@@ -37,6 +37,7 @@
               <th>Nivel</th>
               <th>Aula</th>
               <th>Turno</th>
+              <th>Preceptor</th>
               <th>Estado</th>
               <th class="action-cell">Acciones</th>
             </tr>
@@ -53,6 +54,7 @@
                   {{ curso.turno || "Sin definir" }}
                 </span>
               </td>
+              <td>{{ etiquetaPreceptor(curso) }}</td>
               <td>
                 <span :class="['estado-dot', curso.estado]"></span>
                 {{ etiquetaEstadoCurso[curso.estado] || curso.estado || "Sin estado" }}
@@ -135,6 +137,13 @@
               >{{ cursoSeleccionado.profesorTitular?.apellido }}
               {{ cursoSeleccionado.profesorTitular?.nombre || "Sin asignar" }}
             </span>
+          </div>
+
+          <div class="detail-item">
+            <span class="detail-label">Preceptor</span>
+            <span class="detail-value">{{
+              etiquetaPreceptor(cursoSeleccionado)
+            }}</span>
           </div>
 
           <div class="detail-item">
@@ -283,6 +292,19 @@
           </div>
         </div>
 
+        <div class="form-row">
+          <div class="form-group">
+            <label for="id_preceptor">Preceptor a cargo</label>
+            <select id="id_preceptor" v-model="form.id_preceptor">
+              <option :value="null">Sin asignar</option>
+              <option v-for="preceptor in preceptoresDisponibles" :key="preceptor.id_personal" :value="preceptor.id_personal">
+                {{ preceptor.apellido }}, {{ preceptor.nombre }}
+              </option>
+            </select>
+            <span v-if="errorPreceptores" class="field-error">{{ errorPreceptores }}</span>
+          </div>
+        </div>
+
         <div class="card-footer" style="padding-left: 0; padding-right: 0; background: transparent; margin-top: 10px">
           <div v-if="errorGuardar" class="error-banner"><i class="ti ti-alert-circle"></i> {{ errorGuardar }}</div>
           <div v-if="exitoGuardar" class="exito-banner"><i class="ti ti-check"></i> Curso guardado correctamente.</div>
@@ -335,6 +357,8 @@ import {
   modificarCurso,
   cancelarCurso,
   obtenerProfesores,
+  obtenerTodoPersonal,
+  obtenerCargos,
 } from "../../../services/academico-service.js";
 import {
   validarRequerido,
@@ -354,6 +378,8 @@ const niveles = ["Ciclo básico", "Ciclo superior"];
 // ── Estado ──────────────────────────────────────────────────────────────────
 const cursos = ref([]);
 const profesoresDisponibles = ref([]);
+const preceptoresDisponibles = ref([]);
+const errorPreceptores = ref("");
 const cargando = ref(false);
 const guardando = ref(false);
 const eliminando = ref(false);
@@ -376,7 +402,7 @@ const mostrarFinalizados = ref(false);
 const filterFn = (item, q) => {
   // Si no se están mostrando finalizados/cancelados, ocultarlos
   if (!mostrarFinalizados.value && (item.estado === "finalizado" || item.estado === "cancelado")) return false;
-  const texto = `${item.nombre_curso} ${item.nivel} ${item.aula} ${item.turno} ${item.estado}`.toLowerCase();
+  const texto = `${item.nombre_curso} ${item.nivel} ${item.aula} ${item.turno} ${item.estado} ${etiquetaPreceptor(item)}`.toLowerCase();
   return texto.includes(q);
 };
 const {
@@ -403,6 +429,7 @@ const formVacio = () => ({
   aula: "",
   turno: "",
   id_profesor_titular: null,
+  id_preceptor: null,
   estado: "activo", // Por defecto activo
 });
 const form = ref(formVacio());
@@ -474,6 +501,50 @@ const fetchProfesores = async () => {
   profesoresDisponibles.value = Array.isArray(res.data) ? res.data : [];
 };
 
+// Preceptores: personal con cargo "Preceptor" y estado activo.
+// Un preceptor puede tener varios cursos a cargo, así que no se excluye
+// a los ya asignados: el select muestra todos los disponibles.
+const fetchPreceptores = async () => {
+  errorPreceptores.value = "";
+  const [resPersonal, resCargos] = await Promise.all([
+    obtenerTodoPersonal(),
+    obtenerCargos(),
+  ]);
+
+  if (resPersonal?.success === false) {
+    errorPreceptores.value =
+      resPersonal.message ||
+      "No se pudieron cargar los preceptores. Verificá los permisos del rol.";
+  }
+
+  const personal = resPersonal?.success === false
+    ? []
+    : (Array.isArray(resPersonal?.data) ? resPersonal.data : []);
+  const cargos = resCargos?.success === false
+    ? []
+    : (Array.isArray(resCargos?.data) ? resCargos.data : []);
+
+  const cargoPreceptor = cargos.find(
+    (c) => String(c.nombre_cargo || "").toLowerCase() === "preceptor",
+  );
+
+  preceptoresDisponibles.value = personal.filter((p) => {
+    const esPreceptor = cargoPreceptor
+      ? Number(p.id_cargo) === Number(cargoPreceptor.id_cargo)
+      : String(p.cargoPersonal?.nombre_cargo || "").toLowerCase() === "preceptor";
+    const activo = !p.estado || p.estado === "activo";
+    return esPreceptor && activo;
+  });
+};
+
+const etiquetaPreceptor = (curso) => {
+  const p = curso?.preceptorAsignado;
+  if (p?.apellido || p?.nombre) {
+    return `${p.apellido || ""} ${p.nombre || ""}`.trim();
+  }
+  return "Sin asignar";
+};
+
 // ── Helpers ─────────────────────────────────────────────────────────────────
 const etiquetaEstadoCurso = {
   activo: "Activo",
@@ -494,7 +565,11 @@ const cambiarVista = (nuevaVista, curso = null) => {
   exitoGuardar.value = false;
 
   if (nuevaVista === "editar" && curso) {
-    form.value = { ...curso };
+    form.value = {
+      ...curso,
+      id_profesor_titular: curso.id_profesor_titular ?? null,
+      id_preceptor: curso.id_preceptor ?? null,
+    };
     limpiarErrores();
   } else if (nuevaVista === "crear") {
     form.value = formVacio();
@@ -558,6 +633,7 @@ const guardarCurso = async () => {
   form.value.ciclo_lectivo = parseInt(form.value.ciclo_lectivo);
   form.value.capacidad_maxima = form.value.capacidad_maxima ? parseInt(form.value.capacidad_maxima) : null;
   form.value.id_profesor_titular = form.value.id_profesor_titular ? parseInt(form.value.id_profesor_titular) : null;
+  form.value.id_preceptor = form.value.id_preceptor ? parseInt(form.value.id_preceptor) : null;
 
   let res;
 
@@ -608,6 +684,7 @@ const confirmarEliminar = async () => {
 onMounted(() => {
   fetchCursos();
   fetchProfesores();
+  fetchPreceptores();
 });
 </script>
 

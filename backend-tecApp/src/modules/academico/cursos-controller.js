@@ -1,5 +1,44 @@
-import { Curso, Profesor } from "../../db/models/index.js";
+import { Curso, Profesor, Personal, Cargo } from "../../db/models/index.js";
 import ErrorHandler from "../../utils/ErrorHandler.js";
+
+// Valida el preceptor a asignar a un curso.
+// Devuelve el id normalizado (número) o null cuando se quiere quitar.
+// Un preceptor puede tener varios cursos a cargo, así que no se bloquea
+// la asignación repetida: solo se exige que exista, esté activo y tenga
+// cargo de preceptor.
+async function validarPreceptorAsignado(idPreceptor) {
+  if (idPreceptor === null || idPreceptor === undefined || idPreceptor === "") {
+    return null;
+  }
+
+  const preceptor = await Personal.findByPk(Number(idPreceptor), {
+    include: [
+      {
+        model: Cargo,
+        as: "cargoPersonal",
+        attributes: ["nombre_cargo"],
+      },
+    ],
+  });
+
+  if (!preceptor) {
+    throw new ErrorHandler(400, "El preceptor seleccionado no existe");
+  }
+
+  if (preceptor.estado && preceptor.estado !== "activo") {
+    throw new ErrorHandler(400, "El preceptor seleccionado no está activo");
+  }
+
+  const cargo = preceptor.cargoPersonal?.nombre_cargo || "";
+  if (String(cargo).toLowerCase() !== "preceptor") {
+    throw new ErrorHandler(
+      400,
+      "El personal seleccionado no tiene cargo de preceptor",
+    );
+  }
+
+  return preceptor.id_personal;
+}
 
 async function obtenerTodosCursos() {
   console.log("\x1b[1m\x1b[34m[CTRL]\x1b[0m Ejecutando controlador: obtenerTodosCursos");
@@ -11,12 +50,13 @@ async function obtenerTodosCursos() {
           as: "profesorTitular",
           attributes: ["nombre", "apellido"],
         },
+        {
+          model: Personal,
+          as: "preceptorAsignado",
+          attributes: ["nombre", "apellido"],
+        },
       ],
     });
-
-    if (!cursos.length) {
-      throw new ErrorHandler(404, "No se encontraron cursos");
-    }
 
     return cursos;
   } catch (error) {
@@ -35,7 +75,20 @@ async function obtenerCurso(id) {
       throw new ErrorHandler(400, "ID invalida");
     }
 
-    const curso = await Curso.findByPk(id);
+    const curso = await Curso.findByPk(id, {
+      include: [
+        {
+          model: Profesor,
+          as: "profesorTitular",
+          attributes: ["nombre", "apellido"],
+        },
+        {
+          model: Personal,
+          as: "preceptorAsignado",
+          attributes: ["nombre", "apellido"],
+        },
+      ],
+    });
 
     if (!curso) {
       throw new ErrorHandler(404, "No se encontro el curso especificado");
@@ -54,13 +107,18 @@ async function obtenerCurso(id) {
 async function crearCurso(curso) {
   console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: crearCurso");
   try {
+    const datos = { ...curso };
+    datos.id_preceptor = await validarPreceptorAsignado(datos.id_preceptor);
     // Se crea el curso directamente con los datos recibidos del body
-    const nuevoCurso = await Curso.create(curso);
+    const nuevoCurso = await Curso.create(datos);
     return nuevoCurso;
   } catch (error) {
     if (error instanceof ErrorHandler) throw error;
     if (error.name === "SequelizeValidationError") {
       throw new ErrorHandler(400, "Datos inválidos: " + error.message);
+    }
+    if (error.name === "SequelizeForeignKeyConstraintError") {
+      throw new ErrorHandler(400, "El profesor o preceptor asignado no existe");
     }
     throw new ErrorHandler(500, "Error al crear el curso");
   }
@@ -120,6 +178,11 @@ async function modificarCurso(curso) {
     // Actualizamos usando el objeto completo, evitando sobrescribir el ID
     delete curso.id_curso;
 
+    // id_preceptor solo se toca si el cliente lo envía (null = quitar).
+    if (Object.prototype.hasOwnProperty.call(curso, "id_preceptor")) {
+      curso.id_preceptor = await validarPreceptorAsignado(curso.id_preceptor);
+    }
+
     const [filasAfectadas] = await Curso.update(curso, {
       where: {
         id_curso: id_curso,
@@ -133,6 +196,9 @@ async function modificarCurso(curso) {
     return { mensaje: "Curso actualizado correctamente" };
   } catch (error) {
     if (error instanceof ErrorHandler) throw error;
+    if (error.name === "SequelizeForeignKeyConstraintError") {
+      throw new ErrorHandler(400, "El profesor o preceptor asignado no existe");
+    }
     throw new ErrorHandler(500, "Error interno al modificar el curso");
   }
 }

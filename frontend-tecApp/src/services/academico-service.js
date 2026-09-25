@@ -67,6 +67,7 @@ export const crearCurso = async (cursoData) => {
       aula: cursoData.aula,
       turno: cursoData.turno,
       id_profesor_titular: cursoData.id_profesor_titular,
+      id_preceptor: cursoData.id_preceptor ?? null,
       estado: cursoData.estado,
     };
     const response = await axios.post(`${API_URL}/cursos`, payload, getConfig());
@@ -87,6 +88,7 @@ export const modificarCurso = async (cursoData) => {
       aula: cursoData.aula,
       turno: cursoData.turno,
       id_profesor_titular: cursoData.id_profesor_titular,
+      id_preceptor: cursoData.id_preceptor ?? null,
       estado: cursoData.estado,
     };
     const response = await axios.patch(`${API_URL}/cursos`, payload, getConfig());

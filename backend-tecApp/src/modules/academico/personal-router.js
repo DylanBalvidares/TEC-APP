@@ -11,10 +11,19 @@ import {
 
 import comprobarPermiso from "../../middlewares/comprobarPermisos.js";
 
+// Lectura de personal: root más los roles que gestionan usuarios
+// (el administrativo necesita listar preceptores para asignarlos a cursos).
+const PERMISO_VER_PERSONAL = [
+  "root_gestionar_roles",
+  "administrativo_crear_usuario",
+  "administrativo_editar_usuario",
+  "administrativo_eliminar_usuario",
+];
+
 const personalRouter = Router();
 
 // Obtener un personal por ID
-personalRouter.get("/personal/:id", comprobarPermiso("root_gestionar_roles"), async (req, res) => {
+personalRouter.get("/personal/:id", comprobarPermiso(PERMISO_VER_PERSONAL), async (req, res) => {
     
   try {
     const personal = await obtenerPersonal(req.params.id);
@@ -25,7 +34,7 @@ personalRouter.get("/personal/:id", comprobarPermiso("root_gestionar_roles"), as
 });
 
 // Obtener toda la lista de personal
-personalRouter.get("/personal", comprobarPermiso("root_gestionar_roles"), async (req, res) => {
+personalRouter.get("/personal", comprobarPermiso(PERMISO_VER_PERSONAL), async (req, res) => {
     
   try {
     const todoPersonal = await obtenerTodoPersonal();

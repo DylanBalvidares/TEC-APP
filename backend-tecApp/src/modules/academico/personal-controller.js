@@ -14,10 +14,6 @@ async function obtenerTodoPersonal() {
       ],
     });
 
-    if (!personal.length) {
-      throw new ErrorHandler(404, "No se encontró personal");
-    }
-
     return personal;
   } catch (error) {
     if (error instanceof ErrorHandler) throw error;
