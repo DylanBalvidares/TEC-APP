@@ -26,6 +26,7 @@ import Sidebar from "./views/Sidebar.vue";
 import Topbar from "./views/Topbar.vue";
 import Overview from "./views/Overview.vue";
 import RolesView from "./views/RolesView.vue";
+import MonitorCorreos from "./views/MonitorCorreos.vue";
 import AlumnosView from "./views/AlumnosView.vue";
 import ProfesoresView from "./views/ProfesoresView.vue";
 import CursosView from "./views/CursosView.vue";
@@ -39,6 +40,7 @@ import AsistenciasView from "./views/AsistenciasView.vue";
 
 const componentesMap = {
   overview: Overview,
+  monitorcorreos: MonitorCorreos,
   roles: RolesView,
   alumnos: AlumnosView,
   profesores: ProfesoresView,
@@ -53,6 +55,7 @@ const componentesMap = {
 };
 const pageNames = {
   overview: "Inicio",
+  monitorcorreos: "Historial de Emails",
   roles: "Roles y permisos",
   alumnos: "Alumnos",
   profesores: "Profesores",

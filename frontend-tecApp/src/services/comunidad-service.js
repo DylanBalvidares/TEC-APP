@@ -182,6 +182,28 @@ export const actualizarEstadoObjetoPerdido = async (id, estado) => {
   }
 };
 
+
+// ==========================================
+//      SERVICIO DE HISTORIAL DE EMAILS
+// ==========================================
+
+export async function obtenerHistorialGlobal(filtros = {}) {
+  try {
+    const response = await axios.get(`${API_URL}/comunidad/monitoreo`, { ...getConfig(), params: filtros });
+    return response.data;
+  } catch (error) {
+    return manejarErrorApi(error, "Error al obtener el historial global");
+  }
+}
+
+export async function marcarCorreoLeido(id_correo) {
+  try {
+    const response = await axios.post(`${API_URL}/comunidad/marcar-leido`, { id_correo }, getConfig());
+    return response.data;
+  } catch (error) {
+    return manejarErrorApi(error, "Error al marcar correo como leído");
+  }
+}
 export const eliminarObjetoPerdido = async (id) => {
   try {
     const response = await axios.delete(`${API_URL}/comunidad/objetos-perdidos/${id}`, getConfig());
