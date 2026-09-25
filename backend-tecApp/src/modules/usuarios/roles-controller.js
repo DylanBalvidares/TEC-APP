@@ -5,6 +5,15 @@ import ErrorHandler from "../../utils/ErrorHandler.js";
 
 const LIMITE_NOMBRE_ROL = 50;
 
+// Los 8 roles del seed (gestion_tecnica2.sql) son del sistema y no se
+// pueden renombrar ni eliminar. Se resuelve por id para no depender de
+// una columna extra en la tabla roles.
+const IDS_ROLES_SISTEMA = [1, 2, 3, 4, 5, 6, 7, 8];
+
+function esRolSistema(rol) {
+  return IDS_ROLES_SISTEMA.includes(Number(rol?.id_rol));
+}
+
 function sanitizarNombreRol(nombreRol) {
   if (!nombreRol || !String(nombreRol).trim()) {
     throw new ErrorHandler(400, "El nombre del rol es obligatorio");
@@ -53,7 +62,7 @@ async function crearRol(datosRol) {
       throw new ErrorHandler(400, "Ya existe un rol con ese nombre");
     }
 
-    const rol = await Rol.create({ nombre_rol: nombre, es_sistema: false });
+    const rol = await Rol.create({ nombre_rol: nombre });
 
     return rol;
   } catch (error) {
@@ -81,7 +90,7 @@ async function modificarRol(idRol, datosRol) {
       throw new ErrorHandler(404, "No se encontró el rol especificado");
     }
 
-    if (rol.es_sistema) {
+    if (esRolSistema(rol)) {
       throw new ErrorHandler(
         400,
         "No se puede renombrar un rol del sistema",
@@ -125,7 +134,7 @@ async function eliminarRol(idRol) {
       throw new ErrorHandler(404, "No se encontró el rol especificado");
     }
 
-    if (rol.es_sistema) {
+    if (esRolSistema(rol)) {
       throw new ErrorHandler(400, "No se puede eliminar un rol del sistema");
     }
 

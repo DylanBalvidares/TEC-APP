@@ -4,6 +4,7 @@ import { Rol, Permiso } from "../db/models/index.js";
 export async function obtenerPermisosDeRol(idRol) {
   try {
     const rolConPermisos = await Rol.findByPk(idRol, {
+      attributes: ["id_rol"],
       include: {
         model: Permiso,
         as: "permisos",
@@ -20,7 +21,8 @@ export async function obtenerPermisosDeRol(idRol) {
     return (data.permisos || []).map((p) => p.nombre_permiso);
   } catch (error) {
     console.error("[ERROR] obtenerPermisosDeRol:", error.message);
-    return [];
+    // No devolver [] silencioso: eso convertía un 500 de DB en un 403 engañoso.
+    throw new ErrorHandler(500, "Error interno al verificar permisos");
   }
 }
 
