@@ -598,7 +598,38 @@ export const darDeBajaPersonal = async (id) => {
 };
 
 // ==========================================
-//                  CARGOS
+//               PERSONAL (sync user)
+// ==========================================
+
+export const sincronizarUsuarioPersonal = async (payload) => {
+  try {
+    const response = await axios.patch(`${API_URL}/personal/sincronizar-usuario-personal`, payload, getConfig());
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "No se pudo sincronizar el usuario con el personal");
+  }
+};
+
+export const sincronizarUsuarioAlumno = async (payload) => {
+  try {
+    const response = await axios.patch(`${API_URL}/alumnos/sincronizar-usuario-alumno`, payload, getConfig());
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "No se pudo sincronizar el usuario con el alumno");
+  }
+};
+
+export const sincronizarUsuarioProfesor = async (payload) => {
+  try {
+    const response = await axios.patch(`${API_URL}/profesores/sincronizar-usuario-profesor`, payload, getConfig());
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "No se pudo sincronizar el usuario con el profesor");
+  }
+};
+
+// ==========================================
+//               CARGOS
 // ==========================================
 
 export const obtenerCargos = async () => {

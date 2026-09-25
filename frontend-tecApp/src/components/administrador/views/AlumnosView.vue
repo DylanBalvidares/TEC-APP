@@ -5,19 +5,19 @@
                 <div class="metric-label">
                     <i class="ti ti-school" aria-hidden="true"></i>Total Alumnos
                 </div>
-                <div class="metric-value">{{ alumnos.length }}</div>
+                <div class="metric-value">{{ alumnosActivos }}</div>
                 <span class="metric-badge badge-green">
                     <i class="ti ti-arrow-up"></i>Activos en sistema
                 </span>
             </div>
             <div class="metric-card">
                 <div class="metric-label">
-                    <i class="ti ti-chart-pie" aria-hidden="true"></i>Asistencia
-                    Promedio
+                    <i class="ti ti-user-check" aria-hidden="true"></i>Con cuenta
+                    de acceso
                 </div>
-                <div class="metric-value">81%</div>
+                <div class="metric-value">{{ alumnosConCuenta }}</div>
                 <span class="metric-badge badge-gray"
-                    >Ciclo lectivo actual</span
+                    >Cuentas vinculadas</span
                 >
             </div>
         </div>
@@ -226,7 +226,7 @@
                         >
                         <span class="detail-value">{{
                             alumnoSeleccionado.curso?.nombre_curso ||
-                            "No matriculado"
+                            "Sin asignar"
                         }}</span>
                     </div>
                     <div class="detail-item">
@@ -239,7 +239,10 @@
                     <div class="detail-item">
                         <span class="detail-label"
                             >Tutor / Responsable Legal</span
-                        >{{ alumnoSeleccionado.nombre_tutor || "N/A" }}
+                        >
+                        <span class="detail-value">{{
+                            alumnoSeleccionado.nombre_tutor || "N/A"
+                        }}</span>
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">Tutor Teléfono</span>
@@ -255,24 +258,23 @@
                     </div>
 
                     <div class="detail-item">
-                        <span class="detail-label">ID de usuario</span>
-                        <span class="detail-value">{{
-                            alumnoSeleccionado.id_usuario || "Aún no registrado como usuario"
-                        }}</span>
+                        <span class="detail-label">Cuenta de acceso</span>
+                        <span
+                            :class="[
+                                'status-pill',
+                                alumnoSeleccionado.id_usuario
+                                    ? 'sp-activo'
+                                    : 'sp-neutro',
+                            ]"
+                            style="width: fit-content"
+                        >
+                            {{
+                                alumnoSeleccionado.id_usuario
+                                    ? "Vinculada"
+                                    : "Sin vincular"
+                            }}
+                        </span>
                     </div>
-                </div>
-
-                <div class="info-box">
-                    <i class="ti ti-activity"></i>
-                    <p>
-                        Módulo de historial académico unificado: Próximamente se
-                        integrarán las inasistencias acumuladas y boletín de
-                        calificaciones de las materias correspondientes a
-                        {{
-                            alumnoSeleccionado.curso?.nombre_curso ||
-                            "su curso asignado"
-                        }}.
-                    </p>
                 </div>
             </div>
 
@@ -430,7 +432,40 @@
                         />
                         <span v-if="erroresForm.telefono_tutor" class="field-error">{{ erroresForm.telefono_tutor }}</span>
                     </div>
+
+                    <div class="form-group">
+                        <label for="email">Email (para la cuenta de acceso)</label>
+                        <input
+                            id="email"
+                            v-model="form.email"
+                            type="email"
+                            placeholder="Ej: alumno@tecnica2.edu.ar"
+                            :class="{ 'input-error': erroresForm.email }"
+                            @blur="validarCampo('email')"
+                        />
+                        <span v-if="erroresForm.email" class="field-error">{{ erroresForm.email }}</span>
+                    </div>
                 </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="estado">Estado <span class="required">*</span></label>
+                        <select id="estado" v-model="form.estado" required>
+                            <option value="activo">Activo</option>
+                            <option value="egresado">Egresado</option>
+                            <option value="condicional">Condicional</option>
+                            <option value="baja">Baja</option>
+                        </select>
+                    </div>
+                </div>
+
+                <UserAccessPanel
+                    v-if="vistaActiva === 'crear'"
+                    :defaultRolId="1"
+                    :listaRoles="listaRoles"
+                    :emailSugerido="form.email"
+                    @update:usuarioData="handleUsuarioData"
+                />
 
                 <div
                     class="card-footer"
@@ -467,8 +502,8 @@
                             guardando
                                 ? "Guardando legajo..."
                                 : vistaActiva === "crear"
-                                  ? "Confirmar Inscripción"
-                                  : "Actualizar Alumno"
+                                  ? "Confirmar inscripción"
+                                  : "Actualizar ficha"
                         }}
                     </button>
                 </div>
@@ -542,25 +577,29 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from "vue";
+import { ref, computed, onMounted, nextTick } from "vue";
 import {
     obtenerAlumnos,
     crearAlumno,
     modificarAlumno,
     darDeBajaAlumno,
     obtenerCursos,
+    sincronizarUsuarioAlumno,
 } from "../../../services/academico-service.js";
+import { obtenerRoles, crearUsuario } from "../../../services/usuarios-services.js";
 import { formatDate, toDisplayDate, parseDisplayDate } from "../../../utils/formatters.js";
 import {
     validarRequerido,
     validarLongitudMinima,
     validarDNI,
+    validarEmail,
     validarTelefono,
     validarFechaFormato,
     validarFormulario,
 } from "../../../utils/validators.js";
 import { useTableControls } from "../../../composables/useTableControls.js";
 import Pagination from "../../ui/Pagination.vue";
+import UserAccessPanel from "../../ui/UserAccessPanel.vue";
 
 // ── Estado Reactivo ──────────────────────────────────────────────────────────
 const alumnos = ref([]);
@@ -580,6 +619,10 @@ const exitoGuardar = ref(false);
 
 const mostrarBajas = ref(false);
 
+const panelUsuarioData = ref(null);
+const listaRoles = ref([]);
+const primerInputRef = ref(null);
+
 const etiquetaEstado = {
     activo: "Activo",
     egresado: "Egresado",
@@ -598,6 +641,12 @@ const claseEstado = (estado) => {
 };
 
 // ── Filtros y Paginación ────────────────────────────────────────────────
+const alumnosActivos = computed(
+    () => alumnos.value.filter((a) => a.estado !== "baja").length,
+);
+const alumnosConCuenta = computed(
+    () => alumnos.value.filter((a) => a.id_usuario).length,
+);
 const filterFn = (item, q) => {
     // Si no se están mostrando bajas, ocultar alumnos con estado 'baja'
     if (!mostrarBajas.value && item.estado === "baja") return false;
@@ -629,6 +678,8 @@ const formVacio = () => ({
     nombre_tutor: "",
     telefono_tutor: "",
     domicilio: "",
+    email: "",
+    estado: "activo",
     id_curso: "",
 });
 const form = ref(formVacio());
@@ -642,6 +693,8 @@ const REGLAS_VALIDACION = {
     dni: validarDNI,
     telefono_tutor: (v) => v ? validarTelefono(v, false) : "",
     fecha_nacimiento: (v) => v ? validarFechaFormato(v) : "",
+    email: (v) => v ? validarEmail(v) : "",
+    estado: (v) => validarRequerido(v, "El estado"),
 };
 
 function validarCampo(campo) {
@@ -714,6 +767,24 @@ const fetchCursos = async () => {
     }
 };
 
+const cargarRoles = async () => {
+    try {
+        const res = await obtenerRoles();
+        const data = res?.data || res;
+        if (Array.isArray(data)) {
+            listaRoles.value = data.map((rol) => ({
+                id: rol.id_rol ?? rol.id,
+                nombre: rol.nombre_rol ?? rol.nombre,
+            }));
+        }
+    } catch (error) {
+        console.error(
+            "No se pudieron cargar los roles:",
+            error?.response?.data?.message || error?.message || error,
+        );
+    }
+};
+
 const guardarAlumno = async () => {
     errorGuardar.value = "";
     exitoGuardar.value = false;
@@ -727,16 +798,72 @@ const guardarAlumno = async () => {
             ...form.value,
             fecha_nacimiento: parseDisplayDate(form.value.fecha_nacimiento),
         };
+        // El email solo alimenta la cuenta de acceso (panel); no es columna del legajo
+        delete payload.email;
         if (payload.id_curso === "") {
             payload.id_curso = null;
         }
 
+        let idAlumno = null;
         if (vistaActiva.value === "crear") {
-            await crearAlumno(payload);
+            const res = await crearAlumno(payload);
+            if (res?.success === false) {
+                throw new Error(
+                    res.message || res.mensaje ||
+                    "No se pudo crear la ficha del alumno.",
+                );
+            }
+            idAlumno = res?.data?.id_alumno ?? res?.data?.data?.id_alumno ?? null;
         } else {
-            await modificarAlumno(payload);
+            const res = await modificarAlumno(payload);
+            if (res?.success === false) {
+                throw new Error(
+                    res.message || res.mensaje ||
+                    "No se pudo actualizar la ficha del alumno.",
+                );
+            }
         }
-        exitoGuardar.value = true;
+
+        // Si estamos en modo crear y el panel de usuario estaba activo
+        if (vistaActiva.value === "crear" && panelUsuarioData.value !== null) {
+            const { email, contrasena, id_rol } = panelUsuarioData.value;
+
+            try {
+                const userPayload = {
+                    nombre: form.value.nombre,
+                    apellido: form.value.apellido,
+                    email,
+                    contrasena,
+                    id_rol,
+                };
+                const resUsuario = await crearUsuario(userPayload);
+                if (resUsuario?.success === false) {
+                    throw new Error(
+                        resUsuario.message ||
+                        "No se pudo crear la cuenta de usuario.",
+                    );
+                }
+
+                // PATCH sincronizar usuario ↔ entidad
+                await sincronizarUsuarioAlumno({
+                    idAlumno,
+                    idUsuario: resUsuario.data?.id_usuario,
+                });
+
+                // ✅ Full success: entity + account created
+                exitoGuardar.value = true;
+            } catch (userError) {
+                // ⚠️ Entidad creada pero la cuenta falló
+                errorGuardar.value =
+                    "El alumno fue inscrito, pero la cuenta de usuario no pudo ser registrada. " +
+                    "Podés crear la cuenta manualmente desde la sección Usuarios.";
+                console.error("Error al crear cuenta de usuario:", userError);
+            }
+        } else {
+            // Panel desactivado o modo editar: éxito normal
+            exitoGuardar.value = true;
+        }
+
         await fetchAlumnos();
         setTimeout(() => cambiarVista("lista"), 800);
     } catch (error) {
@@ -753,6 +880,10 @@ const guardarAlumno = async () => {
 const pedirConfirmacion = (alumno) => {
     alumnoAEliminar.value = alumno;
     errorEliminar.value = "";
+};
+
+const handleUsuarioData = (data) => {
+    panelUsuarioData.value = data;
 };
 
 const confirmarEliminar = async () => {
@@ -787,6 +918,7 @@ const confirmarEliminar = async () => {
 onMounted(() => {
     fetchAlumnos();
     fetchCursos();
+    cargarRoles();
 });
 </script>
 <style scoped>
@@ -1239,6 +1371,10 @@ onMounted(() => {
 .sp-condicional {
     background: #fef08a;
     color: #a16207;
+}
+.sp-neutro {
+    background: #f3f4f6;
+    color: #4b5563;
 }
 
 /* ── Fila de alumno dado de baja ───────────────────────────────────── */

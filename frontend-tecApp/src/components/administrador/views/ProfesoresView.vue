@@ -58,7 +58,7 @@
                     </button>
                 </div>
 
-                <template v-if="filteredData.length > 0">
+                <template v-else-if="filteredData.length > 0">
                     <table
                         class="mini"
                         aria-label="Listado de docentes"
@@ -86,12 +86,12 @@
                                     <span
                                         :class="[
                                             'status-pill',
-                                            `sp-${prof.estado}`,
+                                            claseEstado(prof.estado),
                                         ]"
                                     >
                                         {{
                                             etiquetaEstado[prof.estado] ||
-                                            prof.estado
+                                            prof.estado || "Sin estado"
                                         }}
                                     </span>
                                 </td>
@@ -116,8 +116,8 @@
                                         <button
                                             @click="pedirConfirmacion(prof)"
                                             class="icon-btn delete"
-                                            title="Eliminar"
-                                            aria-label="Eliminar"
+                                            title="Dar de baja"
+                                            aria-label="Dar de baja"
                                         >
                                             <i class="ti ti-trash"></i>
                                         </button>
@@ -201,13 +201,15 @@
                     <div class="detail-item">
                         <span class="detail-label">Fecha de nacimiento</span>
                         <span class="detail-value">{{
-                            formatDate(profesorSeleccionado.fecha_nacimiento)
+                            formatDate(profesorSeleccionado.fecha_nacimiento) ||
+                            "No registrada"
                         }}</span>
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">Fecha de contratación</span>
                         <span class="detail-value">{{
-                            formatDate(profesorSeleccionado.fecha_contratacion)
+                            formatDate(profesorSeleccionado.fecha_contratacion) ||
+                            "No registrada"
                         }}</span>
                     </div>
                     <div class="detail-item">
@@ -289,12 +291,15 @@
                                 </td>
                                 <td>
                                     {{
-                                        asig.cursoAsignacion?.nombre_curso || ""
+                                        asig.cursoAsignacion?.nombre_curso ||
+                                        "Sin asignar"
                                     }}
                                 </td>
                                 <td>
                                     {{
-                                        asig.carga_horaria || asig.horas || "-"
+                                        asig.carga_horaria || asig.horas
+                                            ? `${asig.carga_horaria || asig.horas} hs`
+                                            : "-"
                                     }}
                                 </td>
                             </tr>
@@ -389,7 +394,7 @@
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>Nacimiento <span class="required">*</span></label>
+                    <label>Fecha de nacimiento <span class="required">*</span></label>
                     <input
                         v-model="form.fecha_nacimiento"
                         type="text"
@@ -401,7 +406,7 @@
                     <span v-if="erroresForm.fecha_nacimiento" class="field-error">{{ erroresForm.fecha_nacimiento }}</span>
                 </div>
                 <div class="form-group">
-                    <label>Contratación <span class="required">*</span></label>
+                    <label>Fecha de contratación <span class="required">*</span></label>
                     <input
                         v-model="form.fecha_contratacion"
                         type="text"
@@ -424,13 +429,21 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>Estado</label>
+                <label>Estado <span class="required">*</span></label>
                 <select v-model="form.estado" required>
                     <option value="activo">Activo</option>
                     <option value="licencia">Licencia</option>
                     <option value="baja">Baja</option>
                 </select>
             </div>
+
+            <UserAccessPanel
+                v-if="vistaActiva === 'crear'"
+                :defaultRolId="3"
+                :listaRoles="listaRoles"
+                :emailSugerido="form.email"
+                @update:usuarioData="handleUsuarioData"
+            />
 
             <div
                 class="card-footer"
@@ -482,7 +495,7 @@
                     class="ti ti-alert-triangle"
                     style="color: #cd322c; font-size: 20px"
                 ></i>
-                <h3>Eliminar docente</h3>
+                <h3>Dar de baja docente</h3>
             </div>
 
             <p class="modal-body">
@@ -532,7 +545,9 @@ import {
     modificarProfesor,
     darDeBajaProfesor,
     obtenerAsignacionesProfesor,
+    sincronizarUsuarioProfesor,
 } from "../../../services/academico-service.js";
+import { obtenerRoles, crearUsuario } from "../../../services/usuarios-services.js";
 import { formatDate, toDisplayDate, parseDisplayDate } from "../../../utils/formatters.js";
 import {
     validarRequerido,
@@ -545,6 +560,7 @@ import {
 } from "../../../utils/validators.js";
 import { useTableControls } from "../../../composables/useTableControls.js";
 import Pagination from "../../ui/Pagination.vue";
+import UserAccessPanel from "../../ui/UserAccessPanel.vue";
 
 // ── Estado ──────────────────────────────────────────────────────────────────
 const profesores = ref([]);
@@ -580,6 +596,9 @@ const errorCarga = ref("");
 const errorGuardar = ref("");
 const exitoGuardar = ref(false);
 
+const panelUsuarioData = ref(null);
+const listaRoles = ref([]);
+
 const asignacionesProfesor = ref([]);
 const cargandoAsignaciones = ref(false);
 const errorAsignaciones = ref("");
@@ -588,6 +607,19 @@ const etiquetaEstado = {
     activo: "Activo",
     licencia: "Licencia",
     baja: "Baja",
+};
+
+const claseEstado = (estado) => {
+    switch (estado) {
+        case "activo":
+            return "sp-activo";
+        case "licencia":
+            return "sp-licencia";
+        case "baja":
+            return "sp-baja";
+        default:
+            return "";
+    }
 };
 
 const formVacio = () => ({
@@ -699,17 +731,72 @@ const guardarProfesor = async () => {
     guardando.value = true;
 
     try {
-        const payload = { 
+        const payload = {
             ...form.value,
             fecha_nacimiento: parseDisplayDate(form.value.fecha_nacimiento),
             fecha_contratacion: parseDisplayDate(form.value.fecha_contratacion),
         };
+        let idProfesor = null;
         if (vistaActiva.value === "crear") {
-            await crearProfesor(payload);
+            const res = await crearProfesor(payload);
+            if (res?.success === false) {
+                throw new Error(
+                    res.message || res.mensaje ||
+                    "No se pudo crear la ficha del profesor.",
+                );
+            }
+            idProfesor = res?.data?.id_profesor ?? res?.data?.data?.id_profesor ?? null;
         } else {
-            await modificarProfesor(payload);
+            const res = await modificarProfesor(payload);
+            if (res?.success === false) {
+                throw new Error(
+                    res.message || res.mensaje ||
+                    "No se pudo actualizar la ficha del profesor.",
+                );
+            }
         }
-        exitoGuardar.value = true;
+
+        // Si estamos en modo crear y el panel de usuario estaba activo
+        if (vistaActiva.value === "crear" && panelUsuarioData.value !== null) {
+            const { email, contrasena, id_rol } = panelUsuarioData.value;
+
+            // POST crear usuario
+            try {
+                const userPayload = {
+                    nombre: form.value.nombre,
+                    apellido: form.value.apellido,
+                    email,
+                    contrasena,
+                    id_rol: id_rol,
+                };
+                const resUsuario = await crearUsuario(userPayload);
+                if (resUsuario?.success === false) {
+                    throw new Error(
+                        resUsuario.message ||
+                        "No se pudo crear la cuenta de usuario.",
+                    );
+                }
+
+                // PATCH sincronizar usuario ↔ entidad
+                await sincronizarUsuarioProfesor({
+                    idProfesor,
+                    idUsuario: resUsuario.data?.id_usuario,
+                });
+
+                // ✅ Full success: entity + account created
+                exitoGuardar.value = true;
+            } catch (userError) {
+                // ⚠️ Entity created but account failed
+                errorGuardar.value =
+                    "El profesor fue creado, pero la cuenta de usuario no pudo ser registrada. " +
+                    "Podés crear la cuenta manualmente desde la sección Usuarios.";
+                console.error("Error al crear cuenta de usuario:", userError);
+            }
+        } else {
+            // Panel desactivado o modo editar: éxito normal
+            exitoGuardar.value = true;
+        }
+
         await fetchProfesores();
         setTimeout(() => cambiarVista("lista"), 800);
     } catch (e) {
@@ -723,6 +810,10 @@ const guardarProfesor = async () => {
 const pedirConfirmacion = (prof) => {
     profesorAEliminar.value = prof;
     errorEliminar.value = "";
+};
+
+const handleUsuarioData = (data) => {
+    panelUsuarioData.value = data;
 };
 
 const confirmarEliminar = async () => {
@@ -749,7 +840,28 @@ const confirmarEliminar = async () => {
     }
 };
 
-onMounted(fetchProfesores);
+const cargarRoles = async () => {
+    try {
+        const res = await obtenerRoles();
+        const data = res?.data || res;
+        if (Array.isArray(data)) {
+            listaRoles.value = data.map((rol) => ({
+                id: rol.id_rol ?? rol.id,
+                nombre: rol.nombre_rol ?? rol.nombre,
+            }));
+        }
+    } catch (error) {
+        console.error(
+            "No se pudieron cargar los roles:",
+            error?.response?.data?.message || error?.message || error,
+        );
+    }
+};
+
+onMounted(() => {
+    fetchProfesores();
+    cargarRoles();
+});
 </script>
 
 <style scoped>

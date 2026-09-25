@@ -79,16 +79,16 @@
                                     }}
                                 </span>
                             </td>
-                            <td>
-                                <span
-                                    :class="[
-                                        'status-pill',
-                                        claseEstado(empleado.estado),
-                                    ]"
-                                >
-                                    {{ empleado.estado }}
-                                </span>
-                            </td>
+                                <td>
+                                    <span
+                                        :class="[
+                                            'status-pill',
+                                            claseEstado(empleado.estado),
+                                        ]"
+                                    >
+                                        {{ etiquetaEstado[empleado.estado] || empleado.estado }}
+                                    </span>
+                                </td>
                             <td class="action-cell">
                                 <div class="action-buttons">
                                     <button
@@ -114,8 +114,8 @@
                                     <button
                                         @click="pedirConfirmacion(empleado)"
                                         class="icon-btn delete"
-                                        title="Eliminar"
-                                        aria-label="Eliminar"
+                                        title="Dar de baja"
+                                        aria-label="Dar de baja"
                                     >
                                         <i class="ti ti-trash"></i>
                                     </button>
@@ -214,9 +214,13 @@
                         <span class="detail-label">Cargo</span>
                         <span class="detail-value"
                             >{{
-                                empleadoSeleccionado.cargoPersonal.nombre_cargo
-                            }},
-                            {{ empleadoSeleccionado.cargoPersonal.descripcion }}
+                                empleadoSeleccionado.cargoPersonal?.nombre_cargo ||
+                                "Sin cargo"
+                            }}{{
+                                empleadoSeleccionado.cargoPersonal?.descripcion
+                                    ? `, ${empleadoSeleccionado.cargoPersonal.descripcion}`
+                                    : ""
+                            }}
                         </span>
                     </div>
                     <div class="detail-item">
@@ -340,7 +344,7 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Cargo</label>
+                        <label>Cargo <span class="required">*</span></label>
                         <select v-model="form.id_cargo" required>
                             <option :value="null" disabled>
                                 Seleccione un cargo...
@@ -355,6 +359,14 @@
                         </select>
                     </div>
                 </div>
+
+                <UserAccessPanel
+                    v-if="vistaActiva === 'crear'"
+                    :defaultRolId="defaultRolIdPersonal"
+                    :listaRoles="listaRoles"
+                    :emailSugerido="form.email"
+                    @update:usuarioData="handleUsuarioData"
+                />
 
                 <div
                     class="card-footer"
@@ -410,7 +422,7 @@
                         class="ti ti-alert-triangle"
                         style="color: #cd322c; font-size: 20px"
                     ></i>
-                    <h3>Eliminar empleado</h3>
+                    <h3>Dar de baja empleado</h3>
                 </div>
 
                 <p class="modal-body">
@@ -418,7 +430,9 @@
                     <strong>
                         {{ empleadoAEliminar.nombre }}
                         {{ empleadoAEliminar.apellido }} </strong
-                    > (DNI: {{ empleadoAEliminar.dni }})? Esta acción eliminará su registro de personal y desvinculará su usuario asociado.
+                    > (DNI: {{ empleadoAEliminar.dni }})? Quedará marcado como
+                    <strong>"Baja"</strong> y no aparecerá en listas activas, pero su
+                    historial se preservará. Podés reactivarlo después editando su ficha.
                 </p>
 
                 <div
@@ -458,7 +472,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from "vue";
+import { ref, computed, onMounted, nextTick } from "vue";
 
 import {
     obtenerTodoPersonal,
@@ -467,7 +481,9 @@ import {
     modificarPersonal,
     darDeBajaPersonal,
     obtenerCargos,
+    sincronizarUsuarioPersonal,
 } from "../../../services/academico-service.js";
+import { obtenerRoles, crearUsuario } from "../../../services/usuarios-services.js";
 import { formatDate, toDisplayDate, parseDisplayDate } from "../../../utils/formatters.js";
 import {
     validarRequerido,
@@ -480,6 +496,7 @@ import {
 } from "../../../utils/validators.js";
 import { useTableControls } from "../../../composables/useTableControls.js";
 import Pagination from "../../ui/Pagination.vue";
+import UserAccessPanel from "../../ui/UserAccessPanel.vue";
 
 // ── Estado ──────────────────────────────────────────────────────────────────
 const personal = ref([]);
@@ -494,6 +511,9 @@ const errorEliminar = ref("");
 const errorCarga = ref("");
 const errorGuardar = ref("");
 const exitoGuardar = ref(false);
+
+const panelUsuarioData = ref(null);
+const listaRoles = ref([]);
 
 // ── Filtros y Paginación ────────────────────────────────────────────────
 const filterFn = (item, q) => {
@@ -535,6 +555,13 @@ const formVacio = () => ({
 
 const form = ref(formVacio());
 
+const defaultRolIdPersonal = computed(() => {
+    const cargo = Number(form.value.id_cargo);
+    if (cargo === 4) return 4;
+    if (cargo === 6) return 7;
+    return null;
+});
+
 // ── Validación ────────────────────────────────────────────────────────────────
 const erroresForm = ref({});
 
@@ -565,6 +592,11 @@ function limpiarErrores() {
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
+const etiquetaEstado = {
+    activo: "Activo",
+    baja: "Baja",
+    licencia: "Licencia",
+};
 const claseEstado = (estado) => {
     switch (estado) {
         case "activo":
@@ -652,13 +684,66 @@ const guardarEmpleado = async () => {
             payload.id_usuario = null;
         }
 
+        let idPersonal = null;
         if (vistaActiva.value === "crear") {
-            await crearPersonal(payload);
+            const res = await crearPersonal(payload);
+            if (res?.success === false) {
+                throw new Error(
+                    res.message || res.mensaje ||
+                    "No se pudo crear el registro del personal.",
+                );
+            }
+            idPersonal = res?.data?.id_personal ?? res?.data?.data?.id_personal ?? null;
         } else {
-            await modificarPersonal(payload);
+            const res = await modificarPersonal(payload);
+            if (res?.success === false) {
+                throw new Error(
+                    res.message || res.mensaje ||
+                    "No se pudo actualizar el registro del personal.",
+                );
+            }
         }
 
-        exitoGuardar.value = true;
+        // Si estamos en modo crear y el panel de usuario estaba activo
+        if (vistaActiva.value === "crear" && panelUsuarioData.value !== null) {
+            const { email, contrasena, id_rol } = panelUsuarioData.value;
+
+            try {
+                const userPayload = {
+                    nombre: form.value.nombre,
+                    apellido: form.value.apellido,
+                    email,
+                    contrasena,
+                    id_rol,
+                };
+                const resUsuario = await crearUsuario(userPayload);
+                if (resUsuario?.success === false) {
+                    throw new Error(
+                        resUsuario.message ||
+                        "No se pudo crear la cuenta de usuario.",
+                    );
+                }
+
+                // PATCH sincronizar usuario ↔ entidad
+                await sincronizarUsuarioPersonal({
+                    idPersonal,
+                    idUsuario: resUsuario.data?.id_usuario,
+                });
+
+                // ✅ Full success: entity + account created
+                exitoGuardar.value = true;
+            } catch (userError) {
+                // ⚠️ Entidad creada pero la cuenta falló
+                errorGuardar.value =
+                    "El personal fue creado, pero la cuenta de usuario no pudo ser registrada. " +
+                    "Podés crear la cuenta manualmente desde la sección Usuarios.";
+                console.error("Error al crear cuenta de usuario:", userError);
+            }
+        } else {
+            // Panel desactivado o modo editar: éxito normal
+            exitoGuardar.value = true;
+        }
+
         await fetchPersonal();
         setTimeout(() => cambiarVista("lista"), 800);
     } catch (e) {
@@ -699,9 +784,32 @@ const confirmarEliminar = async () => {
 };
 
 // ── Lifecycle ────────────────────────────────────────────────────────────────
+const cargarRoles = async () => {
+    try {
+        const res = await obtenerRoles();
+        const data = res?.data || res;
+        if (Array.isArray(data)) {
+            listaRoles.value = data.map((rol) => ({
+                id: rol.id_rol ?? rol.id,
+                nombre: rol.nombre_rol ?? rol.nombre,
+            }));
+        }
+    } catch (error) {
+        console.error(
+            "No se pudieron cargar los roles:",
+            error?.response?.data?.message || error?.message || error,
+        );
+    }
+};
+
+const handleUsuarioData = (data) => {
+    panelUsuarioData.value = data;
+};
+
 onMounted(() => {
     fetchPersonal();
     fetchCargos();
+    cargarRoles();
 });
 </script>
 
