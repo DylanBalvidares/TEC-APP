@@ -9,3 +9,9 @@ docu-proyecto.txt
 mysql_data
 
 almacenamiento
+
+# Artefactos de verificación local (playwright, logs, reportes)
+.playwright-mcp/
+*.log
+REPORT-*.md
+token*.txt
