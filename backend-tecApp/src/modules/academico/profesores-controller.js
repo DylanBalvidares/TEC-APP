@@ -39,10 +39,6 @@ async function obtenerTodosProfesores() {
   try {
     const profesores = await Profesor.findAll();
 
-    if (!profesores.length) {
-      throw new ErrorHandler(404, "No se encontraron profesores");
-    }
-
     return profesores;
   } catch (error) {
     if (error instanceof ErrorHandler) throw error;

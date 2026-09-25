@@ -15,3 +15,6 @@ almacenamiento
 *.log
 REPORT-*.md
 token*.txt
+
+# Caché local de build de Vite
+frontend-tecApp/.vite/

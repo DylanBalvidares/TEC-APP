@@ -47,10 +47,6 @@ async function obtenerTodosAlumnos() {
       ],
     });
 
-    if (!alumnos.length) {
-      throw new ErrorHandler(404, "No se encontraron alumnos");
-    }
-
     return alumnos;
   } catch (error) {
     if (error instanceof ErrorHandler) {
