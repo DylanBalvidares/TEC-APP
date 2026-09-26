@@ -10,6 +10,7 @@ import Profesor from "./profesores-model.js";
 import Personal from "./personal-model.js";
 import Materia from "./materias-model.js";
 import Nota from "./notas-model.js";
+import HistorialNota from "./historial-notas-model.js";
 import Asignacion from "./asignaciones-model.js";
 import Cargo from "./cargos-model.js";
 
@@ -75,6 +76,12 @@ Nota.belongsTo(Alumno, { foreignKey: "id_alumno" });
 Asignacion.hasMany(Nota, { foreignKey: "id_asignacion", onDelete: "CASCADE" });
 Nota.belongsTo(Asignacion, { foreignKey: "id_asignacion" });
 
+Nota.hasMany(HistorialNota, { foreignKey: "id_nota", onDelete: "CASCADE" });
+HistorialNota.belongsTo(Nota, { foreignKey: "id_nota" });
+HistorialNota.belongsTo(Alumno, { foreignKey: "id_alumno" });
+HistorialNota.belongsTo(Asignacion, { foreignKey: "id_asignacion" });
+HistorialNota.belongsTo(Usuario, { foreignKey: "modificado_por", as: "usuarioModificador" });
+
 Cargo.hasMany(Personal, { foreignKey: "id_cargo" });
 Personal.belongsTo(Cargo, { foreignKey: "id_cargo", as: "cargoPersonal" });
 
@@ -100,6 +107,7 @@ export {
   Cargo,
   Asignacion,
   Nota,
+  HistorialNota,
   Materia,
   Biblioteca,
   Prestamo,

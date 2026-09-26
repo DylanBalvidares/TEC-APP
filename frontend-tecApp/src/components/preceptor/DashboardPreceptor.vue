@@ -203,18 +203,18 @@
           </li>
 
 
-          <!-- BOLETINES -->
+          <!-- LIBRETA DIGITAL -->
 
           <li @click="sidebarAbierto = false">
 
             <RouterLink
-              to="/preceptor/boletines"
+              to="/preceptor/libreta"
               active-class="active"
             >
 
               <i class="fas fa-file-alt"></i>
 
-              Boletines
+              Libreta Digital
 
             </RouterLink>
 

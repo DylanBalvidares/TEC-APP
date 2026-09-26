@@ -27,6 +27,12 @@
           </RouterLink>
         </li>
         <li>
+          <RouterLink to="/alumno/libreta" active-class="active" @click="$emit('close')">
+            <div class="nav-icon"><i class="fas fa-book-open"></i></div>
+            <span>Libreta Digital</span>
+          </RouterLink>
+        </li>
+        <li>
           <RouterLink to="/alumno/objetos-perdidos" active-class="active" @click="$emit('close')">
             <div class="nav-icon"><i class="fas fa-box"></i></div>
             <span>Objetos Perdidos</span>

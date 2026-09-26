@@ -83,6 +83,7 @@ INSERT IGNORE INTO `permisos` (`nombre_permiso`) VALUES
     ('preceptor_gestionar_sanciones'),
     ('preceptor_ver_sanciones'),
     ('preceptor_enviar_email_alumno'),
+    ('preceptor_ver_notas'),
     -- Preceptor nuevos
     ('preceptor_crear_alumno'),
     ('preceptor_editar_alumno'),
@@ -183,7 +184,7 @@ SELECT 4, id_permiso FROM `permisos` WHERE `nombre_permiso` IN (
     'preceptor_registrar_asistencias','preceptor_ver_asistencias',
     'preceptor_gestionar_sanciones','preceptor_ver_sanciones',
     'preceptor_crear_alumno','preceptor_editar_alumno','preceptor_eliminar_alumno',
-    'preceptor_enviar_email_alumno'
+    'preceptor_enviar_email_alumno','preceptor_ver_notas'
 );
 
 -- Bibliotecario (id_rol=5)
@@ -387,6 +388,27 @@ CREATE TABLE `notas` (
     PRIMARY KEY (`id_nota`),
     CONSTRAINT `fk_nota_alumno` FOREIGN KEY (`id_alumno`)     REFERENCES `alumnos`     (`id_alumno`),
     CONSTRAINT `fk_nota_asig`   FOREIGN KEY (`id_asignacion`) REFERENCES `asignaciones`(`id_asignacion`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `historial_notas` (
+    `id_historial`          int(11)      NOT NULL AUTO_INCREMENT,
+    `id_nota`               int(11)      NOT NULL,
+    `id_alumno`             int(11)      NOT NULL,
+    `id_asignacion`         int(11)      NOT NULL,
+    `calificacion_anterior` decimal(3,1) DEFAULT NULL,
+    `calificacion_nueva`    decimal(3,1) NOT NULL,
+    `modificado_por`        int(11)      NOT NULL,
+    `fecha_cambio`          datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `motivo`                varchar(255) DEFAULT NULL,
+    PRIMARY KEY (`id_historial`),
+    KEY `idx_hist_nota` (`id_nota`),
+    KEY `idx_hist_alumno` (`id_alumno`),
+    KEY `idx_hist_asig` (`id_asignacion`),
+    KEY `idx_hist_mod_por` (`modificado_por`),
+    CONSTRAINT `fk_hist_nota`   FOREIGN KEY (`id_nota`)        REFERENCES `notas`       (`id_nota`)       ON DELETE CASCADE,
+    CONSTRAINT `fk_hist_alumno` FOREIGN KEY (`id_alumno`)      REFERENCES `alumnos`     (`id_alumno`)     ON DELETE CASCADE,
+    CONSTRAINT `fk_hist_asig`   FOREIGN KEY (`id_asignacion`)  REFERENCES `asignaciones`(`id_asignacion`) ON DELETE CASCADE,
+    CONSTRAINT `fk_hist_user`   FOREIGN KEY (`modificado_por`) REFERENCES `usuarios`    (`id_usuario`)    ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================

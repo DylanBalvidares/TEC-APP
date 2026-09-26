@@ -767,3 +767,76 @@ export const obtenerComunicado = async (id) => {
     return manejarErrorApi(error, "No se pudo obtener el comunicado");
   }
 };
+
+// ==========================================
+//           CALIFICACIONES / LIBRETA
+// ==========================================
+
+export const obtenerNotasProfesor = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/notas/profesor`, getConfig());
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "No se pudieron obtener las calificaciones del docente");
+  }
+};
+
+export const obtenerNotasPreceptorCurso = async (idCurso) => {
+  try {
+    const response = await axios.get(`${API_URL}/notas/preceptor/curso/${idCurso}`, getConfig());
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "No se pudieron obtener las calificaciones del curso");
+  }
+};
+
+export const obtenerMisNotasAlumno = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/notas/mis-notas`, getConfig());
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "No se pudieron obtener tus calificaciones");
+  }
+};
+
+export const guardarNota = async (notaData) => {
+  try {
+    const response = await axios.post(`${API_URL}/notas`, notaData, getConfig());
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "Error al guardar la calificación");
+  }
+};
+
+export const modificarNotaService = async (notaData) => {
+  try {
+    const response = await axios.patch(`${API_URL}/notas`, notaData, getConfig());
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "Error al modificar la calificación");
+  }
+};
+
+export const obtenerHistorialNotasAlumno = async (idAlumno) => {
+  try {
+    const response = await axios.get(`${API_URL}/notas/historial/alumno/${idAlumno}`, getConfig());
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "No se pudo consultar el historial de calificaciones");
+  }
+};
+
+// Wrapper semántico para la vista de administración: planilla completa
+// de un curso (usa el endpoint de preceptor, habilitado para root/admin).
+export const obtenerPlanillaAdmin = async (idCurso) => {
+  return obtenerNotasPreceptorCurso(idCurso);
+};
+
+export const eliminarNotaService = async (idNota) => {
+  try {
+    const response = await axios.delete(`${API_URL}/notas/${idNota}`, getConfig());
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "Error al eliminar la calificación");
+  }
+};

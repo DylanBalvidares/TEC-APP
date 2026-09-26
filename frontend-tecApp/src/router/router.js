@@ -39,6 +39,11 @@ import DashboardPreceptor from "../components/preceptor/DashboardPreceptor.vue";
 import CursosPreceptorView from "../components/preceptor/views/CursosPreceptorView.vue";
 import AlumnosView from "../components/preceptor/views/AlumnosView.vue";
 
+// Libreta Digital
+import LibretaAlumnoView from "../components/alumno/views/LibretaAlumnoView.vue";
+import LibretaDigitalViewProfesor from "../components/profesores/views/LibretaDigitalView.vue";
+import LibretaPreceptorView from "../components/preceptor/views/LibretaPreceptorView.vue";
+
 const routes = [
   { path: "/", component: Inicio },
   { path: "/login", component: Login },
@@ -55,6 +60,7 @@ const routes = [
       { path: "inicio", component: InicioView },
       { path: "noticias", component: NoticiasView },
       { path: "cursos", component: CursosView },
+      { path: "libreta", component: LibretaAlumnoView },
       { path: "objetos-perdidos", component: ObjetosPerdidosView },
       { path: "", redirect: "/alumno/inicio" }, // Si entran a /alumno, van a inicio
     ],
@@ -100,6 +106,7 @@ const routes = [
       { path: "cursos", component: CursosViewProfesor },
       { path: "materias", component: MateriasView },
       { path: "asistencias", component: AsistenciasView },
+      { path: "libreta", component: LibretaDigitalViewProfesor },
       { path: "", redirect: "/profesor/inicio" }, // Si entran a /alumno, van a inicio
     ],
   },
@@ -115,6 +122,16 @@ const routes = [
       {
         path: "cursos",
         component: CursosPreceptorView,
+      },
+
+      {
+        path: "libreta",
+        component: LibretaPreceptorView,
+      },
+
+      {
+        path: "boletines",
+        redirect: "/preceptor/libreta",
       },
 
       {

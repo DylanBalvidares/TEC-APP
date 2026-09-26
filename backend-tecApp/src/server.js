@@ -6,6 +6,7 @@ import path from "path";
 // DB
 import "./db/conexionDB.js";
 import "./db/ensureCorreosTable.js";
+import "./db/ensureLibretaDigital.js";
 
 // Middlewares
 import autenticar from "./middlewares/autenticar.js";
