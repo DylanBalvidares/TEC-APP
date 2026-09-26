@@ -55,6 +55,14 @@
             <i class="ti ti-git-branch" aria-hidden="true"></i><span title="Asignaciones de materias">Asignaciones</span>
         </div>
 
+        <div
+            class="nav-item" role="button" tabindex="0"
+            :class="{ active: vistaActual === 'libreta' }"
+            @click="$emit('cambiar-vista', 'libreta')"
+        >
+            <i class="ti ti-book-open" aria-hidden="true"></i><span title="Libreta Digital">Libreta Digital</span>
+        </div>
+
         <div class="sidebar-section">Comunicación</div>
         <div
             class="nav-item" role="button" tabindex="0"

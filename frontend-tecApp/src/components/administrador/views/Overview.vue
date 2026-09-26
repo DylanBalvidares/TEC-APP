@@ -39,6 +39,13 @@
             <div class="metric-value">{{ totalComunicados }}</div>
             <span class="metric-badge badge-gray">Ver todos →</span>
         </div>
+        <div class="metric-card clickable" @click="$emit('cambiar-vista', 'libreta')">
+            <div class="metric-label">
+                <i class="ti ti-book-open" aria-hidden="true"></i>Libreta Digital
+            </div>
+            <div class="metric-value">{{ totalCursos }}</div>
+            <span class="metric-badge badge-green">Supervisar notas →</span>
+        </div>
     </div>
 
     <div class="row3">
