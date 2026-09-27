@@ -35,9 +35,11 @@ test("toda ruta de módulo declara permiso, soloAutenticado o está en la allowl
 
   // Hasta cerrar S1–S5 el hueco es conocido. No puede crecer en silencio:
   // si aparece una ruta nueva sin permiso, este número cambia y el test falla.
+  // Fase 1 cerrada (S1–S5): el conteo queda en 0. Si EXIGIR_PERMISOS=1 corre
+  // en cualquier máquina, la aserción estricta de arriba es la que manda.
   assert.equal(
     sinPermiso.length,
-    6,
+    0,
     "Cambió la cantidad de rutas sin permiso. Si cerraste S1–S5, corré con EXIGIR_PERMISOS=1. Si agregaste una ruta, declarale permiso o allowlist.",
   );
 });

@@ -6,16 +6,41 @@ import * as objetosCtrl from "./objetos-perdidos-controller.js";
 import * as mensajesCtrl from "./mensajes-controller.js";
 import upload from "../../middlewares/uploads.js";
 import autenticar from "../../middlewares/autenticar.js";
-import comprobarPermisos, { soloAutenticado } from "../../middlewares/comprobarPermisos.js";
+import comprobarPermisos, {
+  soloAutenticado,
+} from "../../middlewares/comprobarPermisos.js";
 import { obtenerHistorialGlobal, marcarCorreoLeido } from "./comunidad-service.js";
 
 const router = Router();
+
+// S5: cualquier usuario autenticado lee noticias, comunicados y objetos, pero
+// la intención queda explícita para el guardrail (soloAutenticado).
+const LECTURA_COMUNIDAD = comprobarPermisos(soloAutenticado);
+
+// S5: el filtro `rol` de comunicados sale del token, no del query. Un alumno
+// no puede pedir `?rol=root` para leer comunicados de autoridades. `curso` y
+// `cursos` sí pueden venir del query porque sólo refinan dentro del destino
+// permitido para ese rol.
+const DESTINOS_POR_ROL = {
+  1: "alumno",
+  2: "alumno",
+  3: "profesor",
+  4: "autoridades",
+  5: "autoridades",
+  6: "alumno",
+  7: "administrador",
+  8: "root",
+};
+
+function rolParaComunicados(req) {
+  return DESTINOS_POR_ROL[Number(req.headers["id_rol"])] || "alumno";
+}
 
 // === Middleware de autenticación para TODAS las rutas ===
 router.use(autenticar);
 
 // === RUTAS DE NOTICIAS ===
-router.get("/noticias", async (req, res) => {
+router.get("/noticias", LECTURA_COMUNIDAD, async (req, res) => {
   try {
     const noticias = await noticiasCtrl.obtenerTodasNoticias();
     return res.status(200).json(noticias);
@@ -24,7 +49,7 @@ router.get("/noticias", async (req, res) => {
   }
 });
 
-router.get("/noticias/:id", async (req, res) => {
+router.get("/noticias/:id", LECTURA_COMUNIDAD, async (req, res) => {
   try {
     const noticia = await noticiasCtrl.obtenerNoticia(req.params.id);
     return res.status(200).json(noticia);
@@ -65,16 +90,19 @@ router.delete("/noticias/:id", comprobarPermisos(["delegado_eliminar_mis_noticia
 });
 
 // === RUTAS DE COMUNICADOS ===
-router.get("/comunicados", async (req, res) => {
+router.get("/comunicados", LECTURA_COMUNIDAD, async (req, res) => {
   try {
-    const comunicados = await comunicadosCtrl.obtenerTodosComunicados(req.query);
+    const comunicados = await comunicadosCtrl.obtenerTodosComunicados({
+      ...req.query,
+      rol: rolParaComunicados(req),
+    });
     return res.status(200).json(comunicados);
   } catch (error) {
     return res.status(error.statusCode || 500).json({ message: error.message });
   }
 });
 
-router.get("/comunicados/:id", async (req, res) => {
+router.get("/comunicados/:id", LECTURA_COMUNIDAD, async (req, res) => {
   try {
     const comunicado = await comunicadosCtrl.obtenerComunicado(req.params.id);
     return res.status(200).json(comunicado);
@@ -116,7 +144,7 @@ router.delete("/comunicados/:id", comprobarPermisos("comunicado_eliminar"), asyn
 });
 
 // === RUTAS DE OBJETOS PERDIDOS ===
-router.get("/objetos-perdidos", async (req, res) => {
+router.get("/objetos-perdidos", LECTURA_COMUNIDAD, async (req, res) => {
   try {
     const objetos = await objetosCtrl.obtenerTodosObjetos();
     return res.status(200).json(objetos);
@@ -125,7 +153,7 @@ router.get("/objetos-perdidos", async (req, res) => {
   }
 });
 
-router.get("/objetos-perdidos/:id", async (req, res) => {
+router.get("/objetos-perdidos/:id", LECTURA_COMUNIDAD, async (req, res) => {
   try {
     const objeto = await objetosCtrl.obtenerObjeto(req.params.id);
     return res.status(200).json(objeto);

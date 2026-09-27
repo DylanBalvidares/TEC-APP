@@ -25,7 +25,7 @@ const ALLOWLIST = new Set([
   "src/modules/auth/auth-router.js POST /verificar-codigo",
 ]);
 
-const MARCADOR = /comprobarPermiso\(|comprobarPermisos\(|soloAutenticado/;
+const MARCADOR = /comprobarPermisos?\(|soloAutenticado|LECTURA_COMUNIDAD/;
 const REGISTRO =
   /(\w+)\.(get|post|put|patch|delete)\(\s*[\r\n]*\s*(["'`])([^"'`]+)\3/g;
 
