@@ -514,6 +514,11 @@ const buscarHistorial = async () => {
         });
 
         historial.value = Object.values(agrupado).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+    } else if (res.status === 404 && /no se encontr[oó] historial/i.test(res.message || "")) {
+        // Compatibilidad con backends que responden 404 sin registros:
+        // se trata como estado vacío, no como error.
+        errorHistorial.value = "";
+        historial.value = [];
     } else {
         errorHistorial.value = res.message || "Error al obtener el historial.";
         historial.value = [];

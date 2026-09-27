@@ -107,10 +107,8 @@ async function obtenerHistorialAsistencias({ id_curso, fecha_desde, fecha_hasta 
       order: [["fecha", "ASC"], ["id_alumno", "ASC"]],
     });
 
-    if (!historial.length) {
-      throw new ErrorHandler(404, "No se encontró historial de asistencias");
-    }
-
+    // Sin registros en el rango: lista vacía con 200 (no 404). El 404 queda
+    // reservado para parámetros inválidos o errores reales.
     return historial;
   } catch (error) {
     if (error instanceof ErrorHandler) {
