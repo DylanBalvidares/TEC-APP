@@ -93,6 +93,12 @@
                             Plan de Estudios
                         </RouterLink>
                     </li>
+                    <li @click="sidebarAbierto = false">
+                        <RouterLink to="/profesor/mensajes" active-class="active" aria-label="WhatsApp">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 01-12.4 7.5L3 21l2-5.4A8.5 8.5 0 1121 11.5z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            WhatsApp
+                        </RouterLink>
+                    </li>
                 </ul>
 
                 <div class="sidebar-help">

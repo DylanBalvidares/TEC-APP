@@ -43,6 +43,10 @@ import LibretaAlumnoView from "../components/alumno/views/LibretaAlumnoView.vue"
 import LibretaDigitalViewProfesor from "../components/profesores/views/LibretaDigitalView.vue";
 import LibretaPreceptorView from "../components/preceptor/views/LibretaPreceptorView.vue";
 
+// WhatsApp
+import MensajesProfesorView from "../components/profesores/views/MensajesView.vue";
+import MensajesPreceptorView from "../components/preceptor/views/MensajesView.vue";
+
 // Planes de Estudio (consulta por rol)
 import PlanEstudioViewProfesor from "../components/profesores/views/PlanEstudioView.vue";
 import PlanEstudioViewPreceptor from "../components/preceptor/views/PlanEstudioView.vue";
@@ -116,6 +120,7 @@ const routes = [
       { path: "asistencias", component: AsistenciasView },
       { path: "libreta", component: LibretaDigitalViewProfesor },
       { path: "plan", component: PlanEstudioViewProfesor },
+      { path: "mensajes", component: MensajesProfesorView },
       { path: "", redirect: "/profesor/inicio" }, // Si entran a /alumno, van a inicio
     ],
   },
@@ -151,6 +156,11 @@ const routes = [
       {
         path: "alumnos/:id_curso",
         component: AlumnosView,
+      },
+
+      {
+        path: "mensajes",
+        component: MensajesPreceptorView,
       },
 
       {

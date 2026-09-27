@@ -1,5 +1,6 @@
 import ErrorHandler from "../../utils/ErrorHandler.js";
 import { Profesor } from "../../db/models/index.js";
+import { validarTelefonoAR } from "../../utils/whatsappProvider.js";
 
 async function validarIdentidadProfesor(data) {
   console.log("\x1b[1m\x1b[34m[CTRL]\x1b[0m Ejecutando controlador: validarIdentidadProfesor");
@@ -72,6 +73,8 @@ async function obtenerProfesor(id) {
 
 async function crearProfesor(profesor) {
   console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: crearProfesor");
+  const errorTelefono = validarTelefonoAR(profesor?.telefono, true);
+  if (errorTelefono) throw new ErrorHandler(400, `Teléfono: ${errorTelefono}`);
   try {
     const data = await Profesor.create(profesor);
     return data;
@@ -155,6 +158,8 @@ async function modificarProfesor(profesor) {
     especialidad,
   } = profesor;
 
+  const errorTelefonoMod = validarTelefonoAR(telefono, true);
+  if (errorTelefonoMod) throw new ErrorHandler(400, `Teléfono: ${errorTelefonoMod}`);
   try {
     if (!id_profesor) {
       throw new ErrorHandler(400, "ID invalida");

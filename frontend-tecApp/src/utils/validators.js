@@ -2,6 +2,7 @@
  * Validadores reutilizables para formularios.
  * Cada función retorna un string con el mensaje de error, o string vacío si es válido.
  */
+import { analizarTelefono } from "./telefonos.js";
 
 export function validarRequerido(valor, campo = "Este campo") {
   if (!valor || (typeof valor === "string" && !valor.trim())) {
@@ -46,6 +47,17 @@ export function validarTelefono(valor, requerido = true) {
   const limpio = valor.trim().replace(/[\s\-()]/g, "");
   if (!/^\+?\d{7,15}$/.test(limpio)) return "El teléfono no tiene un formato válido";
   return "";
+}
+
+// Validador robusto alineado con el envío de WhatsApp (ver utils/telefonos.js
+// y backend whatsappProvider.js). Retorna "" si es válido.
+export function validarTelefonoAR(valor, requerido = true) {
+  if (!valor || !String(valor).trim()) {
+    return requerido ? "El teléfono es obligatorio" : "";
+  }
+  const r = analizarTelefono(valor);
+  if (r.estado === "ok") return "";
+  return `Teléfono inválido: ${r.mensaje}`;
 }
 
 export function validarSoloNumeros(valor, campo = "Este campo") {

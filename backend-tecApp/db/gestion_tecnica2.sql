@@ -142,6 +142,11 @@ INSERT IGNORE INTO `permisos` (`nombre_permiso`) VALUES
     ('comunicado_editar'),
     ('comunicado_eliminar'),
     ('comunicado_ver'),
+    -- WhatsApp
+    ('whatsapp_enviar'),
+    ('whatsapp_ver_propio'),
+    ('whatsapp_ver_todos'),
+    ('whatsapp_gestionar'),
     -- Root
     ('root_gestionar_roles'),
     ('root_gestionar_permisos'),
@@ -182,7 +187,8 @@ SELECT 3, id_permiso FROM `permisos` WHERE `nombre_permiso` IN (
     'profesor_ver_curso','profesor_ver_alumnos_de_curso','profesor_ver_perfil_alumno',
     'profesor_ver_todos_notas','profesor_crear_nota','profesor_editar_nota',
     'profesor_eliminar_nota','profesor_gestionar_asistencias','profesor_ver_horario',
-    'profesor_ver_planes'
+    'profesor_ver_planes',
+    'whatsapp_enviar','whatsapp_ver_propio'
 );
 
 -- Preceptor (id_rol=4)
@@ -192,7 +198,8 @@ SELECT 4, id_permiso FROM `permisos` WHERE `nombre_permiso` IN (
     'preceptor_registrar_asistencias','preceptor_ver_asistencias',
     'preceptor_gestionar_sanciones','preceptor_ver_sanciones',
     'preceptor_crear_alumno','preceptor_editar_alumno','preceptor_eliminar_alumno',
-    'preceptor_enviar_email_alumno','preceptor_ver_notas','preceptor_ver_planes'
+    'preceptor_enviar_email_alumno','preceptor_ver_notas','preceptor_ver_planes',
+    'whatsapp_enviar','whatsapp_ver_propio'
 );
 
 -- Bibliotecario (id_rol=5)
@@ -228,7 +235,8 @@ SELECT 7, id_permiso FROM `permisos` WHERE `nombre_permiso` IN (
     'administrativo_eliminar_materia',
     'administrativo_ver_planes','administrativo_crear_plan',
     'administrativo_editar_plan','administrativo_eliminar_plan',
-    'comunicado_crear','comunicado_editar','comunicado_eliminar','comunicado_ver'
+    'comunicado_crear','comunicado_editar','comunicado_eliminar','comunicado_ver',
+    'whatsapp_ver_todos'
 );
 
 -- Root (id_rol=8): todos los permisos
@@ -620,6 +628,28 @@ CREATE TABLE `codigos_verificacion` (
 
     INDEX `idx_email` (`email`),
     INDEX `idx_codigo` (`codigo`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Historial de WhatsApp (requerida por GET /api/comunidad/mensajes/*).
+-- Sin FKs: id_remitente guarda id_usuario e id_destinatario guarda id_alumno.
+CREATE TABLE IF NOT EXISTS `mensajes_whatsapp` (
+    `id_mensaje`           int(11)      NOT NULL AUTO_INCREMENT,
+    `id_remitente`          int(11)      DEFAULT NULL,
+    `id_destinatario`       int(11)      DEFAULT NULL,
+    `telefono_destino`      varchar(20)  NOT NULL,
+    `nombre_destinatario`   varchar(200) DEFAULT NULL,
+    `cuerpo`                text         NOT NULL,
+    `fecha_envio`           datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `estado`                ENUM('pendiente','enviado','fallido','leido') NOT NULL DEFAULT 'pendiente',
+    `waba_message_id`       varchar(255) DEFAULT NULL,
+    `error_detalle`         text         DEFAULT NULL,
+    `leido`                 tinyint(1)   NOT NULL DEFAULT 0,
+    `fecha_lectura`         datetime     DEFAULT NULL,
+    PRIMARY KEY (`id_mensaje`),
+    KEY `idx_wpp_remitente` (`id_remitente`),
+    KEY `idx_wpp_destinatario` (`id_destinatario`),
+    KEY `idx_wpp_estado` (`estado`),
+    KEY `idx_wpp_fecha` (`fecha_envio`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Historial de emails (requerida por GET /api/comunidad/monitoreo y persistirCorreo).

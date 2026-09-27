@@ -57,6 +57,7 @@ import LibretaAdminView from "./views/LibretaAdminView.vue";
 import PersonalView from "./views/PersonalView.vue";
 import UsuariosView from "./views/UsuariosView.vue";
 import AsistenciasView from "./views/AsistenciasView.vue";
+import MensajesView from "./views/MensajesView.vue";
 import UsuarioPerfil from "./views/UsuarioPerfil.vue";
 
 const componentesMap = {
@@ -75,6 +76,7 @@ const componentesMap = {
   personal: PersonalView,
   usuarios: UsuariosView,
   asistencias: AsistenciasView,
+  mensajes: MensajesView,
   perfil: UsuarioPerfil,
 };
 const VISTAS_VALIDAS = Object.keys(componentesMap);
@@ -94,6 +96,7 @@ const pageNames = {
   personal: "Personal",
   usuarios: "Usuarios",
   asistencias: "Asistencias",
+  mensajes: "WhatsApp",
   perfil: "Mi Perfil",
 };
 const nombrePagina = (vista) => pageNames[vista] || "Inicio";

@@ -1,6 +1,7 @@
 import ErrorHandler from "../../utils/ErrorHandler.js";
 import { Alumno, Curso, Asistencia } from "../../db/models/index.js";
 import sequelize from "../../db/conexionDB.js";
+import { validarTelefonoAR } from "../../utils/whatsappProvider.js";
 
 async function validarIdentidadAlumno(data) {
   console.log("\x1b[1m\x1b[34m[CTRL]\x1b[0m Ejecutando controlador: validarIdentidadAlumno");
@@ -191,6 +192,8 @@ async function obtenerInfoParaAlumno(id) {
 
 async function crearAlumno(alumno) {
   console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: crearAlumno");
+  const errorTelefono = validarTelefonoAR(alumno?.telefono_tutor, false);
+  if (errorTelefono) throw new ErrorHandler(400, `Teléfono del tutor: ${errorTelefono}`);
   try {
     const data = await Alumno.create(alumno);
     return data;
@@ -288,6 +291,8 @@ async function modificarAlumno(alumno) {
 
   console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m ALUMNOS-CONTROLLER:", alumno);
 
+  const errorTelefonoMod = validarTelefonoAR(telefono_tutor, false);
+  if (errorTelefonoMod) throw new ErrorHandler(400, `Teléfono del tutor: ${errorTelefonoMod}`);
   try {
     // CORRECCIÓN: Validamos el id_alumno, no el id_curso
     if (!id_alumno || id_alumno < 0) {
@@ -425,6 +430,11 @@ async function crearAlumnosEnLote(payload) {
         dnisVistos.add(dniStr);
         dnisValidos.push(dniStr);
       }
+    }
+
+    const errorTel = validarTelefonoAR(alumno.telefono_tutor, false);
+    if (errorTel) {
+      erroresFormato.push(`Alumno #${pos}: Teléfono del tutor: ${errorTel}`);
     }
   });
 

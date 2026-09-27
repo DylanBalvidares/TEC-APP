@@ -393,7 +393,7 @@
             <div class="form-row">
                 <div class="form-group">
                     <label>Teléfono <span class="required">*</span></label>
-                    <input v-model="form.telefono" type="tel" :class="{ 'input-error': erroresForm.telefono }" @blur="validarCampo('telefono')" required />
+                    <TelefonoInput v-model="form.telefono" placeholder="Ej: 2364 71-5375" requerido :error-externo="erroresForm.telefono" @blur="validarCampo('telefono')" />
                     <span v-if="erroresForm.telefono" class="field-error">{{ erroresForm.telefono }}</span>
                 </div>
                 <div class="form-group">
@@ -553,10 +553,11 @@ import {
     validarLongitudMinima,
     validarDNI,
     validarEmail,
-    validarTelefono,
+    validarTelefonoAR,
     validarFechaInput,
     validarFormulario,
 } from "../../../utils/validators.js";
+import TelefonoInput from "../../ui/TelefonoInput.vue";
 import { useTableControls } from "../../../composables/useTableControls.js";
 import { exportarCsv } from "../../../utils/exportCsv.js";
 import Pagination from "../../ui/Pagination.vue";
@@ -685,7 +686,7 @@ const REGLAS_VALIDACION = {
     apellido: (v) => validarRequerido(v, "El apellido") || validarLongitudMinima(v, 2, "El apellido"),
     dni: validarDNI,
     email: validarEmail,
-    telefono: validarTelefono,
+    telefono: (v) => validarTelefonoAR(v, true),
     domicilio: (v) => validarRequerido(v, "El domicilio"),
     fecha_nacimiento: (v) => validarRequerido(v, "La fecha de nacimiento") || validarFechaInput(v),
     fecha_contratacion: (v) => validarRequerido(v, "La fecha de contratación") || validarFechaInput(v),

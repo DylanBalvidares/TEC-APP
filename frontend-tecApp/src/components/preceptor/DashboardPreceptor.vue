@@ -252,6 +252,24 @@
           </li>
 
 
+          <!-- WHATSAPP -->
+
+          <li @click="sidebarAbierto = false">
+
+            <RouterLink
+              to="/preceptor/mensajes"
+              active-class="active"
+            >
+
+              <i class="fab fa-whatsapp"></i>
+
+              WhatsApp
+
+            </RouterLink>
+
+          </li>
+
+
           <!-- COMUNICADOS -->
 
           <li @click="sidebarAbierto = false">

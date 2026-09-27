@@ -1,7 +1,9 @@
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import * as noticiasCtrl from "./noticias-controller.js";
 import * as comunicadosCtrl from "./comunicados-controller.js";
 import * as objetosCtrl from "./objetos-perdidos-controller.js";
+import * as mensajesCtrl from "./mensajes-controller.js";
 import upload from "../../middlewares/uploads.js";
 import autenticar from "../../middlewares/autenticar.js";
 import comprobarPermisos, { soloAutenticado } from "../../middlewares/comprobarPermisos.js";
@@ -215,6 +217,132 @@ router.post("/marcar-leido", comprobarPermisos(PERMISOS_MONITOREO), async (req, 
     res.json(result);
   } catch (error) {
     res.status(error.statusCode || 500).json({ mensaje: error.message });
+  }
+});
+
+// === RUTAS DE MENSAJES WHATSAPP ===
+// Profesor/preceptor: solo su historial propio + envío a su ámbito.
+// Admin (root): control total vía whatsapp_ver_todos / whatsapp_gestionar.
+const limitadorWhatsapp = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, error: "Demasiados WhatsApp. Esperá unos minutos e intentá de nuevo." },
+});
+
+router.post("/mensajes/validar", comprobarPermisos("whatsapp_enviar"), async (req, res) => {
+  try {
+    const { diagnosticarTelefono } = await import("../../utils/whatsappProvider.js");
+    const r = diagnosticarTelefono(req.body?.telefono);
+    return res.status(200).json({ ok: true, ...r });
+  } catch (error) {
+    return res
+      .status(error.status || error.statusCode || 500)
+      .json({ ok: false, error: error.message });
+  }
+});
+
+router.post(
+  "/mensajes/enviar-alumno/:id_alumno",
+  limitadorWhatsapp,
+  comprobarPermisos("whatsapp_enviar"),
+  async (req, res) => {
+    try {
+      const data = await mensajesCtrl.enviarWhatsappAAlumno(
+        req.params.id_alumno,
+        req.body?.cuerpo ?? req.body?.mensaje,
+        req.headers["id_usuario"],
+        req.headers["id_rol"],
+      );
+      return res.status(201).json({ ok: true, ...data });
+    } catch (error) {
+      return res
+        .status(error.status || error.statusCode || 500)
+        .json({ ok: false, error: error.message });
+    }
+  },
+);
+
+router.get(
+  "/mensajes/diagnostico-telefonos",
+  comprobarPermisos(["whatsapp_ver_todos", "root_ver_logs_sistema", "administrativo_ver_reportes"]),
+  async (req, res) => {
+    try {
+      const data = await mensajesCtrl.diagnosticarTelefonos();
+      return res.status(200).json({ ok: true, ...data });
+    } catch (error) {
+      return res
+        .status(error.status || error.statusCode || 500)
+        .json({ ok: false, error: error.message });
+    }
+  },
+);
+
+router.get("/mensajes/mios", comprobarPermisos("whatsapp_ver_propio"), async (req, res) => {
+  try {
+    const data = await mensajesCtrl.listarMisMensajes(req.headers["id_usuario"], req.query);
+    return res.status(200).json({ ok: true, ...data });
+  } catch (error) {
+    return res
+      .status(error.status || error.statusCode || 500)
+      .json({ ok: false, error: error.message });
+  }
+});
+
+router.get(
+  "/mensajes/todos",
+  comprobarPermisos(["whatsapp_ver_todos", "root_ver_logs_sistema", "administrativo_ver_reportes"]),
+  async (req, res) => {
+    try {
+      const data = await mensajesCtrl.listarTodosMensajes(req.query);
+      return res.status(200).json({ ok: true, ...data });
+    } catch (error) {
+      return res
+        .status(error.status || error.statusCode || 500)
+        .json({ ok: false, error: error.message });
+    }
+  },
+);
+
+router.post(
+  "/mensajes/:id/reenviar",
+  comprobarPermisos("whatsapp_gestionar"),
+  async (req, res) => {
+    try {
+      const data = await mensajesCtrl.reenviarMensaje(req.params.id, req.headers["id_usuario"]);
+      return res.status(201).json({ ok: true, ...data });
+    } catch (error) {
+      return res
+        .status(error.status || error.statusCode || 500)
+        .json({ ok: false, error: error.message });
+    }
+  },
+);
+
+router.patch(
+  "/mensajes/:id/leido",
+  comprobarPermisos(["whatsapp_gestionar", "whatsapp_ver_todos", "whatsapp_ver_propio"]),
+  async (req, res) => {
+    try {
+      const data = await mensajesCtrl.marcarMensajeLeido(req.params.id);
+      return res.status(200).json({ ok: true, ...data });
+    } catch (error) {
+      return res
+        .status(error.status || error.statusCode || 500)
+        .json({ ok: false, error: error.message });
+    }
+  },
+);
+
+router.delete("/mensajes/:id", comprobarPermisos("whatsapp_gestionar"), async (req, res) => {
+  try {
+    const data = await mensajesCtrl.eliminarMensaje(req.params.id);
+    return res.status(200).json({ ok: true, ...data });
+  } catch (error) {
+    return res
+      .status(error.status || error.statusCode || 500)
+      .json({ ok: false, error: error.message });
   }
 });
 

@@ -10,6 +10,7 @@ import "./db/conexionDB.js";
 import "./db/ensureCorreosTable.js";
 import "./db/ensureLibretaDigital.js";
 import "./db/ensurePlanesEstudio.js";
+import "./db/ensureMensajesWhatsapp.js";
 
 // Middlewares
 import autenticar from "./middlewares/autenticar.js";

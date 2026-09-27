@@ -455,12 +455,11 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="telefono_tutor">Teléfono del Tutor</label>
-                        <input
+                        <TelefonoInput
                             id="telefono_tutor"
                             v-model="form.telefono_tutor"
-                            type="tel"
-                            placeholder="Ej: 2364123456"
-                            :class="{ 'input-error': erroresForm.telefono_tutor }"
+                            placeholder="Ej: 2364 71-5375"
+                            :error-externo="erroresForm.telefono_tutor"
                             @blur="validarCampo('telefono_tutor')"
                         />
                         <span v-if="erroresForm.telefono_tutor" class="field-error">{{ erroresForm.telefono_tutor }}</span>
@@ -611,7 +610,7 @@ import {
     validarLongitudMinima,
     validarDNI,
     validarEmail,
-    validarTelefono,
+    validarTelefonoAR,
     validarFechaInput,
     validarFormulario,
 } from "../../../utils/validators.js";
@@ -619,6 +618,7 @@ import { useTableControls } from "../../../composables/useTableControls.js";
 import { exportarCsv } from "../../../utils/exportCsv.js";
 import Pagination from "../../ui/Pagination.vue";
 import UserAccessPanel from "../../ui/UserAccessPanel.vue";
+import TelefonoInput from "../../ui/TelefonoInput.vue";
 
 // ── Estado Reactivo ──────────────────────────────────────────────────────────
 const alumnos = ref([]);
@@ -749,7 +749,7 @@ const REGLAS_VALIDACION = {
     nombre: (v) => validarRequerido(v, "El nombre") || validarLongitudMinima(v, 2, "El nombre"),
     apellido: (v) => validarRequerido(v, "El apellido") || validarLongitudMinima(v, 2, "El apellido"),
     dni: validarDNI,
-    telefono_tutor: (v) => v ? validarTelefono(v, false) : "",
+    telefono_tutor: (v) => validarTelefonoAR(v, false),
     fecha_nacimiento: (v) => (v ? validarFechaInput(v) : ""),
     email: (v) => v ? validarEmail(v) : "",
     estado: (v) => validarRequerido(v, "El estado"),

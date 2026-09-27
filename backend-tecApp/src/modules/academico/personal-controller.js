@@ -1,5 +1,6 @@
 import ErrorHandler from "../../utils/ErrorHandler.js";
 import { Cargo, Personal } from "../../db/models/index.js";
+import { validarTelefonoAR } from "../../utils/whatsappProvider.js";
 
 async function obtenerTodoPersonal() {
   console.log("\x1b[1m\x1b[34m[CTRL]\x1b[0m Ejecutando controlador: obtenerTodoPersonal");
@@ -45,6 +46,8 @@ async function obtenerPersonal(id) {
 
 async function crearPersonal(datosPersonal) {
   console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: crearPersonal");
+  const errorTelefono = validarTelefonoAR(datosPersonal?.telefono, true);
+  if (errorTelefono) throw new ErrorHandler(400, `Teléfono: ${errorTelefono}`);
   try {
     const data = await Personal.create(datosPersonal);
     return data;
@@ -169,6 +172,8 @@ async function modificarPersonal(personalData) {
     id_cargo,
   } = personalData;
 
+  const errorTelefonoMod = validarTelefonoAR(telefono, true);
+  if (errorTelefonoMod) throw new ErrorHandler(400, `Teléfono: ${errorTelefonoMod}`);
   try {
     if (!id_personal || id_personal < 0) {
       throw new ErrorHandler(400, "ID inválida");

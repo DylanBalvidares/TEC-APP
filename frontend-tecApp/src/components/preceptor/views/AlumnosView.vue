@@ -408,12 +408,13 @@
             <div class="form-grupo">
               <label>Teléfono *</label>
 
-              <input
+              <TelefonoInput
                 v-model="formulario.telefono_tutor"
-                type="text"
-                placeholder="Ej. 2364123456"
-                required
+                placeholder="Ej. 2364 71-5375"
+                requerido
+                :error-externo="errorTelefono"
               />
+              <p v-if="errorTelefono" class="form-error">{{ errorTelefono }}</p>
             </div>
 
             <div class="form-grupo">
@@ -837,6 +838,9 @@ import {
   crearComunicado
 } from "@/services/comunidad-service.js";
 
+import TelefonoInput from "@/components/ui/TelefonoInput.vue";
+import { validarTelefonoAR } from "@/utils/validators.js";
+
 
 /* =========================================================
    ROUTER
@@ -907,6 +911,7 @@ const pasoActual = ref(1);
 
 const guardandoAlumno = ref(false);
 const errorFormulario = ref("");
+const errorTelefono = ref("");
 
 
 const formularioInicial = () => ({
@@ -1208,6 +1213,10 @@ const siguientePaso = () => {
 const guardarAlumno = async () => {
 
   errorFormulario.value = "";
+  errorTelefono.value = validarTelefonoAR(formulario.value.telefono_tutor, true);
+  if (errorTelefono.value) {
+    return;
+  }
   guardandoAlumno.value = true;
 
   let resultado;

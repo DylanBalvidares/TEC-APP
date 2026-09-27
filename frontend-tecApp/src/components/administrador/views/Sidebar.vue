@@ -54,6 +54,7 @@ const grupos = [
         items: [
             { vista: "noticias", nombre: "Noticias", icono: "ti-news" },
             { vista: "comunicados", nombre: "Comunicados", icono: "ti-speakerphone" },
+            { vista: "mensajes", nombre: "WhatsApp", icono: "ti-brand-whatsapp" },
         ],
     },
     {
