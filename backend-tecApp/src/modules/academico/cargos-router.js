@@ -1,9 +1,14 @@
 import express from "express";
 import * as controller from "./cargos-controller.js";
+import comprobarPermiso from "../../middlewares/comprobarPermisos.js";
 
 const cargosRouter = express.Router();
 
-cargosRouter.get("/cargos", async (req, res) => {
+// S1: el catálogo de cargos lo lee el administrativo; solo root lo gestiona.
+const VER_CARGOS = ["administrativo_ver_cargos", "root_gestionar_cargos"];
+const GESTIONAR_CARGOS = "root_gestionar_cargos";
+
+cargosRouter.get("/cargos", comprobarPermiso(VER_CARGOS), async (req, res) => {
     
   try {
     const data = await controller.obtenerTodosCargos();
@@ -13,7 +18,7 @@ cargosRouter.get("/cargos", async (req, res) => {
   }
 });
 
-cargosRouter.get("/cargos/:id", async (req, res) => {
+cargosRouter.get("/cargos/:id", comprobarPermiso(VER_CARGOS), async (req, res) => {
     
   try {
     const data = await controller.obtenerCargo(req.params.id);
@@ -23,7 +28,7 @@ cargosRouter.get("/cargos/:id", async (req, res) => {
   }
 });
 
-cargosRouter.post("/cargos", async (req, res) => {
+cargosRouter.post("/cargos", comprobarPermiso(GESTIONAR_CARGOS), async (req, res) => {
     
   try {
     const data = await controller.crearCargo(req.body);
@@ -33,7 +38,7 @@ cargosRouter.post("/cargos", async (req, res) => {
   }
 });
 
-cargosRouter.patch("/cargos/:id", async (req, res) => {
+cargosRouter.patch("/cargos/:id", comprobarPermiso(GESTIONAR_CARGOS), async (req, res) => {
     
   try {
     const data = await controller.modificarCargo({
@@ -46,7 +51,7 @@ cargosRouter.patch("/cargos/:id", async (req, res) => {
   }
 });
 
-cargosRouter.delete("/cargos/:id", async (req, res) => {
+cargosRouter.delete("/cargos/:id", comprobarPermiso(GESTIONAR_CARGOS), async (req, res) => {
     
   try {
     await controller.eliminarCargo(req.params.id);

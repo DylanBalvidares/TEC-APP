@@ -147,6 +147,9 @@ INSERT IGNORE INTO `permisos` (`nombre_permiso`) VALUES
     ('whatsapp_ver_propio'),
     ('whatsapp_ver_todos'),
     ('whatsapp_gestionar'),
+    -- Cargos
+    ('administrativo_ver_cargos'),
+    ('root_gestionar_cargos'),
     -- Root
     ('root_gestionar_roles'),
     ('root_gestionar_permisos'),
@@ -233,6 +236,7 @@ SELECT 7, id_permiso FROM `permisos` WHERE `nombre_permiso` IN (
     'administrativo_eliminar_asignacion','administrativo_ver_todos_materias',
     'administrativo_crear_materia','administrativo_editar_materia',
     'administrativo_eliminar_materia',
+    'administrativo_ver_cargos',
     'administrativo_ver_planes','administrativo_crear_plan',
     'administrativo_editar_plan','administrativo_eliminar_plan',
     'comunicado_crear','comunicado_editar','comunicado_eliminar','comunicado_ver',
