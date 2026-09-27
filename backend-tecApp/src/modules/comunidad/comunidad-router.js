@@ -36,6 +36,15 @@ function rolParaComunicados(req) {
   return DESTINOS_POR_ROL[Number(req.headers["id_rol"])] || "alumno";
 }
 
+// S6: autoría para editar/eliminar noticias. Root pasa por permiso
+// (root_eliminar_cualquier_contenido); el resto sólo si es el autor.
+function contextoAutoria(req) {
+  return {
+    idUsuario: Number(req.headers["id_usuario"]),
+    esRoot: Number(req.headers["id_rol"]) === 8,
+  };
+}
+
 // === Middleware de autenticación para TODAS las rutas ===
 router.use(autenticar);
 
@@ -60,7 +69,11 @@ router.get("/noticias/:id", LECTURA_COMUNIDAD, async (req, res) => {
 
 router.post("/noticias", comprobarPermisos(["delegado_crear_noticia"]), upload.single("imagen"), async (req, res) => {
   try {
-    const noticia = await noticiasCtrl.crearNoticia(req.body, req.file);
+    const noticia = await noticiasCtrl.crearNoticia(
+      req.body,
+      req.file,
+      Number(req.headers["id_usuario"]),
+    );
     return res.status(201).json(noticia);
   } catch (error) {
     return res.status(error.statusCode || 500).json({ message: error.message });
@@ -71,8 +84,8 @@ router.patch("/noticias/:id", comprobarPermisos(["delegado_editar_mis_noticias",
   try {
     const resultado = await noticiasCtrl.actualizarNoticia(
       req.params.id,
-      req.body,
-      req.file,
+      { ...req.body, imagen: req.file?.filename },
+      contextoAutoria(req),
     );
     return res.status(200).json({ mensaje: "Noticia actualizada", resultado });
   } catch (error) {
@@ -82,7 +95,10 @@ router.patch("/noticias/:id", comprobarPermisos(["delegado_editar_mis_noticias",
 
 router.delete("/noticias/:id", comprobarPermisos(["delegado_eliminar_mis_noticias", "root_eliminar_cualquier_contenido"]), async (req, res) => {
   try {
-    const resultado = await noticiasCtrl.eliminarNoticia(req.params.id);
+    const resultado = await noticiasCtrl.eliminarNoticia(
+      req.params.id,
+      contextoAutoria(req),
+    );
     return res.status(200).json({ mensaje: "Noticia eliminada", resultado });
   } catch (error) {
     return res.status(error.statusCode || 500).json({ message: error.message });

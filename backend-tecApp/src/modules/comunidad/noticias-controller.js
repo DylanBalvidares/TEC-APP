@@ -49,15 +49,21 @@ export async function obtenerNoticia(id) {
   }
 }
 
-export async function crearNoticia(datos, archivo) {
+export async function crearNoticia(datos, archivo, autorId) {
   console.log("=== Datos recibidos en crearNoticia ===");
   console.log(datos);
   console.log("=======================================");
   try {
-    const { titulo, contenido, autor_id } = datos;
+    const { titulo, contenido } = datos;
 
     if (!titulo || !contenido) {
       throw new ErrorHandler(400, "Título y contenido son requeridos");
+    }
+
+    // S7: el autor sale del token (req.headers["id_usuario"] vía autenticar),
+    // nunca del body: un cliente no puede firmar una noticia como otro usuario.
+    if (!autorId) {
+      throw new ErrorHandler(401, "No se pudo determinar el autor de la noticia");
     }
 
     // 1. SOLUCIÓN AL ERROR: Agregar el signo de interrogación (?.)
@@ -67,7 +73,7 @@ export async function crearNoticia(datos, archivo) {
     const noticia = await Noticia.create({
       titulo: titulo,
       contenido: contenido,
-      autor_id: autor_id,
+      autor_id: autorId,
       imagen: nombreImagen,
       imagen_path: imagenPath,
       fecha: new Date(),
@@ -86,10 +92,22 @@ export async function crearNoticia(datos, archivo) {
   }
 }
 
-export async function eliminarNoticia(id) {
+export async function eliminarNoticia(id, { idUsuario, esRoot = false } = {}) {
   try {
     if (!id || id < 0) {
       throw new ErrorHandler(400, "ID de noticia inválido");
+    }
+
+    // S6: el permiso se llama "mis noticias": sólo el autor o root elimina.
+    const noticia = await Noticia.findByPk(id, { attributes: ["autor_id"] });
+    if (!noticia) {
+      throw new ErrorHandler(404, "Noticia no encontrada");
+    }
+    if (!esRoot && Number(noticia.autor_id) !== Number(idUsuario)) {
+      throw new ErrorHandler(
+        403,
+        "Acceso denegado: solo el autor o root puede eliminar esta noticia",
+      );
     }
 
     const filasEliminadas = await Noticia.destroy({
@@ -110,10 +128,22 @@ export async function eliminarNoticia(id) {
   }
 }
 
-export async function actualizarNoticia(id, datos) {
+export async function actualizarNoticia(id, datos, { idUsuario, esRoot = false } = {}) {
   try {
     if (!id || id < 0) {
       throw new ErrorHandler(400, "ID de noticia inválido");
+    }
+
+    // S6: igual que en eliminar: sólo el autor o root edita.
+    const noticia = await Noticia.findByPk(id, { attributes: ["autor_id"] });
+    if (!noticia) {
+      throw new ErrorHandler(404, "Noticia no encontrada");
+    }
+    if (!esRoot && Number(noticia.autor_id) !== Number(idUsuario)) {
+      throw new ErrorHandler(
+        403,
+        "Acceso denegado: solo el autor o root puede editar esta noticia",
+      );
     }
 
     const { titulo, contenido, imagen } = datos;
