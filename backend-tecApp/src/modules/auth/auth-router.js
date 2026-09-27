@@ -6,11 +6,11 @@ import {
   crearUsuario,
   sincronizarUsuarioAlumno,
   sincronizarUsuarioProfesor,
-  modificarUsuario,
   buscarEnPadron,
   iniciarRegistro,
 } from "./auth-controller.js";
 import ErrorHandler from "../../utils/ErrorHandler.js";
+import { derivarRolDesdePadron } from "../../utils/rolPadron.js";
 
 import {
   verificarCodigoVerificacion,
@@ -25,8 +25,8 @@ authRouter.post("/login", async (req, res) => {
   const { email, contrasena } = req.body;
 
   try {
+    // SEGURIDAD: nunca loguear el body del login (contiene la contraseña).
     console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m LOGIN POST");
-    console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m USUARIO:", req.body);
 
     const response = await login(req.body);
 
@@ -45,7 +45,6 @@ authRouter.post("/login", async (req, res) => {
 authRouter.post("/iniciar-registro", async (req, res) => {
   try {
     console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m POST REGISTRO");
-    console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m USUARIO REGISTRANDO:", req.body);
 
     const resultado = await iniciarRegistro(req.body);
 
@@ -64,29 +63,16 @@ authRouter.post("/iniciar-registro", async (req, res) => {
   }
 });
 
-//// ============== MODIFICAR USUARIO ==============
-authRouter.patch("/auth/", async (req, res) => {
-  try {
-    // Ahora funciona correctamente gracias a la importación superior
-    const usuario = await modificarUsuario(req.body);
-
-    return res.status(200).json(usuario);
-  } catch (error) {
-    console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m ERROR AL MODIFICAR", error);
-
-    // BUG FIX: Validación segura del código de estado del error
-    const statusCode = error.status || 400;
-    const message = error.message || "No se pudo modificar el usuario.";
-
-    return res.status(statusCode).json({ ok: false, error: message });
-  }
-});
+// SEGURIDAD (CRIT-1): la ruta pública PATCH /api/auth/auth/ fue ELIMINADA.
+// Permitía modificar email/contraseña/rol de cualquier usuario sin
+// autenticación. La edición de usuarios vive en:
+//   PATCH /api/usuarios/usuarios  (requiere autenticación + permiso
+//   administrativo_editar_usuario), o en el perfil propio del usuario.
 
 //// ============== BUSCAR EN PADRON ==============
 authRouter.post("/buscar-en-padron", async (req, res) => {
   try {
     console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m POST BUSCAR-EN-PADRON");
-    console.log(req.body);
 
     const verificado = await buscarEnPadron(req.body);
 
@@ -115,10 +101,9 @@ authRouter.post("/buscar-en-padron", async (req, res) => {
 //// ============== CODIGO DE VERIFICACION ==============
 authRouter.post("/verificar-codigo", async (req, res) => {
   console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m POST VERIFICAR-CODIGO");
-  console.log(req.body);
 
   try {
-    const { nombre, apellido, email, codigo, contrasena, id_rol } = req.body;
+    const { nombre, apellido, email, codigo, contrasena } = req.body;
 
     const infoCodigo = {
       email,
@@ -127,11 +112,16 @@ authRouter.post("/verificar-codigo", async (req, res) => {
 
     const verificado = await verificarCodigoVerificacion(infoCodigo);
 
-    let assigned_id_rol = id_rol;
+    // SEGURIDAD (CRIT-2): el rol se deriva SIEMPRE del padrón validado por el
+    // código de verificación. Nunca se acepta `id_rol` enviado por el cliente
+    // (antes permitía crear una cuenta con rol root).
+    const assigned_id_rol = derivarRolDesdePadron(verificado.rol_asociado);
+
     if (!assigned_id_rol) {
-      if (verificado.rol_asociado === "alumno") assigned_id_rol = 1;
-      else if (verificado.rol_asociado === "profesor") assigned_id_rol = 3;
-      else if (verificado.rol_asociado === "administrativo") assigned_id_rol = 7;
+      throw new ErrorHandler(
+        400,
+        "No se pudo determinar el rol de la cuenta a crear.",
+      );
     }
 
     const infoUsuario = {
@@ -144,9 +134,12 @@ authRouter.post("/verificar-codigo", async (req, res) => {
 
     const usuario = await crearUsuario(infoUsuario);
 
+    // Vincular la cuenta nueva con su entidad del padrón según el rol.
+    // El administrativo no vive en las tablas de alumno/profesor, así que no
+    // requiere sincronización.
     if (verificado.rol_asociado === "profesor") {
       await sincronizarUsuarioProfesor(verificado.id_entidad, usuario.id_usuario);
-    } else {
+    } else if (verificado.rol_asociado === "alumno") {
       await sincronizarUsuarioAlumno(verificado.id_entidad, usuario.id_usuario);
     }
 
