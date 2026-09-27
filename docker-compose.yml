@@ -6,18 +6,20 @@ services:
     container_name: mysql-gestion
     restart: unless-stopped
     environment:
-      - MYSQL_ROOT_PASSWORD=root_pass
-      - MYSQL_DATABASE=gestion_tecnica2
+      # Obligatorio: evita el clásico root/root_pass por defecto.
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:?Definí MYSQL_ROOT_PASSWORD en backend-tecApp/db/.env}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-gestion_tecnica2}
     ports:
-      - "3306:3306"
+      # Sólo accesible desde la máquina anfitriona, no desde la red.
+      - "127.0.0.1:3306:3306"
 
     volumes:
     - ./backend-tecApp/db/gestion_tecnica2.sql:/docker-entrypoint-initdb.d/gestion_tecnica2.sql:ro
     - ./backend-tecApp/db/prueba.sql:/docker-entrypoint-initdb.d/prueba.sql:ro
-    - db_data:/var/lib/mysql  
+    - db_data:/var/lib/mysql
 
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_pass"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -27,6 +29,8 @@ services:
   backend:
     env_file:
     - ./backend-tecApp/db/.env
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
     build:
       context: .
       dockerfile: backend-tecApp/Dockerfile
@@ -34,12 +38,17 @@ services:
     restart: unless-stopped
     ports:
     - "9000:9000"
-    
+
+    volumes:
+    # Persistencia de las imágenes de noticias (antes se perdían al recrear el contenedor).
+    - uploads_data:/app/uploads
+
     networks:
     - app-network
     depends_on:
-    - mysql-db
- 
+      mysql-db:
+        condition: service_healthy
+
   # --- FRONTEND ---
   frontend:
     build:
@@ -58,23 +67,25 @@ services:
       - app-network
     depends_on:
       - backend # Se asegura de levantar después de que el backend esté listo
-  
-  # --- PhpMyAdmin---
+
+  # --- PhpMyAdmin ---
+  # Herramienta de administración: accesible sólo desde la máquina anfitriona.
   phpmyadmin:
     depends_on:
     - mysql-db
     image: phpmyadmin/phpmyadmin
     restart: always
     ports:
-      - "8000:80"
+      - "127.0.0.1:8000:80"
     environment:
     -   PMA_ARBITRARY=1
     networks:
       - app-network
-    
+
 networks:
   app-network:
     driver: bridge
 
 volumes:
   db_data:
+  uploads_data:

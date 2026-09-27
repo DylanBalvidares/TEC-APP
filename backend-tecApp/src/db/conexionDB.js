@@ -1,19 +1,28 @@
 import { Sequelize } from "sequelize";
 
-const databaseUrl =
-  process.env.DATABASE_URL ||
-  "mysql://root:root_pass@mysql-db:3306/gestion_tecnica2";
+const ES_PRODUCCION = process.env.NODE_ENV === "production";
+const DATABASE_URL_POR_DEFECTO = "mysql://root:root_pass@mysql-db:3306/gestion_tecnica2";
+
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl && ES_PRODUCCION) {
+  throw new Error(
+    "DATABASE_URL es obligatoria en producción: no se usan credenciales por defecto.",
+  );
+}
 
 let url;
 
 try {
-  url = new URL(databaseUrl);
+  url = new URL(databaseUrl || DATABASE_URL_POR_DEFECTO);
 } catch (error) {
   console.error("[ERROR] DATABASE_URL inválida:", error.message);
 
-  url = new URL(
-    "mysql://root:root_pass@mysql-db:3306/gestion_tecnica2"
-  );
+  if (ES_PRODUCCION) {
+    throw new Error("DATABASE_URL inválida en producción.");
+  }
+
+  url = new URL(DATABASE_URL_POR_DEFECTO);
 }
 
 const DB_CONFIG = {
