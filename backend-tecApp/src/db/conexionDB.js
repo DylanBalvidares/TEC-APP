@@ -77,6 +77,20 @@ async function intentarConexion() {
   }
 }
 
-intentarConexion();
+// En tests no se abre conexión: los tests importan modelos y routers sin base
+// disponible, y el reintento con setTimeout mantendría vivo el proceso (la
+// suite quedaría colgada). SKIP_DB_CONNECT permite forzarlo en otros entornos.
+const SIN_CONEXION_A_DB =
+  process.env.NODE_ENV === "test" ||
+  process.env.SKIP_DB_CONNECT === "1" ||
+  // Defensivo: `node --test` ejecuta cada archivo en un proceso hijo que expone
+  // NODE_TEST_CONTEXT. Así un test que importe modelos de forma estática (antes
+  // de poder fijar NODE_ENV) tampoco dispara la conexión real.
+  Boolean(process.env.NODE_TEST_CONTEXT);
 
+if (!SIN_CONEXION_A_DB) {
+  intentarConexion();
+}
+
+export { intentarConexion, SIN_CONEXION_A_DB };
 export default sequelize;
