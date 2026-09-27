@@ -1,6 +1,8 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import path from "path";
 
 // DB
@@ -37,9 +39,45 @@ import recursosRouter from "./modules/biblioteca/recursos-router.js";
 
 const app = express();
 const PORT = process.env.PORT || 9000;
+const ES_PRODUCCION = process.env.NODE_ENV === "production";
 
-app.use(cors());
-app.use(express.json());
+// Detrás de un proxy (Docker/nginx): permite que el rate-limit vea la IP real.
+app.set("trust proxy", 1);
+
+// Cabeceras de seguridad. CSP desactivada porque es una API JSON (el frontend
+// define su propia política); CORP permisivo para que las imágenes de uploads
+// se puedan mostrar desde otro origen.
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  }),
+);
+
+// CORS con allowlist configurable (CSV en CORS_ORIGINS). En desarrollo, si no
+// se configura, se permite cualquier origen para no romper el flujo local.
+const origenesPermitidos = (process.env.CORS_ORIGINS || "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Sin cabecera Origin (curl, SSR, mismo origen): se permite.
+      if (!origin) return callback(null, true);
+      if (origenesPermitidos.length === 0 && !ES_PRODUCCION) {
+        return callback(null, true);
+      }
+      if (origenesPermitidos.includes(origin)) return callback(null, true);
+      return callback(new Error("Origen no permitido por CORS"));
+    },
+    credentials: true,
+  }),
+);
+
+// Límite del tamaño del body para evitar payloads abusivos.
+app.use(express.json({ limit: process.env.JSON_BODY_LIMIT || "1mb" }));
 
 // Log de peticiones
 app.use((req, res, next) => {
@@ -47,14 +85,79 @@ app.use((req, res, next) => {
   next();
 });
 
+// ==========================================
+// Healthcheck (público, sin datos sensibles)
+// ==========================================
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ ok: true, status: "up" });
+});
+
+// ==========================================
 // Servir estáticos de uploads
+// ==========================================
+// Las imágenes se consumen con <img src>, que no puede enviar el header
+// Authorization; por eso la lectura queda pública. Se endurece con lista
+// blanca de extensiones, sin listado de directorios y sin dotfiles.
 const uploadDir = process.env.UPLOADS_DIR || path.resolve("uploads");
-app.use("/api/comunidad/uploads", express.static(uploadDir));
-app.use("/uploads", express.static(uploadDir));
+const EXTENSIONES_UPLOAD = new Set([
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".gif",
+  ".webp",
+  ".avif",
+  ".pdf",
+]);
+
+const soloExtensionesPermitidas = (req, res, next) => {
+  const ext = path.extname(req.path).toLowerCase();
+  if (!EXTENSIONES_UPLOAD.has(ext)) {
+    return res.status(404).json({ ok: false, error: "Recurso no encontrado" });
+  }
+  next();
+};
+
+const servirUploads = express.static(uploadDir, {
+  dotfiles: "deny",
+  index: false,
+  redirect: false,
+  maxAge: ES_PRODUCCION ? "7d" : 0,
+});
+
+app.use("/api/comunidad/uploads", soloExtensionesPermitidas, servirUploads);
+app.use("/uploads", soloExtensionesPermitidas, servirUploads);
 
 // ==========================================
 // 1. RUTAS PÚBLICAS
 // ==========================================
+// Rate-limit global de autenticación y uno más estricto para login/código
+// (frena la fuerza bruta sobre credenciales y códigos de verificación).
+const limitadorAuth = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    ok: false,
+    error: "Demasiados intentos. Esperá unos minutos e intentá de nuevo.",
+  },
+});
+
+const limitadorCredenciales = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+  message: {
+    ok: false,
+    error: "Demasiados intentos. Esperá unos minutos e intentá de nuevo.",
+  },
+});
+
+app.use("/api/auth", limitadorAuth);
+app.use("/api/auth/login", limitadorCredenciales);
+app.use("/api/auth/verificar-codigo", limitadorCredenciales);
 app.use("/api/auth", authRouter);
 
 // ==========================================
@@ -80,6 +183,11 @@ app.use("/api/comunidad", comunidadRouter);
 app.use("/api/biblioteca", autenticar, bibliotecaRouter);
 app.use("/api/biblioteca", autenticar, prestamosRouter);
 app.use("/api/biblioteca", autenticar, recursosRouter);
+
+// 404 uniforme para rutas desconocidas.
+app.use((req, res) => {
+  res.status(404).json({ ok: false, error: "Ruta no encontrada" });
+});
 
 // Middleware de manejo de errores global
 app.use((err, req, res, next) => {
