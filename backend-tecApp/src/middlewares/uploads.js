@@ -4,7 +4,9 @@ import fs from "fs";
 
 const uploadDir = process.env.UPLOADS_DIR || path.resolve("uploads");
 
-if (!fs.existsSync(uploadDir)) {
+// En tests el import no debe crear directorios del entorno (p. ej. UPLOADS_DIR
+// de db/.env apunta a /app/uploads). Fuera de test se crea si falta.
+if (process.env.NODE_ENV !== "test" && !fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
