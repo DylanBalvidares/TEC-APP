@@ -294,43 +294,38 @@
             </form>
         </div>
 
-        <div v-if="comunicadoAEliminar" class="modal-overlay" @click.self="comunicadoAEliminar = null">
-            <div class="modal-card animate-fade-in">
-                <div class="modal-header">
-                    <i class="ti ti-alert-triangle" style="color: #cd322c; font-size: 20px"></i>
-                    <h3>Eliminar Comunicado</h3>
-                </div>
+        <Modal v-model="modalEliminarAbierto" title="Eliminar Comunicado" variante="danger">
+            <p class="modal-texto">
+                ¿Seguro que querés eliminar el comunicado
+                <strong>"{{ comunicadoAEliminar?.titulo }}"</strong
+                > (destino: {{ comunicadoAEliminar?.destino }}, importancia: {{ comunicadoAEliminar?.importancia }})? Esta acción no se puede deshacer y los destinatarios ya no podrán verlo.
+            </p>
 
-                <p class="modal-body">
-                    ¿Seguro que querés eliminar el comunicado
-                    <strong>"{{ comunicadoAEliminar.titulo }}"</strong
-                    > (destino: {{ comunicadoAEliminar.destino }}, importancia: {{ comunicadoAEliminar.importancia }})? Esta acción no se puede deshacer y los destinatarios ya no podrán verlo.
-                </p>
-
-                <div v-if="errorEliminar" class="error-banner" style="
-                        margin-bottom: 16px;
-                        width: 100%;
-                        box-sizing: border-box;
-                    ">
-                    <i class="ti ti-alert-circle"></i> {{ errorEliminar }}
-                </div>
-
-                <div class="modal-footer">
-                    <button class="tb-btn outline" @click="comunicadoAEliminar = null">
-                        Cancelar
-                    </button>
-                    <button class="tb-btn danger" @click="confirmarEliminar" :disabled="eliminando">
-                        <i class="ti ti-loader animate-spin" v-if="eliminando"></i>
-                        {{ eliminando ? "Eliminando..." : "Sí, eliminar" }}
-                    </button>
-                </div>
+            <div v-if="errorEliminar" class="error-banner" style="
+                    margin-bottom: 16px;
+                    width: 100%;
+                    box-sizing: border-box;
+                ">
+                <i class="ti ti-alert-circle"></i> {{ errorEliminar }}
             </div>
-        </div>
+
+            <template #footer>
+                <button class="tb-btn outline" @click="modalEliminarAbierto = false">
+                    Cancelar
+                </button>
+                <button class="tb-btn danger" @click="confirmarEliminar" :disabled="eliminando">
+                    <i class="ti ti-loader animate-spin" v-if="eliminando"></i>
+                    {{ eliminando ? "Eliminando..." : "Sí, eliminar" }}
+                </button>
+            </template>
+        </Modal>
     </div>
 </template>
 
 <script setup>
 import { ref, onMounted, nextTick } from "vue";
+import Modal from "../../ui/Modal.vue";
+import { toast } from "../../../services/toast-service.js";
 // IMPORTANTE: Ajustá esta ruta al archivo de servicios que estés utilizando para los comunicados.
 import {
     obtenerTodosComunicados,
@@ -353,6 +348,7 @@ const eliminando = ref(false);
 const vistaActiva = ref("lista"); // 'lista' | 'crear' | 'editar' | 'detalles'
 const comunicadoSeleccionado = ref(null);
 const comunicadoAEliminar = ref(null);
+const modalEliminarAbierto = ref(false);
 
 const errorCarga = ref("");
 const errorGuardar = ref("");
@@ -476,8 +472,13 @@ const guardarComunicado = async () => {
         }
 
         exitoGuardar.value = true;
+        toast.success(
+            vistaActiva.value === "crear"
+                ? "Comunicado publicado correctamente."
+                : "Comunicado actualizado correctamente.",
+        );
         await fetchComunicados();
-        setTimeout(() => cambiarVista("lista"), 800);
+        cambiarVista("lista");
     } catch (e) {
         errorGuardar.value =
             e?.response?.data?.mensaje ||
@@ -491,6 +492,7 @@ const guardarComunicado = async () => {
 const pedirConfirmacion = (comunicado) => {
     comunicadoAEliminar.value = comunicado;
     errorEliminar.value = "";
+    modalEliminarAbierto.value = true;
 };
 
 const fetchCursos = async () => {
@@ -534,7 +536,9 @@ const confirmarEliminar = async () => {
         comunicados.value = comunicados.value.filter(
             (c) => c.id_comunicado !== comunicadoAEliminar.value.id_comunicado,
         );
+        modalEliminarAbierto.value = false;
         comunicadoAEliminar.value = null;
+        toast.success("El comunicado fue eliminado correctamente.");
     } catch (e) {
         errorEliminar.value =
             "Ocurrió un error inesperado al eliminar el comunicado.";

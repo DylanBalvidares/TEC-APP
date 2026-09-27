@@ -1,127 +1,70 @@
 <template>
-    <aside class="sidebar" aria-label="Navegación" @keydown="onTeclaNav">
-        <div class="sidebar-section">General</div>
+    <aside
+        class="sidebar"
+        :class="{ colapsado: colapsado, 'drawer-abierto': movilAbierto }"
+        aria-label="Navegación"
+        @keydown="onTeclaNav"
+    >
+        <template v-for="grupo in grupos" :key="grupo.titulo">
+            <div class="sidebar-section">{{ grupo.titulo }}</div>
 
-        <div
-            class="nav-item" role="button" tabindex="0"
-            :class="{ active: vistaActual === 'overview' }"
-            @click="$emit('cambiar-vista', 'overview')"
-        >
-            <i class="ti ti-home" aria-hidden="true"></i>Inicio
-        </div>
-        <div
-            class="nav-item" role="button" tabindex="0"
-            :class="{ active: vistaActual === 'alumnos' }"
-            @click="$emit('cambiar-vista', 'alumnos')"
-        >
-            <i class="ti ti-school" aria-hidden="true"></i>Alumnos
-        </div>
-        <div
-            class="nav-item" role="button" tabindex="0"
-            :class="{ active: vistaActual === 'profesores' }"
-            @click="$emit('cambiar-vista', 'profesores')"
-        >
-            <i class="ti ti-chalkboard" aria-hidden="true"></i>Profesores
-        </div>
-        <div
-            class="nav-item" role="button" tabindex="0"
-            :class="{ active: vistaActual === 'cursos' }"
-            @click="$emit('cambiar-vista', 'cursos')"
-        >
-            <i class="ti ti-book" aria-hidden="true"></i>Cursos
-        </div>
-
-        <div
-            class="nav-item" role="button" tabindex="0"
-            :class="{ active: vistaActual === 'asistencias' }"
-            @click="$emit('cambiar-vista', 'asistencias')"
-        >
-            <i class="ti ti-calendar-check" aria-hidden="true"></i>Asistencias
-        </div>
-
-        <div
-            class="nav-item" role="button" tabindex="0"
-            :class="{ active: vistaActual === 'materias' }"
-            @click="$emit('cambiar-vista', 'materias')"
-        >
-            <i class="ti ti-books" aria-hidden="true"></i>Materias
-        </div>
-
-        <div
-            class="nav-item" role="button" tabindex="0"
-            :class="{ active: vistaActual === 'asignaciones' }"
-            @click="$emit('cambiar-vista', 'asignaciones')"
-        >
-            <i class="ti ti-git-branch" aria-hidden="true"></i><span title="Asignaciones de materias">Asignaciones</span>
-        </div>
-
-        <div
-            class="nav-item" role="button" tabindex="0"
-            :class="{ active: vistaActual === 'libreta' }"
-            @click="$emit('cambiar-vista', 'libreta')"
-        >
-            <i class="ti ti-book-open" aria-hidden="true"></i><span title="Libreta Digital">Libreta Digital</span>
-        </div>
-
-        <div class="sidebar-section">Comunicación</div>
-        <div
-            class="nav-item" role="button" tabindex="0"
-            :class="{ active: vistaActual === 'noticias' }"
-            @click="$emit('cambiar-vista', 'noticias')"
-        >
-            <i class="ti ti-news" aria-hidden="true"></i>Noticias
-        </div>
-
-        <div
-            class="nav-item" role="button" tabindex="0"
-            :class="{ active: vistaActual === 'comunicados' }"
-            @click="$emit('cambiar-vista', 'comunicados')"
-        >
-            <i class="ti ti-speakerphone" aria-hidden="true"></i>Comunicados
-        </div>
-        <div class="sidebar-section">Sistema</div>
-        <div
-            class="nav-item" role="button" tabindex="0"
-            :class="{ active: vistaActual === 'personal' }"
-            @click="$emit('cambiar-vista', 'personal')"
-        >
-            <i class="ti ti-users" aria-hidden="true"></i>Personal
-        </div>
-
-        <div
-            class="nav-item" role="button" tabindex="0"
-            :class="{ active: vistaActual === 'usuarios' }"
-            @click="$emit('cambiar-vista', 'usuarios')"
-        >
-            <i class="ti ti-user-shield" aria-hidden="true"></i>Usuarios
-        </div>
-
-        <div
-            class="nav-item" role="button" tabindex="0"
-            :class="{ active: vistaActual === 'roles' }"
-            @click="$emit('cambiar-vista', 'roles')"
-        >
-            <i class="ti ti-lock" aria-hidden="true"></i>Roles y permisos
-        </div>
-        <div
-            class="nav-item" role="button" tabindex="0"
-            :class="{ active: vistaActual === 'monitorcorreos' }"
-            @click="$emit('cambiar-vista', 'monitorcorreos')"
-        >
-            <i class="ti ti-envelope" aria-hidden="true"></i>Historial de Emails
-        </div>
+            <div
+                v-for="item in grupo.items"
+                :key="item.vista"
+                class="nav-item"
+                role="button"
+                tabindex="0"
+                :class="{ active: vistaActual === item.vista }"
+                :title="colapsado ? item.nombre : null"
+                @click="$emit('cambiar-vista', item.vista)"
+            >
+                <i class="ti" :class="item.icono" aria-hidden="true"></i>
+                <span class="nav-texto">{{ item.nombre }}</span>
+            </div>
+        </template>
     </aside>
 </template>
 
 <script setup>
 defineProps({
-    vistaActual: {
-        type: String,
-        required: true,
-    },
+    vistaActual: { type: String, required: true },
+    colapsado: { type: Boolean, default: false },
+    movilAbierto: { type: Boolean, default: false },
 });
 
 defineEmits(["cambiar-vista"]);
+
+const grupos = [
+    {
+        titulo: "General",
+        items: [
+            { vista: "overview", nombre: "Inicio", icono: "ti-home" },
+            { vista: "alumnos", nombre: "Alumnos", icono: "ti-school" },
+            { vista: "profesores", nombre: "Profesores", icono: "ti-chalkboard" },
+            { vista: "cursos", nombre: "Cursos", icono: "ti-book" },
+            { vista: "asistencias", nombre: "Asistencias", icono: "ti-calendar-check" },
+            { vista: "materias", nombre: "Materias", icono: "ti-books" },
+            { vista: "asignaciones", nombre: "Asignaciones", icono: "ti-git-branch" },
+            { vista: "libreta", nombre: "Libreta Digital", icono: "ti-book-open" },
+        ],
+    },
+    {
+        titulo: "Comunicación",
+        items: [
+            { vista: "noticias", nombre: "Noticias", icono: "ti-news" },
+            { vista: "comunicados", nombre: "Comunicados", icono: "ti-speakerphone" },
+        ],
+    },
+    {
+        titulo: "Sistema",
+        items: [
+            { vista: "personal", nombre: "Personal", icono: "ti-users" },
+            { vista: "usuarios", nombre: "Usuarios", icono: "ti-user-shield" },
+            { vista: "roles", nombre: "Roles y permisos", icono: "ti-lock" },
+            { vista: "monitorcorreos", nombre: "Historial de Emails", icono: "ti-envelope" },
+        ],
+    },
+];
 
 const onTeclaNav = (e) => {
     if (e.key !== "Enter" && e.key !== " ") return;
@@ -147,6 +90,7 @@ const onTeclaNav = (e) => {
     position: relative;
     z-index: 20;
     overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .sidebar-section {
@@ -156,6 +100,7 @@ const onTeclaNav = (e) => {
     letter-spacing: 0.06em;
     text-transform: uppercase;
     margin-top: 8px;
+    white-space: nowrap;
 }
 
 .nav-item {
@@ -169,6 +114,7 @@ const onTeclaNav = (e) => {
     margin: 1px 6px;
     transition: background 0.15s;
     font-size: 12.5px;
+    white-space: nowrap;
 }
 
 .nav-item:hover {
@@ -189,5 +135,74 @@ const onTeclaNav = (e) => {
 .nav-item i {
     font-size: 16px;
     flex-shrink: 0;
+}
+
+.nav-texto {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Modo colapsado (desktop): solo iconos ─────────────────────────────── */
+.sidebar.colapsado {
+    width: 72px;
+    min-width: 72px;
+    max-width: 72px;
+}
+
+.sidebar.colapsado .sidebar-section {
+    font-size: 0;
+    padding: 6px 8px 2px;
+    border-bottom: 0.5px solid var(--color-border-tertiary, #e5e7eb);
+    margin: 6px 8px 2px;
+}
+
+.sidebar.colapsado .nav-item {
+    justify-content: center;
+    padding: 9px 0;
+    margin: 2px 10px;
+}
+
+.sidebar.colapsado .nav-texto {
+    display: none;
+}
+
+/* ── Móvil: drawer fuera de pantalla ───────────────────────────────────── */
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        top: 64px; /* debajo del Topbar */
+        bottom: 0;
+        left: 0;
+        z-index: 100;
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .sidebar.drawer-abierto {
+        transform: translateX(0);
+    }
+
+    /* En móvil el drawer siempre muestra texto, ignora el colapsado */
+    .sidebar.colapsado {
+        width: 220px;
+        min-width: 220px;
+        max-width: 220px;
+    }
+
+    .sidebar.colapsado .nav-texto {
+        display: inline;
+    }
+
+    .sidebar.colapsado .nav-item {
+        justify-content: flex-start;
+        padding: 7px 12px;
+    }
+
+    .sidebar.colapsado .sidebar-section {
+        font-size: 11px;
+        border-bottom: none;
+        margin-top: 8px;
+    }
 }
 </style>

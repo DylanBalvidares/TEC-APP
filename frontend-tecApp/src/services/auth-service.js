@@ -10,6 +10,11 @@ const ROL_ROUTES = {
   preceptor: "/preceptor",
   profesor: "/profesor",
   alumno: "/alumno/inicio",
+  // El rol administrativo todavía no tiene un panel propio: en lugar de caer
+  // en "/" (que dejaba la sesión en una pantalla sin contexto), se lo envía a
+  // la pantalla de acceso denegado con un mensaje claro.
+  administrativo: "/unauthorized",
+  bibliotecario: "/biblioteca/dashboard",
 };
 
 const getConfig = () => {

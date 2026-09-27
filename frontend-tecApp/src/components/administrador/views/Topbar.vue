@@ -1,12 +1,24 @@
 <template>
     <header class="topbar">
         <div class="brand-section">
+            <button
+                class="menu-toggle"
+                aria-label="Abrir o cerrar menú de navegación"
+                @click="$emit('toggle-sidebar')"
+            >
+                <i class="ti ti-menu-2" aria-hidden="true"></i>
+            </button>
             <img src="/logoEscuela.png" class="brand-logo" alt="Logo Escuela" />
             <div class="brand-divider"></div>
-            <div class="brand-text">
-                <h1 class="brand-title">Tec-app</h1>
-                <span class="brand-subtitle">{{ currentPage }}</span>
-            </div>
+            <nav class="breadcrumb" aria-label="Ubicación actual">
+                <button class="breadcrumb-raiz" @click="$emit('ir-inicio')">
+                    Tec-app
+                </button>
+                <template v-if="currentPage !== 'Inicio'">
+                    <i class="ti ti-chevron-right" aria-hidden="true"></i>
+                    <span class="breadcrumb-actual">{{ currentPage }}</span>
+                </template>
+            </nav>
         </div>
 
         <div class="user-section" ref="profileMenuRef">
@@ -59,13 +71,13 @@
                             <span class="badge-value">{{ userRole }}</span>
                         </div>
 
-                        <RouterLink
-                            to="/perfil/administrador"
+                        <button
+                            type="button"
                             class="dropdown-item"
-                            @click="menuAbierto = false"
+                            @click="irAlPerfil"
                         >
                             <i class="ti ti-user-circle"></i> Mi Perfil
-                        </RouterLink>
+                        </button>
                     </div>
 
                     <div class="dropdown-divider"></div>
@@ -79,6 +91,25 @@
                 </div>
             </transition>
         </div>
+
+        <Modal
+            v-model="confirmarLogout"
+            title="Cerrar sesión"
+            variante="danger"
+        >
+            <p class="modal-texto">¿Seguro que querés cerrar sesión?</p>
+            <template #footer>
+                <button
+                    class="tb-btn outline"
+                    @click="confirmarLogout = false"
+                >
+                    Cancelar
+                </button>
+                <button class="tb-btn danger" @click="ejecutarLogout">
+                    Cerrar sesión
+                </button>
+            </template>
+        </Modal>
     </header>
 </template>
 
@@ -86,10 +117,14 @@
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "../../../stores/auth";
+import Modal from "../../ui/Modal.vue";
+import { etiquetaRol } from "../../../utils/roles.js";
 
 defineProps({
     currentPage: { type: String, default: "Inicio" },
 });
+
+const emit = defineEmits(["toggle-sidebar", "ir-inicio", "ir-perfil"]);
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -113,23 +148,7 @@ const userDocLine = computed(() => {
     if (u?.email) return u.email;
     return "Cuenta institucional";
 });
-const ETIQUETAS_ROL = {
-    root: "Administrador",
-    administrativo: "Administrativo",
-    profesor: "Profesor",
-    preceptor: "Preceptor",
-    alumno: "Alumno",
-    tutor: "Tutor",
-    delegado: "Delegado",
-    bibliotecario: "Bibliotecario",
-};
-const userRole = computed(() => {
-    const crudo = nombreRolCrudo.value;
-    if (ETIQUETAS_ROL[crudo]) return ETIQUETAS_ROL[crudo];
-    return crudo
-        ? crudo.charAt(0).toUpperCase() + crudo.slice(1)
-        : "Invitado";
-});
+const userRole = computed(() => etiquetaRol(nombreRolCrudo.value));
 
 // Avatar dinámico usando el color rojo institucional (cd322c)
 const avatarError = ref(false);
@@ -151,6 +170,12 @@ const toggleMenu = () => {
     menuAbierto.value = !menuAbierto.value;
 };
 
+// Acceso al perfil dentro del mismo dashboard (mantiene sidebar/topbar)
+const irAlPerfil = () => {
+    menuAbierto.value = false;
+    emit("ir-perfil");
+};
+
 const handleClickOutside = (event) => {
     if (profileMenuRef.value && !profileMenuRef.value.contains(event.target)) {
         menuAbierto.value = false;
@@ -165,9 +190,16 @@ onUnmounted(() => {
     document.removeEventListener("click", handleClickOutside);
 });
 
-// Acción de logout
+// Acción de logout con modal de confirmación (sin confirm nativo)
+const confirmarLogout = ref(false);
+
 const cerrarSesion = () => {
-    if (!window.confirm("¿Seguro que querés cerrar sesión?")) return;
+    menuAbierto.value = false;
+    confirmarLogout.value = true;
+};
+
+const ejecutarLogout = () => {
+    confirmarLogout.value = false;
     authStore.logout();
     router.push("/");
 };
@@ -189,11 +221,31 @@ const cerrarSesion = () => {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
+/* --- Botón de menú (toggle sidebar) --- */
+.menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #374151;
+    font-size: 22px;
+    padding: 6px;
+    border-radius: 6px;
+    transition: background 0.15s;
+}
+
+.menu-toggle:hover {
+    background: #f3f4f6;
+}
+
 /* --- Marca y Logo --- */
 .brand-section {
     display: flex;
     align-items: center;
     gap: 16px;
+    min-width: 0;
 }
 
 .brand-logo {
@@ -209,26 +261,43 @@ const cerrarSesion = () => {
     background-color: #d1d5db;
 }
 
-.brand-text {
+/* --- Breadcrumb --- */
+.breadcrumb {
     display: flex;
-    align-items: baseline;
-    gap: 10px;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    min-width: 0;
 }
 
-.brand-title {
-    font-size: 16px;
+.breadcrumb-raiz {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: #6b7280;
+    font-size: 14px;
     font-weight: 600;
-    color: #111827;
-    margin: 0;
     letter-spacing: -0.01em;
 }
 
-.brand-subtitle {
-    font-size: 13px;
+.breadcrumb-raiz:hover {
+    color: #cd322c;
+    text-decoration: underline;
+}
+
+.breadcrumb i {
+    font-size: 14px;
+    color: #9ca3af;
+    flex-shrink: 0;
+}
+
+.breadcrumb-actual {
     color: #6b7280;
     font-weight: 500;
-    padding-left: 4px;
-    border-left: 2px solid #cd322c; /* Toque visual de la página actual */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* --- Sección de Usuario --- */
@@ -427,17 +496,13 @@ const cerrarSesion = () => {
 }
 
 /* --- Responsive --- */
-@media (max-width: 600px) {
+@media (max-width: 640px) {
     .brand-divider {
         display: none;
     }
 
-    .brand-subtitle {
-        font-size: 11px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 35vw;
+    .brand-section {
+        gap: 10px;
     }
 
     .topbar {

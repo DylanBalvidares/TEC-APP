@@ -454,65 +454,58 @@
         </div>
 
         <!-- ── MODAL ELIMINAR ─────────────────────────────────────────────── -->
-        <div
-            v-if="noticiaAEliminar"
-            class="modal-overlay"
-            @click.self="noticiaAEliminar = null"
+        <Modal
+            v-model="modalEliminarAbierto"
+            title="Eliminar Noticia"
+            variante="danger"
         >
-            <div class="modal-card animate-fade-in">
-                <div class="modal-header">
-                    <i
-                        class="ti ti-alert-triangle"
-                        style="color: #cd322c; font-size: 20px"
-                    ></i>
-                    <h3>Eliminar Noticia</h3>
-                </div>
-                <p class="modal-body">
-                    ¿Estás seguro de que querés borrar
-                    <strong>"{{ noticiaAEliminar.titulo }}"</strong>? Esta
-                    acción es permanente.
-                </p>
-                <div
-                    v-if="errorEliminar"
-                    class="error-banner"
-                    style="
-                        margin-bottom: 16px;
-                        width: 100%;
-                        box-sizing: border-box;
-                    "
-                >
-                    <i class="ti ti-alert-circle"></i> {{ errorEliminar }}
-                </div>
-                <div class="modal-footer">
-                    <button
-                        class="tb-btn outline"
-                        @click="noticiaAEliminar = null"
-                        :disabled="eliminando"
-                    >
-                        Cancelar
-                    </button>
-                    <button
-                        class="tb-btn danger"
-                        @click="confirmarEliminar"
-                        :disabled="eliminando"
-                    >
-                        <i
-                            class="ti ti-loader animate-spin"
-                            v-if="eliminando"
-                        ></i>
-                        {{
-                            eliminando
-                                ? "Eliminando..."
-                                : "Eliminar de forma definitiva"
-                        }}
-                    </button>
-                </div>
+            <p class="modal-texto">
+                ¿Estás seguro de que querés borrar
+                <strong>"{{ noticiaAEliminar?.titulo }}"</strong>? Esta
+                acción es permanente.
+            </p>
+            <div
+                v-if="errorEliminar"
+                class="error-banner"
+                style="
+                    margin-bottom: 16px;
+                    width: 100%;
+                    box-sizing: border-box;
+                "
+            >
+                <i class="ti ti-alert-circle"></i> {{ errorEliminar }}
             </div>
-        </div>
+            <template #footer>
+                <button
+                    class="tb-btn outline"
+                    @click="modalEliminarAbierto = false"
+                    :disabled="eliminando"
+                >
+                    Cancelar
+                </button>
+                <button
+                    class="tb-btn danger"
+                    @click="confirmarEliminar"
+                    :disabled="eliminando"
+                >
+                    <i
+                        class="ti ti-loader animate-spin"
+                        v-if="eliminando"
+                    ></i>
+                    {{
+                        eliminando
+                            ? "Eliminando..."
+                            : "Eliminar de forma definitiva"
+                    }}
+                </button>
+            </template>
+        </Modal>
     </div>
 </template>
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue";
+import Modal from "../../ui/Modal.vue";
+import { toast } from "../../../services/toast-service.js";
 import {
     obtenerNoticias,
     crearNoticia,
@@ -536,6 +529,7 @@ const eliminando = ref(false);
 const vistaActiva = ref("lista");
 const noticiaSeleccionada = ref(null);
 const noticiaAEliminar = ref(null);
+const modalEliminarAbierto = ref(false);
 
 const errorCarga = ref("");
 const errorGuardar = ref("");
@@ -760,7 +754,12 @@ async function guardarNoticia() {
         }
 
         exitoGuardar.value = true;
-        setTimeout(() => cambiarVista("lista"), 900);
+        toast.success(
+            vistaActiva.value === "crear"
+                ? "Noticia creada correctamente."
+                : "Noticia actualizada correctamente.",
+        );
+        cambiarVista("lista");
     } catch (e) {
         console.error("Error en guardarNoticia:", e);
         errorGuardar.value =
@@ -773,6 +772,7 @@ async function guardarNoticia() {
 function pedirConfirmacion(noticia) {
     noticiaAEliminar.value = noticia;
     errorEliminar.value = "";
+    modalEliminarAbierto.value = true;
 }
 
 async function confirmarEliminar() {
@@ -787,7 +787,9 @@ async function confirmarEliminar() {
         noticias.value = noticias.value.filter(
             (n) => n.id_noticia !== noticiaAEliminar.value.id_noticia,
         );
+        modalEliminarAbierto.value = false;
         noticiaAEliminar.value = null;
+        toast.success("La noticia fue eliminada correctamente.");
     } catch (e) {
         errorEliminar.value = e?.message || "Ocurrió un error al eliminar la noticia.";
     } finally {

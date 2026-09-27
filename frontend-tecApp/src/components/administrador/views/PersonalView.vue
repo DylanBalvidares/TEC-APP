@@ -312,8 +312,8 @@
                             <label>Fecha de Nacimiento <span class="required">*</span></label>
                             <input
                                 v-model="form.fecha_nacimiento"
-                                type="text"
-                                placeholder="DD/MM/AAAA"
+                                type="date"
+                                
                                 :class="{ 'input-error': erroresForm.fecha_nacimiento }"
                                 @blur="validarCampo('fecha_nacimiento')"
                                 required
@@ -324,8 +324,7 @@
                             <label>Fecha de Ingreso <span class="required">*</span></label>
                             <input
                                 v-model="form.fecha_ingreso"
-                                type="text"
-                                placeholder="DD/MM/AAAA"
+                                type="date"
                                 :class="{ 'input-error': erroresForm.fecha_ingreso }"
                                 @blur="validarCampo('fecha_ingreso')"
                                 required
@@ -411,68 +410,58 @@
             </form>
         </div>
 
-        <div
-            v-if="empleadoAEliminar"
-            class="modal-overlay"
-            @click.self="empleadoAEliminar = null"
+        <Modal
+            v-model="modalEliminarAbierto"
+            title="Dar de baja empleado"
+            variante="danger"
         >
-            <div class="modal-card animate-fade-in">
-                <div class="modal-header">
-                    <i
-                        class="ti ti-alert-triangle"
-                        style="color: #cd322c; font-size: 20px"
-                    ></i>
-                    <h3>Dar de baja empleado</h3>
-                </div>
+            <p class="modal-texto">
+                ¿Seguro que querés dar de baja a
+                <strong>{{ empleadoAEliminar?.nombre }} {{ empleadoAEliminar?.apellido }}</strong>
+                (DNI: {{ empleadoAEliminar?.dni }})? Quedará marcado como
+                <strong>"Baja"</strong> y no aparecerá en listas activas, pero su
+                historial se preservará. Podés reactivarlo después editando su ficha.
+            </p>
 
-                <p class="modal-body">
-                    ¿Seguro que querés dar de baja a
-                    <strong>
-                        {{ empleadoAEliminar.nombre }}
-                        {{ empleadoAEliminar.apellido }} </strong
-                    > (DNI: {{ empleadoAEliminar.dni }})? Quedará marcado como
-                    <strong>"Baja"</strong> y no aparecerá en listas activas, pero su
-                    historial se preservará. Podés reactivarlo después editando su ficha.
-                </p>
-
-                <div
-                    v-if="errorEliminar"
-                    class="error-banner"
-                    style="
-                        margin-bottom: 16px;
-                        width: 100%;
-                        box-sizing: border-box;
-                    "
-                >
-                    <i class="ti ti-alert-circle"></i> {{ errorEliminar }}
-                </div>
-
-                <div class="modal-footer">
-                    <button
-                        class="tb-btn outline"
-                        @click="empleadoAEliminar = null"
-                    >
-                        Cancelar
-                    </button>
-                    <button
-                        class="tb-btn danger"
-                        @click="confirmarEliminar"
-                        :disabled="eliminando"
-                    >
-                        <i
-                            class="ti ti-loader animate-spin"
-                            v-if="eliminando"
-                        ></i>
-                        {{ eliminando ? "Eliminando..." : "Sí, eliminar" }}
-                    </button>
-                </div>
+            <div
+                v-if="errorEliminar"
+                class="error-banner"
+                style="
+                    margin-bottom: 16px;
+                    width: 100%;
+                    box-sizing: border-box;
+                "
+            >
+                <i class="ti ti-alert-circle"></i> {{ errorEliminar }}
             </div>
-        </div>
+
+            <template #footer>
+                <button
+                    class="tb-btn outline"
+                    @click="modalEliminarAbierto = false"
+                >
+                    Cancelar
+                </button>
+                <button
+                    class="tb-btn danger"
+                    @click="confirmarEliminar"
+                    :disabled="eliminando"
+                >
+                    <i
+                        class="ti ti-loader animate-spin"
+                        v-if="eliminando"
+                    ></i>
+                    {{ eliminando ? "Eliminando..." : "Sí, eliminar" }}
+                </button>
+            </template>
+        </Modal>
     </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue";
+import Modal from "../../ui/Modal.vue";
+import { toast } from "../../../services/toast-service.js";
 
 import {
     obtenerTodoPersonal,
@@ -484,14 +473,14 @@ import {
     sincronizarUsuarioPersonal,
 } from "../../../services/academico-service.js";
 import { obtenerRoles, crearUsuario } from "../../../services/usuarios-services.js";
-import { formatDate, toDisplayDate, parseDisplayDate } from "../../../utils/formatters.js";
+import { formatDate, toInputDate } from "../../../utils/formatters.js";
 import {
     validarRequerido,
     validarLongitudMinima,
     validarDNI,
     validarEmail,
     validarTelefono,
-    validarFechaFormato,
+    validarFechaInput,
     validarFormulario,
 } from "../../../utils/validators.js";
 import { useTableControls } from "../../../composables/useTableControls.js";
@@ -506,6 +495,7 @@ const eliminando = ref(false);
 const vistaActiva = ref("lista"); // 'lista' | 'crear' | 'editar' | 'detalles'
 const empleadoSeleccionado = ref(null);
 const empleadoAEliminar = ref(null);
+const modalEliminarAbierto = ref(false);
 const errorEliminar = ref("");
 
 const errorCarga = ref("");
@@ -572,8 +562,8 @@ const REGLAS_VALIDACION = {
     email: validarEmail,
     telefono: validarTelefono,
     domicilio: (v) => validarRequerido(v, "El domicilio"),
-    fecha_nacimiento: (v) => validarRequerido(v, "La fecha de nacimiento") || validarFechaFormato(v),
-    fecha_ingreso: (v) => validarRequerido(v, "La fecha de ingreso") || validarFechaFormato(v),
+    fecha_nacimiento: (v) => validarRequerido(v, "La fecha de nacimiento") || validarFechaInput(v),
+    fecha_ingreso: (v) => validarRequerido(v, "La fecha de ingreso") || validarFechaInput(v),
 };
 
 function validarCampo(campo) {
@@ -619,8 +609,8 @@ const cambiarVista = (nuevaVista, empleado = null) => {
     if (nuevaVista === "editar" && empleado) {
         form.value = { 
             ...empleado,
-            fecha_nacimiento: toDisplayDate(empleado.fecha_nacimiento),
-            fecha_ingreso: toDisplayDate(empleado.fecha_ingreso),
+            fecha_nacimiento: toInputDate(empleado.fecha_nacimiento),
+            fecha_ingreso: toInputDate(empleado.fecha_ingreso),
         };
         limpiarErrores();
     } else if (nuevaVista === "crear") {
@@ -677,8 +667,8 @@ const guardarEmpleado = async () => {
     try {
         const payload = { 
             ...form.value,
-            fecha_nacimiento: parseDisplayDate(form.value.fecha_nacimiento),
-            fecha_ingreso: parseDisplayDate(form.value.fecha_ingreso),
+            fecha_nacimiento: form.value.fecha_nacimiento || null,
+            fecha_ingreso: form.value.fecha_ingreso || null,
         };
         if (!payload.id_usuario) {
             payload.id_usuario = null;
@@ -744,8 +734,13 @@ const guardarEmpleado = async () => {
             exitoGuardar.value = true;
         }
 
+        toast.success(
+            vistaActiva.value === "crear"
+                ? "Empleado creado correctamente."
+                : "Ficha del empleado actualizada correctamente.",
+        );
         await fetchPersonal();
-        setTimeout(() => cambiarVista("lista"), 800);
+        cambiarVista("lista");
     } catch (e) {
         errorGuardar.value =
             e?.response?.data?.mensaje ||
@@ -758,6 +753,7 @@ const guardarEmpleado = async () => {
 const pedirConfirmacion = (empleado) => {
     empleadoAEliminar.value = empleado;
     errorEliminar.value = "";
+    modalEliminarAbierto.value = true;
 };
 
 const confirmarEliminar = async () => {
@@ -773,7 +769,9 @@ const confirmarEliminar = async () => {
             errorEliminar.value = respuesta.message || "No se pudo completar la baja.";
         } else {
             await fetchPersonal();
+            modalEliminarAbierto.value = false;
             empleadoAEliminar.value = null;
+            toast.success("El empleado fue dado de baja correctamente.");
         }
     } catch (e) {
         errorEliminar.value =

@@ -408,77 +408,69 @@
             </form>
         </div>
 
-        <div
-            v-if="asignacionAEliminar"
-            class="modal-overlay"
-            @click.self="asignacionAEliminar = null"
+        <Modal
+            v-model="modalEliminarAbierto"
+            title="Dar de baja asignación"
+            variante="danger"
         >
-            <div class="modal-card animate-fade-in">
-                <div class="modal-header">
-                    <i
-                        class="ti ti-alert-triangle"
-                        style="color: #cd322c; font-size: 20px"
-                    ></i>
-                    <h3>Dar de baja asignación</h3>
-                </div>
-
-                <p class="modal-body">
-                    ¿Estás seguro de que querés desvincular a
-                    <strong
-                        >{{ asignacionAEliminar.profesorAsignacion?.apellido }},
-                        {{ asignacionAEliminar.profesorAsignacion?.nombre }}</strong
-                    >
-                    de la materia
-                    <strong>{{
-                        asignacionAEliminar.materiaAsignacion?.nombre_materia
-                    }}</strong>
-                    en el curso
-                    <strong>{{
-                        asignacionAEliminar.cursoAsignacion?.nombre_curso
-                    }}</strong
-                    >? Esta operación no eliminará al profesor ni al curso, solo
-                    su relación. Esta acción también eliminará las notas
-                    asociadas a esta asignación.
-                </p>
-
-                <div
-                    v-if="errorEliminar"
-                    class="error-banner"
-                    style="
-                        margin-bottom: 16px;
-                        width: 100%;
-                        box-sizing: border-box;
-                    "
+            <p class="modal-texto">
+                ¿Estás seguro de que querés desvincular a
+                <strong
+                    >{{ asignacionAEliminar?.profesorAsignacion?.apellido }},
+                    {{ asignacionAEliminar?.profesorAsignacion?.nombre }}</strong
                 >
-                    <i class="ti ti-alert-circle"></i> {{ errorEliminar }}
-                </div>
+                de la materia
+                <strong>{{
+                    asignacionAEliminar?.materiaAsignacion?.nombre_materia
+                }}</strong>
+                en el curso
+                <strong>{{
+                    asignacionAEliminar?.cursoAsignacion?.nombre_curso
+                }}</strong
+                >? Esta operación no eliminará al profesor ni al curso, solo
+                su relación. Esta acción también eliminará las notas
+                asociadas a esta asignación.
+            </p>
 
-                <div class="modal-footer">
-                    <button
-                        class="tb-btn outline"
-                        @click="asignacionAEliminar = null"
-                    >
-                        Cancelar
-                    </button>
-                    <button
-                        class="tb-btn danger"
-                        @click="confirmarEliminar"
-                        :disabled="eliminando"
-                    >
-                        <i
-                            class="ti ti-loader animate-spin"
-                            v-if="eliminando"
-                        ></i>
-                        {{ eliminando ? "Eliminando..." : "Eliminar vínculo" }}
-                    </button>
-                </div>
+            <div
+                v-if="errorEliminar"
+                class="error-banner"
+                style="
+                    margin-bottom: 16px;
+                    width: 100%;
+                    box-sizing: border-box;
+                "
+            >
+                <i class="ti ti-alert-circle"></i> {{ errorEliminar }}
             </div>
-        </div>
+
+            <template #footer>
+                <button
+                    class="tb-btn outline"
+                    @click="modalEliminarAbierto = false"
+                >
+                    Cancelar
+                </button>
+                <button
+                    class="tb-btn danger"
+                    @click="confirmarEliminar"
+                    :disabled="eliminando"
+                >
+                    <i
+                        class="ti ti-loader animate-spin"
+                        v-if="eliminando"
+                    ></i>
+                    {{ eliminando ? "Eliminando..." : "Eliminar vínculo" }}
+                </button>
+            </template>
+        </Modal>
     </div>
 </template>
 
 <script setup>
 import { ref, onMounted, nextTick } from "vue";
+import Modal from "../../ui/Modal.vue";
+import { toast } from "../../../services/toast-service.js";
 // IMPORTANTE: Ajustar estas rutas según la estructura de tus servicios en tec-app-gestion
 import {
     obtenerAsignaciones,
@@ -509,6 +501,7 @@ const eliminando = ref(false);
 const vistaActiva = ref("lista");
 const asignacionSeleccionada = ref(null);
 const asignacionAEliminar = ref(null);
+const modalEliminarAbierto = ref(false);
 
 const errorCarga = ref("");
 const errorGuardar = ref("");
@@ -646,11 +639,16 @@ const guardarAsignacion = async () => {
             await modificarAsignacion(form.value);
         }
         exitoGuardar.value = true;
+        toast.success(
+            vistaActiva.value === "crear"
+                ? "Asignación creada correctamente."
+                : "Asignación actualizada correctamente.",
+        );
         // Refrescamos solo las asignaciones para ver los cambios
         const resAsig = await obtenerAsignaciones();
         asignaciones.value = Array.isArray(resAsig.data) ? resAsig.data : [];
 
-        setTimeout(() => cambiarVista("lista"), 800);
+        cambiarVista("lista");
     } catch (e) {
         errorGuardar.value =
             e?.response?.data?.mensaje ||
@@ -663,6 +661,7 @@ const guardarAsignacion = async () => {
 const pedirConfirmacion = (asignacion) => {
     asignacionAEliminar.value = asignacion;
     errorEliminar.value = "";
+    modalEliminarAbierto.value = true;
 };
 
 const confirmarEliminar = async () => {
@@ -679,7 +678,9 @@ const confirmarEliminar = async () => {
                 (a) =>
                     a.id_asignacion !== asignacionAEliminar.value.id_asignacion,
             );
+            modalEliminarAbierto.value = false;
             asignacionAEliminar.value = null;
+            toast.success("La asignación fue eliminada correctamente.");
         } else {
             errorEliminar.value = respuesta.message || respuesta.data?.mensaje;
         }

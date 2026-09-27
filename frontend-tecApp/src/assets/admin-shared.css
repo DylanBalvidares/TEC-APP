@@ -153,12 +153,12 @@
     transition: all 0.12s;
 }
 .tb-btn.primary {
-    background: #cd322c;
+    background: var(--color-primary, #cd322c);
     color: #fff;
-    border-color: #cd322c;
+    border-color: var(--color-primary, #cd322c);
 }
 .tb-btn.primary:hover {
-    background: #a52420;
+    background: var(--color-primary-dark, #a52420);
 }
 .tb-btn.outline {
     background: white;
@@ -170,11 +170,11 @@
     color: #111827;
 }
 .tb-btn.danger {
-    background: #cd322c;
+    background: var(--color-primary, #cd322c);
     color: white;
 }
 .tb-btn.danger:hover {
-    background: #a52420;
+    background: var(--color-primary-dark, #a52420);
 }
 .tb-btn.sm {
     padding: 5px 10px;
@@ -333,6 +333,75 @@
 /* ── Toolbar de búsqueda ─────────────────────────────────────────────────── */
 .search-bar-wrapper {
     margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* ── Filtros por columna y exportación ─────────────────────────────────── */
+.filtro-inline {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    color: var(--color-text-tertiary, #6b7280);
+    font-weight: 500;
+}
+
+.filtro-inline select {
+    padding: 7px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 12.5px;
+    background: #fff;
+    color: #111827;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.filtro-inline select:focus {
+    border-color: #cd322c;
+    box-shadow: 0 0 0 2px rgba(205, 50, 44, 0.08);
+}
+
+.exportar-btn {
+    margin-left: auto;
+}
+
+.th-sort {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    text-align: left;
+}
+
+.th-sort:hover {
+    color: #cd322c;
+}
+
+.th-sort i {
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+.th-sort .ti-selector {
+    opacity: 0.25;
+}
+
+@media (max-width: 640px) {
+    .exportar-btn {
+        margin-left: 0;
+        width: 100%;
+        justify-content: center;
+    }
 }
 .search-box {
     display: flex;
@@ -416,6 +485,14 @@
     font-size: 13px;
     color: #4b5563;
     margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+/* Texto de cuerpo para modales de ui/Modal.vue */
+.modal-texto {
+    font-size: 13px;
+    color: #4b5563;
+    margin: 0 0 8px;
     line-height: 1.6;
 }
 .modal-footer {

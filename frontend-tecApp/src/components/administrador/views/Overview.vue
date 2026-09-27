@@ -32,20 +32,32 @@
             <div class="metric-value">{{ totalCursos }}</div>
             <span class="metric-badge badge-green">Ver todos →</span>
         </div>
-        <div class="metric-card clickable" @click="$emit('cambiar-vista', 'comunicados')">
+        <div class="metric-card clickable" @click="$emit('cambiar-vista', 'alumnos')">
             <div class="metric-label">
-                <i class="ti ti-speakerphone" aria-hidden="true"></i>Comunicados
+                <i class="ti ti-user-question" aria-hidden="true"></i>Sin curso asignado
             </div>
-            <div class="metric-value">{{ totalComunicados }}</div>
-            <span class="metric-badge badge-gray">Ver todos →</span>
+            <div class="metric-value">{{ alumnosSinCurso }}</div>
+            <span class="metric-badge badge-yellow">Revisar →</span>
         </div>
-        <div class="metric-card clickable" @click="$emit('cambiar-vista', 'libreta')">
-            <div class="metric-label">
-                <i class="ti ti-book-open" aria-hidden="true"></i>Libreta Digital
-            </div>
-            <div class="metric-value">{{ totalCursos }}</div>
-            <span class="metric-badge badge-green">Supervisar notas →</span>
-        </div>
+    </div>
+
+    <div class="acciones-rapidas">
+        <button class="accion-rapida" @click="$emit('cambiar-vista', 'alumnos')">
+            <i class="ti ti-user-plus" aria-hidden="true"></i>
+            <span>Nuevo alumno</span>
+        </button>
+        <button class="accion-rapida" @click="$emit('cambiar-vista', 'comunicados')">
+            <i class="ti ti-speakerphone" aria-hidden="true"></i>
+            <span>Publicar comunicado</span>
+        </button>
+        <button class="accion-rapida" @click="$emit('cambiar-vista', 'asistencias')">
+            <i class="ti ti-calendar-check" aria-hidden="true"></i>
+            <span>Ver asistencias</span>
+        </button>
+        <button class="accion-rapida" @click="$emit('cambiar-vista', 'libreta')">
+            <i class="ti ti-book-open" aria-hidden="true"></i>
+            <span>Supervisar libreta</span>
+        </button>
     </div>
 
     <div class="row3">
@@ -111,14 +123,14 @@
                     <tr>
                         <th>Nombre</th>
                         <th>Curso</th>
-                        <th>DNI</th>
+                        <th>Registrado</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr v-for="alumno in ultimosAlumnos" :key="alumno.dni">
                         <td>{{ alumno.nombre }}</td>
                         <td>{{ alumno.curso }}</td>
-                        <td>{{ alumno.dni }}</td>
+                        <td class="mono">{{ alumno.fecha }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -149,7 +161,7 @@
                 >
                     <div class="li-info">
                         <div class="li-name">{{ com.titulo }}</div>
-                        <div class="li-sub">{{ com.detalle }}</div>
+                        <div class="li-sub">{{ com.destino }} · {{ com.fecha }}</div>
                     </div>
                 </div>
             </div>
@@ -189,8 +201,12 @@ const ultimosAlumnos = computed(() =>
         .map((a) => ({
             nombre: `${a.nombre} ${a.apellido || ""}`.trim(),
             curso: a.curso?.nombre_curso || a.nombre_curso || "—",
-            dni: a.dni || "—",
+            fecha: fechaCorta(a.fecha_ingreso || a.createdAt) || "—",
         })),
+);
+
+const alumnosSinCurso = computed(
+    () => listaAlumnos.value.filter((a) => !a.id_curso).length,
 );
 
 const ultimosComunicados = computed(() =>
@@ -204,7 +220,8 @@ const ultimosComunicados = computed(() =>
         .map((c) => ({
             id_comunicado: c.id_comunicado,
             titulo: c.titulo || "Sin título",
-            detalle: `${cap(c.destino)} · ${fechaCorta(c.fecha_publicacion)}`,
+            destino: cap(c.destino),
+            fecha: fechaCorta(c.fecha_publicacion) || "sin fecha",
         })),
 );
 
@@ -312,6 +329,53 @@ onMounted(cargarDatos);
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 10px;
+}
+
+/* ── Acciones rápidas ────────────────────────────────────────────────── */
+.acciones-rapidas {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.accion-rapida {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--color-background-primary, #ffffff);
+    border: 1px solid var(--color-border-tertiary, #e5e7eb);
+    border-radius: 8px;
+    padding: 12px 14px;
+    cursor: pointer;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--color-text-primary, #111827);
+    transition: box-shadow 0.15s, transform 0.15s, border-color 0.15s;
+    text-align: left;
+}
+
+.accion-rapida i {
+    font-size: 18px;
+    color: #cd322c;
+    flex-shrink: 0;
+}
+
+.accion-rapida:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+    border-color: #cd322c;
+}
+
+.badge-yellow {
+    background: #fef9c3;
+    color: #a16207;
+}
+
+@media (max-width: 768px) {
+    .metrics,
+    .acciones-rapidas {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 .metric-card {

@@ -18,6 +18,43 @@ export function useTableControls(dataRef, options = {}) {
     const currentPage = ref(1);
     const pageSize = ref(defaultPageSize);
 
+    // ── Ordenamiento por columna ─────────────────────────────────────────
+    const sortKey = ref(null);
+    const sortDir = ref("asc"); // 'asc' | 'desc'
+
+    /**
+     * Alterna el orden de una columna. Tres estados: asc → desc → sin orden.
+     * @param {string} key - Campo por el que ordenar
+     * @param {Function} [getterFn] - Getter opcional (item) => valor comparable
+     */
+    function toggleSort(key, getterFn = null) {
+        if (sortKey.value !== key) {
+            sortKey.value = key;
+            sortDir.value = "asc";
+        } else if (sortDir.value === "asc") {
+            sortDir.value = "desc";
+        } else {
+            sortKey.value = null;
+            sortDir.value = "asc";
+        }
+        sortGetter.value = getterFn;
+        currentPage.value = 1;
+    }
+
+    const sortGetter = ref(null);
+
+    function compararValores(a, b) {
+        // Números primero, luego strings con localeCompare
+        const ambosNumericos =
+            typeof a === "number" &&
+            typeof b === "number";
+        if (ambosNumericos) return a - b;
+        return String(a ?? "").localeCompare(String(b ?? ""), "es", {
+            numeric: true,
+            sensitivity: "base",
+        });
+    }
+
     // ── Filtros por campo ─────────────────────────────────────────────────
     // Ej: { estado: 'activo', id_curso: '3' }
     const filters = ref({});
@@ -48,8 +85,9 @@ export function useTableControls(dataRef, options = {}) {
     const filteredData = computed(() => {
         let list = dataRef.value || [];
 
-        // Búsqueda textual general
-        if (searchText.value.trim()) {
+        // Búsqueda textual general (+ filtro custom aplicado siempre que exista,
+        // incluso sin texto de búsqueda, para soportar visibilidad condicional)
+        if (searchText.value.trim() || options.filterFn) {
             const q = searchText.value.toLowerCase().trim();
             list = list.filter((item) => {
                 // Si hay una función custom, la usa
@@ -73,6 +111,17 @@ export function useTableControls(dataRef, options = {}) {
                     if (itemVal === null || itemVal === undefined) return false;
                     return String(itemVal).toLowerCase() === String(value).toLowerCase();
                 });
+            });
+        }
+
+        // Ordenamiento por columna activa
+        if (sortKey.value) {
+            const getter = sortGetter.value;
+            const dir = sortDir.value === "asc" ? 1 : -1;
+            list = [...list].sort((a, b) => {
+                const va = getter ? getter(a) : a?.[sortKey.value];
+                const vb = getter ? getter(b) : b?.[sortKey.value];
+                return compararValores(va, vb) * dir;
             });
         }
 
@@ -126,6 +175,8 @@ export function useTableControls(dataRef, options = {}) {
         currentPage,
         pageSize,
         filters,
+        sortKey,
+        sortDir,
         // Datos
         filteredData,
         paginatedData,
@@ -138,5 +189,6 @@ export function useTableControls(dataRef, options = {}) {
         setPageSize,
         onFilterChange,
         getUniqueOptions,
+        toggleSort,
     };
 }

@@ -1,230 +1,611 @@
 <template>
-    <div class="profile-wrapper">
-        <div class="profile-card">
-            <!-- ENCABEZADO -->
-            <div class="profile-header">
-                <div class="avatar-large">
-                    <img :src="avatarUrl" alt="Avatar" />
+    <div class="perfil-wrapper">
+        <!-- ── Encabezado de identidad ─────────────────────────────────── -->
+        <div class="perfil-header card">
+            <div class="avatar" aria-hidden="true">{{ iniciales }}</div>
+            <div class="perfil-identidad">
+                <h1>{{ nombreCompleto }}</h1>
+                <p class="perfil-email">
+                    <i class="ti ti-mail" aria-hidden="true"></i>
+                    {{ usuario?.email || "Sin email registrado" }}
+                </p>
+                <div class="perfil-badges">
+                    <span class="perfil-badge">{{ rolLegible }}</span>
+                    <span v-if="usuario?.id_usuario" class="perfil-badge badge-neutro">
+                        <i class="ti ti-id" aria-hidden="true"></i>
+                        ID {{ usuario.id_usuario }}
+                    </span>
                 </div>
-                <div class="user-info">
-                    <h1>{{ authStore.usuario?.nombre || "Usuario" }}</h1>
-                    <p class="role-tag">
-                        {{ authStore.usuario?.nombre_rol || "Estudiante" }}
-                    </p>
+            </div>
+        </div>
+
+        <!-- ── Datos personales ─────────────────────────────────────────── -->
+        <form class="card perfil-card" @submit.prevent="guardarDatos">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="ti ti-user-edit" aria-hidden="true"></i>
+                    Datos personales
+                </div>
+                <span v-if="hayCambiosDatos" class="perfil-badge badge-aviso">
+                    Cambios sin guardar
+                </span>
+            </div>
+
+            <div class="card-body">
+                <div class="form-grid">
+                    <div class="field-group">
+                        <label class="field-label" for="perfil-nombre">Nombre</label>
+                        <input
+                            id="perfil-nombre"
+                            v-model="form.nombre"
+                            class="field-input"
+                            :class="{ 'input-error': errores.nombre }"
+                            type="text"
+                            autocomplete="given-name"
+                            @blur="validarCampoPerfil('nombre')"
+                        />
+                        <span v-if="errores.nombre" class="field-error">{{ errores.nombre }}</span>
+                    </div>
+
+                    <div class="field-group">
+                        <label class="field-label" for="perfil-apellido">Apellido</label>
+                        <input
+                            id="perfil-apellido"
+                            v-model="form.apellido"
+                            class="field-input"
+                            :class="{ 'input-error': errores.apellido }"
+                            type="text"
+                            autocomplete="family-name"
+                            @blur="validarCampoPerfil('apellido')"
+                        />
+                        <span v-if="errores.apellido" class="field-error">{{ errores.apellido }}</span>
+                    </div>
+
+                    <div class="field-group form-grid-full">
+                        <label class="field-label" for="perfil-email">Correo electrónico</label>
+                        <input
+                            id="perfil-email"
+                            v-model="form.email"
+                            class="field-input"
+                            :class="{ 'input-error': errores.email }"
+                            type="email"
+                            autocomplete="email"
+                            @blur="validarCampoPerfil('email')"
+                        />
+                        <span v-if="errores.email" class="field-error">{{ errores.email }}</span>
+                        <span class="field-help">
+                            Se usa para iniciar sesión. Si lo cambiás, usá el nuevo
+                            email la próxima vez.
+                        </span>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <i class="ti ti-info-circle" aria-hidden="true"></i>
+                    <span>
+                        El rol y el ID de la cuenta los gestiona la institución y no
+                        se pueden modificar desde acá.
+                    </span>
                 </div>
             </div>
 
-            <!-- FORMULARIO DE PERFIL -->
-            <form @submit.prevent="guardarCambios" class="profile-form">
-                <!-- Grid de campos -->
-                <div class="form-grid">
-                    <div class="field-group">
-                        <label class="field-label">Nombre Completo</label>
-                        <input
-                            type="text"
-                            v-model="form.nombre"
-                            class="field-input"
-                            disabled
-                        />
-                    </div>
-
-                    <div class="field-group">
-                        <label class="field-label">DNI</label>
-                        <input
-                            type="text"
-                            v-model="form.dni"
-                            class="field-input"
-                            disabled
-                        />
-                    </div>
-
-                    <div class="field-group">
-                        <label class="field-label">Correo Electrónico</label>
-                        <input
-                            type="email"
-                            v-model="form.email"
-                            class="field-input"
-                        />
-                    </div>
-
-                    <div class="field-group">
-                        <label class="field-label">Teléfono</label>
-                        <input
-                            type="tel"
-                            v-model="form.telefono"
-                            class="field-input"
-                            placeholder="Ej: 2364123456"
-                        />
-                    </div>
-                </div>
-
-                <div class="divider"></div>
-
-                <!-- CAMBIO DE CONTRASEÑA -->
-                <h3 class="section-title">Seguridad</h3>
-                <div class="field-group">
-                    <label class="field-label">Nueva Contraseña</label>
-                    <input
-                        type="password"
-                        v-model="form.password"
-                        class="field-input"
-                        placeholder="••••••••"
-                    />
-                    <span class="field-help"
-                        >Dejar en blanco para no cambiarla.</span
-                    >
-                </div>
-
-                <button type="submit" class="btn-submit" :disabled="loading">
-                    {{ loading ? "Guardando..." : "Actualizar Perfil" }}
+            <div class="card-footer">
+                <button
+                    type="button"
+                    class="tb-btn outline"
+                    :disabled="!hayCambiosDatos || guardandoDatos"
+                    @click="descartarDatos"
+                >
+                    Descartar
                 </button>
-            </form>
-        </div>
+                <button
+                    type="submit"
+                    class="tb-btn primary"
+                    :disabled="!hayCambiosDatos || guardandoDatos"
+                >
+                    <i v-if="guardandoDatos" class="ti ti-loader animate-spin" aria-hidden="true"></i>
+                    {{ guardandoDatos ? "Guardando..." : "Guardar datos" }}
+                </button>
+            </div>
+        </form>
+
+        <!-- ── Seguridad ────────────────────────────────────────────────── -->
+        <form class="card perfil-card" @submit.prevent="guardarContrasena">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="ti ti-lock" aria-hidden="true"></i>
+                    Seguridad
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="form-grid">
+                    <div class="field-group form-grid-full">
+                        <label class="field-label" for="perfil-pass-actual">
+                            Contraseña actual
+                        </label>
+                        <div class="input-pass">
+                            <input
+                                id="perfil-pass-actual"
+                                v-model="form.passActual"
+                                class="field-input"
+                                :class="{ 'input-error': errores.passActual }"
+                                :type="visible.passActual ? 'text' : 'password'"
+                                autocomplete="current-password"
+                                @blur="validarCampoPass('passActual')"
+                            />
+                            <button
+                                type="button"
+                                class="pass-toggle"
+                                :aria-label="visible.passActual ? 'Ocultar contraseña actual' : 'Mostrar contraseña actual'"
+                                @click="visible.passActual = !visible.passActual"
+                            >
+                                <i
+                                    class="ti"
+                                    :class="visible.passActual ? 'ti-eye-off' : 'ti-eye'"
+                                    aria-hidden="true"
+                                ></i>
+                            </button>
+                        </div>
+                        <span v-if="errores.passActual" class="field-error">{{ errores.passActual }}</span>
+                    </div>
+
+                    <div class="field-group">
+                        <label class="field-label" for="perfil-pass-nueva">
+                            Nueva contraseña
+                        </label>
+                        <div class="input-pass">
+                            <input
+                                id="perfil-pass-nueva"
+                                v-model="form.passNueva"
+                                class="field-input"
+                                :class="{ 'input-error': errores.passNueva }"
+                                :type="visible.passNueva ? 'text' : 'password'"
+                                autocomplete="new-password"
+                                @blur="validarCampoPass('passNueva')"
+                            />
+                            <button
+                                type="button"
+                                class="pass-toggle"
+                                :aria-label="visible.passNueva ? 'Ocultar nueva contraseña' : 'Mostrar nueva contraseña'"
+                                @click="visible.passNueva = !visible.passNueva"
+                            >
+                                <i
+                                    class="ti"
+                                    :class="visible.passNueva ? 'ti-eye-off' : 'ti-eye'"
+                                    aria-hidden="true"
+                                ></i>
+                            </button>
+                        </div>
+                        <span v-if="errores.passNueva" class="field-error">{{ errores.passNueva }}</span>
+                        <span v-else class="field-help">Mínimo 6 caracteres.</span>
+                    </div>
+
+                    <div class="field-group">
+                        <label class="field-label" for="perfil-pass-confirmar">
+                            Confirmar nueva contraseña
+                        </label>
+                        <div class="input-pass">
+                            <input
+                                id="perfil-pass-confirmar"
+                                v-model="form.passConfirmar"
+                                class="field-input"
+                                :class="{ 'input-error': errores.passConfirmar }"
+                                :type="visible.passConfirmar ? 'text' : 'password'"
+                                autocomplete="new-password"
+                                @blur="validarCampoPass('passConfirmar')"
+                            />
+                            <button
+                                type="button"
+                                class="pass-toggle"
+                                :aria-label="visible.passConfirmar ? 'Ocultar confirmación' : 'Mostrar confirmación'"
+                                @click="visible.passConfirmar = !visible.passConfirmar"
+                            >
+                                <i
+                                    class="ti"
+                                    :class="visible.passConfirmar ? 'ti-eye-off' : 'ti-eye'"
+                                    aria-hidden="true"
+                                ></i>
+                            </button>
+                        </div>
+                        <span v-if="errores.passConfirmar" class="field-error">{{ errores.passConfirmar }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer">
+                <p class="seguridad-nota">
+                    Para cambiarla te pedimos la contraseña actual por seguridad.
+                </p>
+                <button
+                    type="submit"
+                    class="tb-btn primary"
+                    :disabled="guardandoPass"
+                >
+                    <i v-if="guardandoPass" class="ti ti-loader animate-spin" aria-hidden="true"></i>
+                    {{ guardandoPass ? "Actualizando..." : "Cambiar contraseña" }}
+                </button>
+            </div>
+        </form>
     </div>
 </template>
 
 <script setup>
 import { ref, reactive, computed } from "vue";
-import { useAuthStore } from "../../../stores/auth";
+import { useAuthStore } from "../../../stores/auth.js";
+import { modificarUsuario, verificarContrasena } from "../../../services/usuarios-services.js";
+import { toast } from "../../../services/toast-service.js";
+import { etiquetaRol } from "../../../utils/roles.js";
+import { validarEmail, validarRequerido, validarContrasena } from "../../../utils/validators.js";
 
 const authStore = useAuthStore();
-const loading = ref(false);
+const usuario = computed(() => authStore.usuario || {});
+
+const rolLegible = computed(() => etiquetaRol(usuario.value.nombre_rol));
+
+const nombreCompleto = computed(() => {
+    const completo = `${usuario.value.nombre || ""} ${usuario.value.apellido || ""}`.trim();
+    return completo || "Usuario";
+});
+
+const iniciales = computed(() =>
+    nombreCompleto.value
+        .split(/\s+/)
+        .map((p) => p[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase(),
+);
+
+// ── Datos personales ────────────────────────────────────────────────────────
+const datosBase = () => ({
+    nombre: usuario.value.nombre || "",
+    apellido: usuario.value.apellido || "",
+    email: usuario.value.email || "",
+});
 
 const form = reactive({
-    nombre: authStore.usuario?.nombre || "",
-    dni: authStore.usuario?.dni || "",
-    email: authStore.usuario?.email || "",
-    telefono: authStore.usuario?.telefono || "",
-    password: "",
+    ...datosBase(),
+    passActual: "",
+    passNueva: "",
+    passConfirmar: "",
 });
 
-const avatarUrl = computed(() => {
-    const name = form.nombre.split(" ").join("+");
-    return `https://ui-avatars.com/api/?name=${name}&background=cd322c&color=fff&rounded=true&bold=true&size=128`;
+const errores = reactive({});
+const visible = reactive({
+    passActual: false,
+    passNueva: false,
+    passConfirmar: false,
 });
 
-const guardarCambios = async () => {
-    loading.value = true;
-    // Aquí iría tu llamada a la API
-    setTimeout(() => {
-        alert("Cambios guardados correctamente");
-        loading.value = false;
-    }, 1000);
+const guardandoDatos = ref(false);
+const guardandoPass = ref(false);
+
+const REGLAS_DATOS = {
+    nombre: (v) => validarRequerido(v, "El nombre"),
+    apellido: (v) => validarRequerido(v, "El apellido"),
+    email: validarEmail,
 };
+
+function validarCampoPerfil(campo) {
+    if (REGLAS_DATOS[campo]) errores[campo] = REGLAS_DATOS[campo](form[campo]);
+}
+
+const hayCambiosDatos = computed(() => {
+    const base = datosBase();
+    return (
+        form.nombre !== base.nombre ||
+        form.apellido !== base.apellido ||
+        form.email !== base.email
+    );
+});
+
+function descartarDatos() {
+    Object.assign(form, datosBase());
+    Object.keys(REGLAS_DATOS).forEach((k) => delete errores[k]);
+}
+
+async function guardarDatos() {
+    if (guardandoDatos.value) return;
+
+    // Validación previa
+    Object.keys(REGLAS_DATOS).forEach(validarCampoPerfil);
+    if (Object.keys(REGLAS_DATOS).some((campo) => errores[campo])) {
+        toast.error("Revisá los campos marcados en rojo.");
+        return;
+    }
+    if (!hayCambiosDatos.value) return;
+
+    guardandoDatos.value = true;
+    try {
+        await modificarUsuario({
+            id_usuario: usuario.value.id_usuario,
+            nombre: form.nombre.trim(),
+            apellido: form.apellido.trim(),
+            email: form.email.trim(),
+        });
+
+        // Reflejar los cambios en la sesión y en el localStorage
+        authStore.updateProfile({
+            nombre: form.nombre.trim(),
+            apellido: form.apellido.trim(),
+            email: form.email.trim(),
+        });
+
+        toast.success("Tus datos se actualizaron correctamente.");
+    } catch (error) {
+        const mensaje =
+            error?.response?.data?.mensaje ||
+            error?.response?.data?.error ||
+            error?.response?.data?.message ||
+            "No se pudieron guardar tus datos. Intentá de nuevo.";
+        toast.error(mensaje);
+    } finally {
+        guardandoDatos.value = false;
+    }
+}
+
+// ── Seguridad ───────────────────────────────────────────────────────────────
+const REGLAS_PASS = {
+    passActual: (v) => validarRequerido(v, "La contraseña actual"),
+    passNueva: (v, formData) => {
+        const requerido = validarContrasena(v);
+        if (requerido) return requerido;
+        if (v === formData.passActual) {
+            return "La nueva contraseña debe ser distinta a la actual";
+        }
+        return "";
+    },
+    passConfirmar: (v, formData) => {
+        if (!v) return "Confirmá la nueva contraseña";
+        if (v !== formData.passNueva) return "Las contraseñas no coinciden";
+        return "";
+    },
+};
+
+function validarCampoPass(campo) {
+    if (REGLAS_PASS[campo]) errores[campo] = REGLAS_PASS[campo](form[campo], form);
+}
+
+function limpiarPasswords() {
+    form.passActual = "";
+    form.passNueva = "";
+    form.passConfirmar = "";
+    ["passActual", "passNueva", "passConfirmar"].forEach((k) => delete errores[k]);
+}
+
+async function guardarContrasena() {
+    if (guardandoPass.value) return;
+
+    Object.keys(REGLAS_PASS).forEach(validarCampoPass);
+    if (errores.passActual || errores.passNueva || errores.passConfirmar) {
+        return;
+    }
+
+    guardandoPass.value = true;
+    try {
+        // 1) Verificar la contraseña actual contra el servidor
+        const verificacion = await verificarContrasena(
+            usuario.value.email,
+            form.passActual,
+        );
+
+        if (!verificacion.success) {
+            errores.passActual =
+                verificacion.message || "La contraseña actual es incorrecta.";
+            toast.error(errores.passActual);
+            return;
+        }
+
+        // 2) Aplicar el cambio (el backend la guarda hasheada)
+        await modificarUsuario({
+            id_usuario: usuario.value.id_usuario,
+            contrasena: form.passNueva,
+        });
+
+        limpiarPasswords();
+        toast.success("Contraseña actualizada correctamente.");
+    } catch (error) {
+        const mensaje =
+            error?.response?.data?.mensaje ||
+            error?.response?.data?.error ||
+            error?.response?.data?.message ||
+            "No se pudo cambiar la contraseña. Intentá de nuevo.";
+        toast.error(mensaje);
+    } finally {
+        guardandoPass.value = false;
+    }
+}
+
+// Expuestos para tests
+defineExpose({ form, errores, hayCambiosDatos });
 </script>
 
 <style scoped>
-.profile-wrapper {
-    padding: 40px 20px;
+.perfil-wrapper {
     display: flex;
-    justify-content: center;
-}
-
-.profile-card {
+    flex-direction: column;
+    gap: 14px;
+    max-width: 860px;
     width: 100%;
-    max-width: 600px;
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 32px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
-.profile-header {
+/* ── Encabezado de identidad ─────────────────────────────────────────── */
+.perfil-header {
     display: flex;
     align-items: center;
-    gap: 20px;
-    margin-bottom: 32px;
+    gap: 18px;
+    padding: 20px;
 }
 
-.avatar-large img {
-    width: 80px;
-    height: 80px;
-    border-radius: 16px;
+.avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: #cd322c;
+    color: #fff;
+    font-size: 24px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
-.user-info h1 {
-    font-size: 20px;
-    color: #111827;
+.perfil-identidad h1 {
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--color-text-primary, #111827);
     margin: 0;
 }
 
-.role-tag {
-    display: inline-block;
-    background: #fef2f2;
-    color: #cd322c;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 12px;
+.perfil-email {
+    font-size: 12.5px;
+    color: var(--color-text-tertiary, #6b7280);
+    margin: 4px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    overflow-wrap: anywhere;
+}
+
+.perfil-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.perfil-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #fbf0f0;
+    color: #a52420;
+    font-size: 11px;
     font-weight: 600;
-    margin-top: 4px;
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
+.badge-neutro {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+.badge-aviso {
+    background: #fef9c3;
+    color: #a16207;
+}
+
+/* ── Tarjetas de formulario ──────────────────────────────────────────── */
+.perfil-card {
+    display: flex;
+    flex-direction: column;
 }
 
 .form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
+    gap: 14px;
 }
 
-.section-title {
-    font-size: 14px;
-    color: #111827;
-    margin: 24px 0 16px 0;
+.form-grid-full {
+    grid-column: 1 / -1;
 }
 
-.divider {
-    height: 1px;
-    background: #e5e7eb;
-    margin: 24px 0;
-}
-
-/* Reutilización de estilos de Auth */
 .field-group {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 5px;
 }
+
 .field-label {
-    font-size: 12px;
+    font-size: 11.5px;
+    font-weight: 600;
     color: #4b5563;
-    font-weight: 500;
 }
+
 .field-input {
-    padding: 10px 12px;
+    padding: 9px 12px;
     border-radius: 6px;
     border: 1px solid #d1d5db;
     font-size: 13px;
     outline: none;
+    background: #fff;
+    font-family: inherit;
+    color: var(--color-text-primary, #111827);
+    transition: border-color 0.15s, box-shadow 0.15s;
 }
+
 .field-input:focus {
-    border-color: #cd322c;
-    box-shadow: 0 0 0 3px rgba(205, 50, 44, 0.1);
+    border-color: var(--color-primary, #cd322c);
+    box-shadow: 0 0 0 2px rgba(205, 50, 44, 0.08);
 }
+
 .field-help {
     font-size: 11px;
     color: #9ca3af;
 }
 
-.btn-submit {
+.input-pass {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-pass .field-input {
     width: 100%;
-    padding: 12px;
+    padding-right: 38px;
+}
+
+.pass-toggle {
+    position: absolute;
+    right: 6px;
+    background: none;
     border: none;
-    border-radius: 6px;
-    background: #cd322c;
-    color: #fff;
     cursor: pointer;
-    font-weight: 600;
-    margin-top: 24px;
-    transition: background 0.2s;
+    color: #9ca3af;
+    padding: 5px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
 }
 
-.btn-submit:hover {
-    background: #b91c1c;
+.pass-toggle:hover {
+    color: #4b5563;
+    background: #f3f4f6;
 }
 
-@media (max-width: 500px) {
+.seguridad-nota {
+    font-size: 11.5px;
+    color: var(--color-text-tertiary, #6b7280);
+    margin: 0 auto 0 0;
+    align-self: center;
+}
+
+@media (max-width: 640px) {
     .form-grid {
         grid-template-columns: 1fr;
+    }
+
+    .perfil-header {
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .card-footer {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .card-footer .tb-btn {
+        justify-content: center;
+    }
+
+    .seguridad-nota {
+        margin: 0 0 4px;
     }
 }
 </style>

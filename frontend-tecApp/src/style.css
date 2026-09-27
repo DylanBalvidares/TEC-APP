@@ -3,11 +3,11 @@
    ============================================ */
 
 :root {
-  /* Paleta institucional */
-  --color-primary: #ca0d0d;
-  --color-primary-dark: #a80b0b;
-  --color-primary-light: #ffe9e9;
-  --color-primary-hover: #b20c0c;
+  /* Paleta institucional (unificada con el rojo usado en toda la UI admin) */
+  --color-primary: #cd322c;
+  --color-primary-dark: #a52420;
+  --color-primary-light: #fbf0f0;
+  --color-primary-hover: #a52420;
 
   /* Neutrals */
   --color-bg: #f5f6fa;

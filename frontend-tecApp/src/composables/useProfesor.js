@@ -1,7 +1,8 @@
 import { useAuthStore } from "@/stores/auth.js";
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:9000/api";
+// Ruta relativa: en dev/producción el proxy de Vite/Nginx resuelve /api.
+const API_URL = import.meta.env.VITE_API_URL || "/api";
 
 /**
  * Devuelve el id_profesor del usuario logueado.

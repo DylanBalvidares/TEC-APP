@@ -245,156 +245,122 @@
         </div>
 
         <!-- ── Modal crear/renombrar rol ── -->
-        <div
-            v-if="modalRol.abierto"
-            class="modal-overlay"
-            @click.self="modalRol.abierto = false"
+        <Modal
+            :model-value="modalRol.abierto"
+            :title="modalRol.modo === 'crear' ? 'Nuevo rol' : 'Renombrar rol'"
+            @update:model-value="modalRol.abierto = $event"
         >
-            <div class="modal-card animate-fade-in">
-                <div class="modal-header">
-                    <i
-                        class="ti ti-shield"
-                        style="color: #cd322c; font-size: 20px"
-                    ></i>
-                    <h3>
-                        {{
-                            modalRol.modo === "crear"
-                                ? "Nuevo rol"
-                                : "Renombrar rol"
-                        }}
-                    </h3>
-                </div>
+            <label class="field-label">Nombre del rol</label>
+            <input
+                v-model="modalRol.nombre"
+                ref="nombreRolRef"
+                class="field-input modal-input"
+                maxlength="50"
+                placeholder="Ej: auxiliar administrativo"
+                @keyup.enter="guardarRol"
+            />
 
-                <label class="field-label">Nombre del rol</label>
-                <input
-                    v-model="modalRol.nombre"
-                    ref="nombreRolRef"
-                    class="field-input modal-input"
-                    maxlength="50"
-                    placeholder="Ej: auxiliar administrativo"
-                    @keyup.enter="guardarRol"
-                />
-
-                <div
-                    v-if="errorModal"
-                    class="error-banner"
-                    style="margin-top: 12px"
-                >
-                    <i class="ti ti-alert-circle"></i> {{ errorModal }}
-                </div>
-
-                <div class="modal-footer" style="margin-top: 20px">
-                    <button
-                        class="tb-btn outline"
-                        @click="modalRol.abierto = false"
-                    >
-                        Cancelar
-                    </button>
-                    <button
-                        class="tb-btn primary"
-                        :disabled="guardandoRol || !modalRol.nombre.trim()"
-                        @click="guardarRol"
-                    >
-                        <i
-                            class="ti ti-loader animate-spin"
-                            v-if="guardandoRol"
-                        ></i>
-                        {{ guardandoRol ? "Guardando..." : "Guardar" }}
-                    </button>
-                </div>
+            <div
+                v-if="errorModal"
+                class="error-banner"
+                style="margin-top: 12px"
+            >
+                <i class="ti ti-alert-circle"></i> {{ errorModal }}
             </div>
-        </div>
+
+            <template #footer>
+                <button
+                    class="tb-btn outline"
+                    @click="modalRol.abierto = false"
+                >
+                    Cancelar
+                </button>
+                <button
+                    class="tb-btn primary"
+                    :disabled="guardandoRol || !modalRol.nombre.trim()"
+                    @click="guardarRol"
+                >
+                    <i
+                        class="ti ti-loader animate-spin"
+                        v-if="guardandoRol"
+                    ></i>
+                    {{ guardandoRol ? "Guardando..." : "Guardar" }}
+                </button>
+            </template>
+        </Modal>
 
         <!-- ── Modal confirmar eliminación ── -->
-        <div
-            v-if="rolAEliminar"
-            class="modal-overlay"
-            @click.self="rolAEliminar = null"
+        <Modal
+            v-model="modalEliminarAbierto"
+            title="Eliminar rol"
+            variante="danger"
         >
-            <div class="modal-card animate-fade-in">
-                <div class="modal-header">
-                    <i
-                        class="ti ti-alert-triangle"
-                        style="color: #cd322c; font-size: 20px"
-                    ></i>
-                    <h3>Eliminar rol</h3>
-                </div>
+            <p class="modal-texto">
+                ¿Seguro que querés eliminar el rol
+                <strong>{{ rolAEliminar?.nombre_rol }}</strong
+                >? Los usuarios que lo tengan asignado quedarán sin rol.
+            </p>
 
-                <p class="modal-body">
-                    ¿Seguro que querés eliminar el rol
-                    <strong>{{ rolAEliminar.nombre_rol }}</strong
-                    >? Los usuarios que lo tengan asignado quedarán sin rol.
-                </p>
-
-                <div
-                    v-if="errorEliminar"
-                    class="error-banner"
-                    style="margin-bottom: 16px"
-                >
-                    <i class="ti ti-alert-circle"></i> {{ errorEliminar }}
-                </div>
-
-                <div class="modal-footer">
-                    <button
-                        class="tb-btn outline"
-                        @click="rolAEliminar = null"
-                    >
-                        Cancelar
-                    </button>
-                    <button
-                        class="tb-btn danger"
-                        :disabled="eliminando"
-                        @click="confirmarEliminar"
-                    >
-                        <i
-                            class="ti ti-loader animate-spin"
-                            v-if="eliminando"
-                        ></i>
-                        {{ eliminando ? "Eliminando..." : "Sí, eliminar" }}
-                    </button>
-                </div>
+            <div
+                v-if="errorEliminar"
+                class="error-banner"
+                style="margin-bottom: 16px"
+            >
+                <i class="ti ti-alert-circle"></i> {{ errorEliminar }}
             </div>
-        </div>
+
+            <template #footer>
+                <button
+                    class="tb-btn outline"
+                    @click="modalEliminarAbierto = false"
+                >
+                    Cancelar
+                </button>
+                <button
+                    class="tb-btn danger"
+                    :disabled="eliminando"
+                    @click="confirmarEliminar"
+                >
+                    <i
+                        class="ti ti-loader animate-spin"
+                        v-if="eliminando"
+                    ></i>
+                    {{ eliminando ? "Eliminando..." : "Sí, eliminar" }}
+                </button>
+            </template>
+        </Modal>
 
         <!-- ── Modal cambios sin guardar ── -->
-        <div
-            v-if="rolPendiente"
-            class="modal-overlay"
-            @click.self="rolPendiente = null"
+        <Modal
+            v-model="modalPendienteAbierto"
+            title="Cambios sin guardar"
+            variante="danger"
         >
-            <div class="modal-card animate-fade-in">
-                <div class="modal-header">
-                    <i
-                        class="ti ti-alert-triangle"
-                        style="color: #cd322c; font-size: 20px"
-                    ></i>
-                    <h3>Cambios sin guardar</h3>
-                </div>
+            <p class="modal-texto">
+                Modificaste los permisos de
+                <strong>{{ rolSeleccionado?.nombre_rol }}</strong> pero no
+                los guardaste. Si cambiás de rol, esos cambios se perderán.
+            </p>
 
-                <p class="modal-body">
-                    Modificaste los permisos de
-                    <strong>{{ rolSeleccionado?.nombre_rol }}</strong> pero no
-                    los guardaste. Si cambiás de rol, esos cambios se perderán.
-                </p>
-
-                <div class="modal-footer">
-                    <button class="tb-btn outline" @click="rolPendiente = null">
-                        Seguir editando
-                    </button>
-                    <button
-                        class="tb-btn danger"
-                        @click="confirmarCambioRol"
-                    >
-                        Descartar y cambiar
-                    </button>
-                </div>
-            </div>
-        </div>
+            <template #footer>
+                <button class="tb-btn outline" @click="cancelarCambioRol">
+                    Seguir editando
+                </button>
+                <button
+                    class="tb-btn danger"
+                    @click="confirmarCambioRol"
+                >
+                    Descartar y cambiar
+                </button>
+            </template>
+        </Modal>
     </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue";
+import Modal from "../../ui/Modal.vue";
+import { toast } from "../../../services/toast-service.js";
 
 import {
     obtenerRoles,
@@ -412,6 +378,8 @@ const rolSeleccionado = ref(null);
 const permisosSeleccionados = ref([]);
 const permisosOriginales = ref([]);
 const rolPendiente = ref(null);
+const modalEliminarAbierto = ref(false);
+const modalPendienteAbierto = ref(false);
 const busquedaPermisos = ref("");
 const conteoPermisos = ref({});
 
@@ -684,13 +652,20 @@ const intentarSeleccionarRol = (rol) => {
         rol?.id_rol !== rolSeleccionado.value?.id_rol
     ) {
         rolPendiente.value = rol;
+        modalPendienteAbierto.value = true;
         return;
     }
     seleccionarRol(rol);
 };
 
+const cancelarCambioRol = () => {
+    modalPendienteAbierto.value = false;
+    rolPendiente.value = null;
+};
+
 const confirmarCambioRol = async () => {
     const destino = rolPendiente.value;
+    modalPendienteAbierto.value = false;
     rolPendiente.value = null;
     if (destino) await seleccionarRol(destino);
 };
@@ -745,6 +720,7 @@ const guardarPermisos = async () => {
             [rolSeleccionado.value.id_rol]: permisosSeleccionados.value.length,
         };
         exitoGuardar.value = true;
+        toast.success("Permisos guardados correctamente.");
         setTimeout(() => (exitoGuardar.value = false), 2500);
     } catch {
         errorGuardar.value = "Error al guardar los permisos.";
@@ -782,6 +758,11 @@ const guardarRol = async () => {
         }
 
         modalRol.value.abierto = false;
+        toast.success(
+            modalRol.value.modo === "crear"
+                ? "Rol creado correctamente."
+                : "Rol renombrado correctamente.",
+        );
         await fetchRoles();
         const [rolNuevo] = roles.value.filter(
             (r) => nombre === r.nombre_rol,
@@ -797,6 +778,7 @@ const guardarRol = async () => {
 const pedirConfirmacion = (rol) => {
     rolAEliminar.value = rol;
     errorEliminar.value = "";
+    modalEliminarAbierto.value = true;
 };
 
 const confirmarEliminar = async () => {
@@ -813,7 +795,9 @@ const confirmarEliminar = async () => {
             permisosSeleccionados.value = [];
             permisosOriginales.value = [];
         }
+        modalEliminarAbierto.value = false;
         rolAEliminar.value = null;
+        toast.success("El rol fue eliminado correctamente.");
         await fetchRoles();
     } catch {
         errorEliminar.value = "Error inesperado al eliminar el rol.";
@@ -843,7 +827,7 @@ onMounted(async () => {
     align-items: start;
 }
 
-@media (max-width: 860px) {
+@media (max-width: 768px) {
     .roles-grid {
         grid-template-columns: 1fr;
     }

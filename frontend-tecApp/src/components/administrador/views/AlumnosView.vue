@@ -40,6 +40,32 @@
                         <i class="ti ti-x"></i>
                     </button>
                 </div>
+
+                <label class="filtro-inline">
+                    <span>Curso</span>
+                    <select :value="filters.id_curso ?? ''" @change="setFilter('id_curso', $event.target.value)">
+                        <option value="">Todos</option>
+                        <option
+                            v-for="curso in cursosDisponibles"
+                            :key="curso.id_curso"
+                            :value="String(curso.id_curso)"
+                        >
+                            {{ curso.nombre_curso }}
+                        </option>
+                    </select>
+                </label>
+
+                <label class="filtro-inline">
+                    <span>Estado</span>
+                    <select :value="filters.estado ?? ''" @change="setFilter('estado', $event.target.value)">
+                        <option value="">Todos</option>
+                        <option v-for="(etiqueta, valor) in etiquetaEstado" :key="valor" :value="valor">{{ etiqueta }}</option>
+                    </select>
+                </label>
+
+                <button class="tb-btn outline sm exportar-btn" @click="exportarAlumnos">
+                    <i class="ti ti-download" aria-hidden="true"></i> Exportar
+                </button>
             </div>
 
             <div
@@ -97,10 +123,18 @@
                     >
                         <thead>
                             <tr>
-                                <th>Alumno</th>
-                                <th>DNI</th>
-                                <th>Curso asignado</th>
-                                <th>Estado</th>
+                                <th :aria-sort="ariaSort('apellido')">
+                                    <button class="th-sort" @click="toggleSort('apellido')">Alumno <i class="ti" :class="iconoSort('apellido')" aria-hidden="true"></i></button>
+                                </th>
+                                <th :aria-sort="ariaSort('dni')">
+                                    <button class="th-sort" @click="toggleSort('dni')">DNI <i class="ti" :class="iconoSort('dni')" aria-hidden="true"></i></button>
+                                </th>
+                                <th :aria-sort="ariaSort('curso')">
+                                    <button class="th-sort" @click="toggleSort('curso', (a) => a.curso?.nombre_curso)">Curso asignado <i class="ti" :class="iconoSort('curso')" aria-hidden="true"></i></button>
+                                </th>
+                                <th :aria-sort="ariaSort('estado')">
+                                    <button class="th-sort" @click="toggleSort('estado')">Estado <i class="ti" :class="iconoSort('estado')" aria-hidden="true"></i></button>
+                                </th>
                                 <th class="action-cell">Acciones</th>
                             </tr>
                         </thead>
@@ -388,8 +422,7 @@
                         <input
                             id="fecha_nacimiento"
                             v-model="form.fecha_nacimiento"
-                            type="text"
-                            placeholder="DD/MM/AAAA"
+                            type="date"
                             :class="{ 'input-error': erroresForm.fecha_nacimiento }"
                             @blur="validarCampo('fecha_nacimiento')"
                         />
@@ -478,10 +511,6 @@
                     <div v-if="errorGuardar" class="error-banner">
                         <i class="ti ti-alert-circle"></i> {{ errorGuardar }}
                     </div>
-                    <div v-if="exitoGuardar" class="exito-banner">
-                        <i class="ti ti-check"></i> Los cambios en el legajo se
-                        guardaron correctamente.
-                    </div>
                     <button
                         type="button"
                         @click="cambiarVista('lista')"
@@ -510,74 +539,63 @@
             </form>
         </div>
 
-        <div
-            v-if="alumnoAEliminar"
-            class="modal-overlay"
-            @click.self="alumnoAEliminar = null"
+        <Modal
+            v-model="modalEliminarAbierto"
+            title="Dar de baja legajo institucional"
+            variante="danger"
         >
-            <div class="modal-card animate-fade-in">
-                <div class="modal-header">
-                    <i
-                        class="ti ti-alert-triangle"
-                        style="color: #cd322c; font-size: 20px"
-                    ></i>
-                    <h3>Dar de baja legajo institucional</h3>
-                </div>
+            <p class="modal-texto">
+                ¿Estás seguro de que querés dar de baja a
+                <strong>{{ alumnoAEliminar?.nombre }} {{ alumnoAEliminar?.apellido }}</strong>
+                (DNI: {{ alumnoAEliminar?.dni }})? El alumno quedará marcado como
+                <strong>"Baja"</strong> y no aparecerá en listas activas, pero su
+                historial de asistencias y notas se preservará. Podés reactivarlo
+                después editando su ficha.
+            </p>
 
-                <p class="modal-body">
-                    ¿Estás seguro de que querés dar de baja a
-                    <strong
-                        >{{ alumnoAEliminar.nombre }}
-                        {{ alumnoAEliminar.apellido }}</strong
-                    >
-                    (DNI: {{ alumnoAEliminar.dni }})? El alumno quedará marcado como
-                    <strong>"Baja"</strong> y no aparecerá en listas activas, pero su
-                    historial de asistencias y notas se preservará. Podés reactivarlo
-                    después editando su ficha.
-                </p>
-
-                <div
-                    v-if="errorEliminar"
-                    class="error-banner"
-                    style="
-                        margin-bottom: 16px;
-                        width: 100%;
-                        box-sizing: border-box;
-                    "
-                >
-                    <i class="ti ti-alert-circle"></i> {{ errorEliminar }}
-                </div>
-
-                <div class="modal-footer">
-                    <button
-                        class="tb-btn outline"
-                        @click="alumnoAEliminar = null"
-                    >
-                        Cancelar
-                    </button>
-                    <button
-                        class="tb-btn danger"
-                        @click="confirmarEliminar"
-                        :disabled="eliminando"
-                    >
-                        <i
-                            class="ti ti-loader animate-spin"
-                            v-if="eliminando"
-                        ></i>
-                        {{
-                            eliminando
-                                ? "Dando de baja..."
-                                : "Sí, dar de baja"
-                        }}
-                    </button>
-                </div>
+            <div
+                v-if="errorEliminar"
+                class="error-banner"
+                style="
+                    margin-bottom: 16px;
+                    width: 100%;
+                    box-sizing: border-box;
+                "
+            >
+                <i class="ti ti-alert-circle"></i> {{ errorEliminar }}
             </div>
-        </div>
+
+            <template #footer>
+                <button
+                    class="tb-btn outline"
+                    @click="modalEliminarAbierto = false"
+                >
+                    Cancelar
+                </button>
+                <button
+                    class="tb-btn danger"
+                    @click="confirmarEliminar"
+                    :disabled="eliminando"
+                >
+                    <i
+                        class="ti ti-loader animate-spin"
+                        v-if="eliminando"
+                    ></i>
+                    {{
+                        eliminando
+                            ? "Dando de baja..."
+                            : "Sí, dar de baja"
+                    }}
+                </button>
+            </template>
+        </Modal>
     </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue";
+import Modal from "../../ui/Modal.vue";
+import { toast } from "../../../services/toast-service.js";
 import {
     obtenerAlumnos,
     crearAlumno,
@@ -587,17 +605,18 @@ import {
     sincronizarUsuarioAlumno,
 } from "../../../services/academico-service.js";
 import { obtenerRoles, crearUsuario } from "../../../services/usuarios-services.js";
-import { formatDate, toDisplayDate, parseDisplayDate } from "../../../utils/formatters.js";
+import { formatDate, toInputDate } from "../../../utils/formatters.js";
 import {
     validarRequerido,
     validarLongitudMinima,
     validarDNI,
     validarEmail,
     validarTelefono,
-    validarFechaFormato,
+    validarFechaInput,
     validarFormulario,
 } from "../../../utils/validators.js";
 import { useTableControls } from "../../../composables/useTableControls.js";
+import { exportarCsv } from "../../../utils/exportCsv.js";
 import Pagination from "../../ui/Pagination.vue";
 import UserAccessPanel from "../../ui/UserAccessPanel.vue";
 
@@ -611,6 +630,7 @@ const eliminando = ref(false);
 const vistaActiva = ref("lista");
 const alumnoSeleccionado = ref(null);
 const alumnoAEliminar = ref(null);
+const modalEliminarAbierto = ref(false);
 
 const errorCarga = ref("");
 const errorGuardar = ref("");
@@ -648,8 +668,9 @@ const alumnosConCuenta = computed(
     () => alumnos.value.filter((a) => a.id_usuario).length,
 );
 const filterFn = (item, q) => {
-    // Si no se están mostrando bajas, ocultar alumnos con estado 'baja'
+    // Si no se están mostrando bajas, ocultar alumnos con estado 'baja' (independiente de la búsqueda)
     if (!mostrarBajas.value && item.estado === "baja") return false;
+    if (!q) return true;
     const texto = `${item.nombre} ${item.apellido} ${item.dni} ${item.curso?.nombre_curso || ""}`.toLowerCase();
     return texto.includes(q);
 };
@@ -658,6 +679,8 @@ const {
     currentPage,
     pageSize,
     filters,
+    sortKey,
+    sortDir,
     filteredData,
     paginatedData,
     totalItems,
@@ -667,7 +690,42 @@ const {
     goToPage,
     setPageSize,
     getUniqueOptions,
+    toggleSort,
 } = useTableControls(alumnos, { pageSize: 10, filterFn });
+
+// ── Ordenamiento asistido para encabezados ────────────────────────────────
+const ariaSort = (key) =>
+    sortKey.value === key
+        ? sortDir.value === "asc"
+            ? "ascending"
+            : "descending"
+        : "none";
+const iconoSort = (key) =>
+    sortKey.value !== key
+        ? "ti-selector"
+        : sortDir.value === "asc"
+          ? "ti-caret-up-filled"
+          : "ti-caret-down-filled";
+
+// ── Exportación CSV ──────────────────────────────────────────────────────
+const exportarAlumnos = () => {
+    try {
+        exportarCsv(filteredData.value, {
+            nombreArchivo: "alumnos",
+            columnas: {
+                Nombre: "nombre",
+                Apellido: "apellido",
+                DNI: "dni",
+                Curso: (a) => a.curso?.nombre_curso || "Sin asignar",
+                Estado: (a) => etiquetaEstado[a.estado] || a.estado || "",
+                "Teléfono Tutor": "telefono_tutor",
+            },
+        });
+        toast.success("Listado de alumnos exportado.");
+    } catch (e) {
+        toast.error(e?.message || "No se pudo exportar el listado.");
+    }
+};
 
 const formVacio = () => ({
     id_alumno: null,
@@ -692,7 +750,7 @@ const REGLAS_VALIDACION = {
     apellido: (v) => validarRequerido(v, "El apellido") || validarLongitudMinima(v, 2, "El apellido"),
     dni: validarDNI,
     telefono_tutor: (v) => v ? validarTelefono(v, false) : "",
-    fecha_nacimiento: (v) => v ? validarFechaFormato(v) : "",
+    fecha_nacimiento: (v) => (v ? validarFechaInput(v) : ""),
     email: (v) => v ? validarEmail(v) : "",
     estado: (v) => validarRequerido(v, "El estado"),
 };
@@ -722,7 +780,7 @@ const cambiarVista = (nuevaVista, alumno = null) => {
         form.value = {
             ...alumno,
             id_curso: alumno.id_curso || "",
-            fecha_nacimiento: toDisplayDate(alumno.fecha_nacimiento),
+            fecha_nacimiento: toInputDate(alumno.fecha_nacimiento),
         };
         limpiarErrores();
     } else if (nuevaVista === "crear") {
@@ -796,7 +854,8 @@ const guardarAlumno = async () => {
     try {
         const payload = { 
             ...form.value,
-            fecha_nacimiento: parseDisplayDate(form.value.fecha_nacimiento),
+            // El input type="date" ya emite YYYY-MM-DD, listo para la API
+            fecha_nacimiento: form.value.fecha_nacimiento || null,
         };
         // El email solo alimenta la cuenta de acceso (panel); no es columna del legajo
         delete payload.email;
@@ -864,8 +923,13 @@ const guardarAlumno = async () => {
             exitoGuardar.value = true;
         }
 
+        toast.success(
+            vistaActiva.value === "crear"
+                ? "Alumno inscripto correctamente."
+                : "Ficha del alumno actualizada correctamente.",
+        );
         await fetchAlumnos();
-        setTimeout(() => cambiarVista("lista"), 800);
+        cambiarVista("lista");
     } catch (error) {
         errorGuardar.value =
             error?.response?.data?.message ||
@@ -880,6 +944,7 @@ const guardarAlumno = async () => {
 const pedirConfirmacion = (alumno) => {
     alumnoAEliminar.value = alumno;
     errorEliminar.value = "";
+    modalEliminarAbierto.value = true;
 };
 
 const handleUsuarioData = (data) => {
@@ -901,7 +966,9 @@ const confirmarEliminar = async () => {
         } else {
             // Refrescamos la lista completa desde la API para reflejar el cambio de estado
             await fetchAlumnos();
+            modalEliminarAbierto.value = false;
             alumnoAEliminar.value = null;
+            toast.success("El alumno fue dado de baja correctamente.");
         }
     } catch (error) {
         errorEliminar.value =

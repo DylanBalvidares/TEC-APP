@@ -16,7 +16,6 @@ import Inicio from "../components/auth/Inicio.vue";
 import Login from "../components/auth/Login.vue";
 import Registro from "../components/auth/Registro.vue";
 import Unauthorized from "../components/auth/Unauthorized.vue";
-import UsuarioPerfil from "../components/administrador/views/UsuarioPerfil.vue";
 
 // Biblioteca y otros
 import Biblioteca from "../components/bibliotecario/Biblioteca.vue";
@@ -93,7 +92,12 @@ const routes = [
     component: BibliotecaDashboard,
     meta: { requiresAuth: true, role: "bibliotecario" },
   },
-  { path: "/perfil/administrador", component: UsuarioPerfil },
+  // El perfil ahora vive dentro del dashboard (?vista=perfil) para no perder
+  // el layout. Se mantiene la ruta vieja como redirección compatible.
+  {
+    path: "/perfil/administrador",
+    redirect: { path: "/dashboard-administrador", query: { vista: "perfil" } },
+  },
 
   {
     path: "/profesor",

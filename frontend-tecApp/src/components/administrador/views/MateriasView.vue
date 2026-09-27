@@ -346,65 +346,57 @@
             </form>
         </div>
 
-        <div
-            v-if="materiaAEliminar"
-            class="modal-overlay"
-            @click.self="materiaAEliminar = null"
+        <Modal
+            v-model="modalEliminarAbierto"
+            title="Eliminar Materia"
+            variante="danger"
         >
-            <div class="modal-card animate-fade-in">
-                <div class="modal-header">
-                    <i
-                        class="ti ti-alert-triangle"
-                        style="color: #cd322c; font-size: 20px"
-                    ></i>
-                    <h3>Eliminar Materia</h3>
-                </div>
+            <p class="modal-texto">
+                ¿Estás seguro de que querés eliminar la materia
+                <strong>{{ materiaAEliminar?.nombre_materia }}</strong
+                >? Esta acción podría afectar a las asignaciones activas si
+                ya está vinculada a cursos y profesores.
+            </p>
 
-                <p class="modal-body">
-                    ¿Estás seguro de que querés eliminar la materia
-                    <strong>{{ materiaAEliminar.nombre_materia }}</strong
-                    >? Esta acción podría afectar a las asignaciones activas si
-                    ya está vinculada a cursos y profesores.
-                </p>
-
-                <div
-                    v-if="errorEliminar"
-                    class="error-banner"
-                    style="
-                        margin-bottom: 16px;
-                        width: 100%;
-                        box-sizing: border-box;
-                    "
-                >
-                    <i class="ti ti-alert-circle"></i> {{ errorEliminar }}
-                </div>
-
-                <div class="modal-footer">
-                    <button
-                        class="tb-btn outline"
-                        @click="materiaAEliminar = null"
-                    >
-                        Cancelar
-                    </button>
-                    <button
-                        class="tb-btn danger"
-                        @click="confirmarEliminar"
-                        :disabled="eliminando"
-                    >
-                        <i
-                            class="ti ti-loader animate-spin"
-                            v-if="eliminando"
-                        ></i>
-                        {{ eliminando ? "Eliminando..." : "Eliminar materia" }}
-                    </button>
-                </div>
+            <div
+                v-if="errorEliminar"
+                class="error-banner"
+                style="
+                    margin-bottom: 16px;
+                    width: 100%;
+                    box-sizing: border-box;
+                "
+            >
+                <i class="ti ti-alert-circle"></i> {{ errorEliminar }}
             </div>
-        </div>
+
+            <template #footer>
+                <button
+                    class="tb-btn outline"
+                    @click="modalEliminarAbierto = false"
+                >
+                    Cancelar
+                </button>
+                <button
+                    class="tb-btn danger"
+                    @click="confirmarEliminar"
+                    :disabled="eliminando"
+                >
+                    <i
+                        class="ti ti-loader animate-spin"
+                        v-if="eliminando"
+                    ></i>
+                    {{ eliminando ? "Eliminando..." : "Eliminar materia" }}
+                </button>
+            </template>
+        </Modal>
     </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue";
+import Modal from "../../ui/Modal.vue";
+import { toast } from "../../../services/toast-service.js";
 // IMPORTANTE: Ajustar esta ruta según la estructura de tus servicios
 import {
     obtenerMaterias,
@@ -438,6 +430,7 @@ const eliminando = ref(false);
 const vistaActiva = ref("lista");
 const materiaSeleccionada = ref(null);
 const materiaAEliminar = ref(null);
+const modalEliminarAbierto = ref(false);
 
 const errorCarga = ref("");
 const errorGuardar = ref("");
@@ -549,12 +542,17 @@ const guardarMateria = async () => {
             await modificarMateria(form.value);
         }
         exitoGuardar.value = true;
+        toast.success(
+            vistaActiva.value === "crear"
+                ? "Materia creada correctamente."
+                : "Materia actualizada correctamente.",
+        );
 
         // Refrescamos la lista de materias para ver los cambios
         const resMat = await obtenerMaterias();
         materias.value = Array.isArray(resMat.data) ? resMat.data : [];
 
-        setTimeout(() => cambiarVista("lista"), 800);
+        cambiarVista("lista");
     } catch (e) {
         errorGuardar.value =
             e?.response?.data?.mensaje ||
@@ -567,6 +565,7 @@ const guardarMateria = async () => {
 const pedirConfirmacion = (materia) => {
     materiaAEliminar.value = materia;
     errorEliminar.value = "";
+    modalEliminarAbierto.value = true;
 };
 
 const confirmarEliminar = async () => {
@@ -582,7 +581,9 @@ const confirmarEliminar = async () => {
             materias.value = materias.value.filter(
                 (m) => m.id_materia !== materiaAEliminar.value.id_materia,
             );
+            modalEliminarAbierto.value = false;
             materiaAEliminar.value = null;
+            toast.success("Materia eliminada correctamente.");
         } else {
             errorEliminar.value = respuesta.message || respuesta.data?.mensaje;
         }

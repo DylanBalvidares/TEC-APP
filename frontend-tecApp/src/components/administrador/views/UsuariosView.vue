@@ -328,66 +328,56 @@
             </form>
         </div>
 
-        <div
-            v-if="usuarioAEliminar"
-            class="modal-overlay"
-            @click.self="usuarioAEliminar = null"
+        <Modal
+            v-model="modalEliminarAbierto"
+            title="Eliminar usuario"
+            variante="danger"
         >
-            <div class="modal-card animate-fade-in">
-                <div class="modal-header">
-                    <i
-                        class="ti ti-alert-triangle"
-                        style="color: #cd322c; font-size: 20px"
-                    ></i>
-                    <h3>Eliminar usuario</h3>
-                </div>
+            <p class="modal-texto">
+                ¿Seguro que querés eliminar a
+                <strong>{{ usuarioAEliminar?.nombre }} {{ usuarioAEliminar?.apellido }}</strong>
+                ? Esta acción no se puede deshacer.
+            </p>
 
-                <p class="modal-body">
-                    ¿Seguro que querés eliminar a
-                    <strong>
-                        {{ usuarioAEliminar.nombre }}
-                        {{ usuarioAEliminar.apellido }} </strong
-                    >? Esta acción no se puede deshacer.
-                </p>
-
-                <div
-                    v-if="errorEliminar"
-                    class="error-banner"
-                    style="
-                        margin-bottom: 16px;
-                        width: 100%;
-                        box-sizing: border-box;
-                    "
-                >
-                    <i class="ti ti-alert-circle"></i> {{ errorEliminar }}
-                </div>
-
-                <div class="modal-footer">
-                    <button
-                        class="tb-btn outline"
-                        @click="usuarioAEliminar = null"
-                    >
-                        Cancelar
-                    </button>
-                    <button
-                        class="tb-btn danger"
-                        @click="confirmarEliminar"
-                        :disabled="eliminando"
-                    >
-                        <i
-                            class="ti ti-loader animate-spin"
-                            v-if="eliminando"
-                        ></i>
-                        {{ eliminando ? "Eliminando..." : "Sí, eliminar" }}
-                    </button>
-                </div>
+            <div
+                v-if="errorEliminar"
+                class="error-banner"
+                style="
+                    margin-bottom: 16px;
+                    width: 100%;
+                    box-sizing: border-box;
+                "
+            >
+                <i class="ti ti-alert-circle"></i> {{ errorEliminar }}
             </div>
-        </div>
+
+            <template #footer>
+                <button
+                    class="tb-btn outline"
+                    @click="modalEliminarAbierto = false"
+                >
+                    Cancelar
+                </button>
+                <button
+                    class="tb-btn danger"
+                    @click="confirmarEliminar"
+                    :disabled="eliminando"
+                >
+                    <i
+                        class="ti ti-loader animate-spin"
+                        v-if="eliminando"
+                    ></i>
+                    {{ eliminando ? "Eliminando..." : "Sí, eliminar" }}
+                </button>
+            </template>
+        </Modal>
     </div>
 </template>
 
 <script setup>
 import { ref, onMounted, nextTick } from "vue";
+import Modal from "../../ui/Modal.vue";
+import { toast } from "../../../services/toast-service.js";
 
 import {
     obtenerUsuarios,
@@ -432,6 +422,7 @@ const eliminando = ref(false);
 const vistaActiva = ref("lista"); // 'lista' | 'crear' | 'editar' | 'detalles'
 const usuarioSeleccionado = ref(null);
 const usuarioAEliminar = ref(null);
+const modalEliminarAbierto = ref(false);
 const errorEliminar = ref("");
 
 const errorCarga = ref("");
@@ -566,8 +557,13 @@ const guardarUsuario = async () => {
             return;
         }
         exitoGuardar.value = true;
+        toast.success(
+            vistaActiva.value === "crear"
+                ? "Usuario creado correctamente."
+                : "Usuario actualizado correctamente.",
+        );
         await fetchUsuarios();
-        setTimeout(() => cambiarVista("lista"), 800);
+        cambiarVista("lista");
     } catch (e) {
         errorGuardar.value =
             e?.response?.data?.message ||
@@ -580,6 +576,7 @@ const guardarUsuario = async () => {
 const pedirConfirmacion = (usuario) => {
     usuarioAEliminar.value = usuario;
     errorEliminar.value = "";
+    modalEliminarAbierto.value = true;
 };
 
 const confirmarEliminar = async () => {
@@ -596,7 +593,9 @@ const confirmarEliminar = async () => {
             usuarios.value = usuarios.value.filter(
                 (u) => u.id_usuario !== usuarioAEliminar.value.id_usuario,
             );
+            modalEliminarAbierto.value = false;
             usuarioAEliminar.value = null;
+            toast.success("El usuario fue eliminado correctamente.");
         } else {
             errorEliminar.value = respuesta?.message || "Error al eliminar";
         }

@@ -106,6 +106,26 @@ export function validarFechaFormato(valor) {
 }
 
 /**
+ * Valida la fecha que emite el input nativo type="date" (YYYY-MM-DD).
+ * Vacío se considera válido; combinar con validarRequerido si es obligatorio.
+ */
+export function validarFechaInput(valor) {
+  if (!valor) return "";
+  const match = String(valor).trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return "Formato inválido";
+  const [, y, m, d] = match.map(Number);
+  const fecha = new Date(y, m - 1, d);
+  if (
+    fecha.getFullYear() !== y ||
+    fecha.getMonth() !== m - 1 ||
+    fecha.getDate() !== d
+  ) {
+    return "La fecha no es válida";
+  }
+  return "";
+}
+
+/**
  * Valida un objeto completo contra un conjunto de reglas.
  * @param {Object} valores - Los valores del formulario
  * @param {Object} reglas - Objeto con funciones validadoras: { campo: (valor) => string }

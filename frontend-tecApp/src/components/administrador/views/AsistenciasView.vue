@@ -814,7 +814,7 @@ onMounted(() => {
 /* hist-card top margin */
 .hist-card { margin-top: 14px; }
 
-@media (max-width: 720px) {
+@media (max-width: 768px) {
     .hist-filters { grid-template-columns: 1fr 1fr; }
     .form-group-action { grid-column: span 2; }
 }

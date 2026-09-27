@@ -18,6 +18,10 @@
                         <i class="ti ti-x"></i>
                     </button>
                 </div>
+
+                <button class="tb-btn outline sm exportar-btn" @click="exportarProfesores">
+                    <i class="ti ti-download" aria-hidden="true"></i> Exportar
+                </button>
             </div>
 
             <div v-if="vistaActiva === 'lista'" class="card animate-fade-in">
@@ -65,9 +69,15 @@
                     >
                         <thead>
                             <tr>
-                                <th>Docente</th>
-                                <th>Email</th>
-                                <th>Estado</th>
+                                <th :aria-sort="ariaSort('apellido')">
+                                    <button class="th-sort" @click="toggleSort('apellido')">Docente <i class="ti" :class="iconoSort('apellido')" aria-hidden="true"></i></button>
+                                </th>
+                                <th :aria-sort="ariaSort('email')">
+                                    <button class="th-sort" @click="toggleSort('email')">Email <i class="ti" :class="iconoSort('email')" aria-hidden="true"></i></button>
+                                </th>
+                                <th :aria-sort="ariaSort('estado')">
+                                    <button class="th-sort" @click="toggleSort('estado')">Estado <i class="ti" :class="iconoSort('estado')" aria-hidden="true"></i></button>
+                                </th>
                                 <th class="action-cell">Acciones</th>
                             </tr>
                         </thead>
@@ -397,8 +407,8 @@
                     <label>Fecha de nacimiento <span class="required">*</span></label>
                     <input
                         v-model="form.fecha_nacimiento"
-                        type="text"
-                        placeholder="DD/MM/AAAA"
+                        type="date"
+                        
                         :class="{ 'input-error': erroresForm.fecha_nacimiento }"
                         @blur="validarCampo('fecha_nacimiento')"
                         required
@@ -409,8 +419,7 @@
                     <label>Fecha de contratación <span class="required">*</span></label>
                     <input
                         v-model="form.fecha_contratacion"
-                        type="text"
-                        placeholder="DD/MM/AAAA"
+                        type="date"
                         :class="{ 'input-error': erroresForm.fecha_contratacion }"
                         @blur="validarCampo('fecha_contratacion')"
                         required
@@ -484,61 +493,51 @@
         </form>
     </div>
 
-    <div
-        v-if="profesorAEliminar"
-        class="modal-overlay"
-        @click.self="profesorAEliminar = null"
+    <Modal
+        v-model="modalEliminarAbierto"
+        title="Dar de baja docente"
+        variante="danger"
     >
-        <div class="modal-card animate-fade-in">
-            <div class="modal-header">
-                <i
-                    class="ti ti-alert-triangle"
-                    style="color: #cd322c; font-size: 20px"
-                ></i>
-                <h3>Dar de baja docente</h3>
-            </div>
+        <p class="modal-texto">
+            ¿Seguro que querés dar de baja a
+            <strong>{{ profesorAEliminar?.nombre }} {{ profesorAEliminar?.apellido }}</strong>
+            ? El docente quedará marcado como <strong>"Baja"</strong> y no
+            aparecerá en listas activas, pero sus registros de cursos y
+            asignaciones se preservarán. Podés reactivarlo después editando
+            su ficha.
+        </p>
 
-            <p class="modal-body">
-                ¿Seguro que querés dar de baja a
-                <strong
-                    >{{ profesorAEliminar.nombre }}
-                    {{ profesorAEliminar.apellido }}</strong
-                >? El docente quedará marcado como <strong>"Baja"</strong> y no
-                aparecerá en listas activas, pero sus registros de cursos y
-                asignaciones se preservarán. Podés reactivarlo después editando
-                su ficha.
-            </p>
-
-            <div
-                v-if="errorEliminar"
-                class="error-banner"
-                style="margin-bottom: 16px; width: 100%; box-sizing: border-box"
-            >
-                <i class="ti ti-alert-circle"></i> {{ errorEliminar }}
-            </div>
-
-            <div class="modal-footer">
-                <button
-                    class="tb-btn outline"
-                    @click="profesorAEliminar = null"
-                >
-                    Cancelar
-                </button>
-                <button
-                    class="tb-btn danger"
-                    @click="confirmarEliminar"
-                    :disabled="eliminando"
-                >
-                    <i class="ti ti-loader animate-spin" v-if="eliminando"></i>
-                    {{ eliminando ? "Dando de baja..." : "Sí, dar de baja" }}
-                </button>
-            </div>
+        <div
+            v-if="errorEliminar"
+            class="error-banner"
+            style="margin-bottom: 16px; width: 100%; box-sizing: border-box"
+        >
+            <i class="ti ti-alert-circle"></i> {{ errorEliminar }}
         </div>
-    </div>
+
+        <template #footer>
+            <button
+                class="tb-btn outline"
+                @click="modalEliminarAbierto = false"
+            >
+                Cancelar
+            </button>
+            <button
+                class="tb-btn danger"
+                @click="confirmarEliminar"
+                :disabled="eliminando"
+            >
+                <i class="ti ti-loader animate-spin" v-if="eliminando"></i>
+                {{ eliminando ? "Dando de baja..." : "Sí, dar de baja" }}
+            </button>
+        </template>
+    </Modal>
 </template>
 
 <script setup>
 import { ref, onMounted, nextTick } from "vue";
+import Modal from "../../ui/Modal.vue";
+import { toast } from "../../../services/toast-service.js";
 import {
     obtenerProfesores,
     crearProfesor,
@@ -548,17 +547,18 @@ import {
     sincronizarUsuarioProfesor,
 } from "../../../services/academico-service.js";
 import { obtenerRoles, crearUsuario } from "../../../services/usuarios-services.js";
-import { formatDate, toDisplayDate, parseDisplayDate } from "../../../utils/formatters.js";
+import { formatDate, toInputDate } from "../../../utils/formatters.js";
 import {
     validarRequerido,
     validarLongitudMinima,
     validarDNI,
     validarEmail,
     validarTelefono,
-    validarFechaFormato,
+    validarFechaInput,
     validarFormulario,
 } from "../../../utils/validators.js";
 import { useTableControls } from "../../../composables/useTableControls.js";
+import { exportarCsv } from "../../../utils/exportCsv.js";
 import Pagination from "../../ui/Pagination.vue";
 import UserAccessPanel from "../../ui/UserAccessPanel.vue";
 
@@ -583,13 +583,51 @@ const {
     setFilter,
     goToPage,
     setPageSize,
+    sortKey,
+    sortDir,
+    toggleSort,
 } = useTableControls(profesores, { pageSize: 10, filterFn });
+
+// ── Ordenamiento asistido para encabezados ────────────────────────────────
+const ariaSort = (key) =>
+    sortKey.value === key
+        ? sortDir.value === "asc"
+            ? "ascending"
+            : "descending"
+        : "none";
+const iconoSort = (key) =>
+    sortKey.value !== key
+        ? "ti-selector"
+        : sortDir.value === "asc"
+          ? "ti-caret-up-filled"
+          : "ti-caret-down-filled";
+
+// ── Exportación CSV ──────────────────────────────────────────────────────
+const exportarProfesores = () => {
+    try {
+        exportarCsv(filteredData.value, {
+            nombreArchivo: "profesores",
+            columnas: {
+                Nombre: "nombre",
+                Apellido: "apellido",
+                Email: "email",
+                DNI: "dni",
+                Especialidad: "especialidad",
+                Estado: (p) => etiquetaEstado[p.estado] || p.estado || "",
+            },
+        });
+        toast.success("Listado de docentes exportado.");
+    } catch (e) {
+        toast.error(e?.message || "No se pudo exportar el listado.");
+    }
+};
 const cargando = ref(false);
 const guardando = ref(false);
 const eliminando = ref(false);
 const vistaActiva = ref("lista"); // 'lista' | 'crear' | 'editar' | 'detalles'
 const profesorSeleccionado = ref(null);
 const profesorAEliminar = ref(null);
+const modalEliminarAbierto = ref(false);
 const errorEliminar = ref("");
 
 const errorCarga = ref("");
@@ -649,8 +687,8 @@ const REGLAS_VALIDACION = {
     email: validarEmail,
     telefono: validarTelefono,
     domicilio: (v) => validarRequerido(v, "El domicilio"),
-    fecha_nacimiento: (v) => validarRequerido(v, "La fecha de nacimiento") || validarFechaFormato(v),
-    fecha_contratacion: (v) => validarRequerido(v, "La fecha de contratación") || validarFechaFormato(v),
+    fecha_nacimiento: (v) => validarRequerido(v, "La fecha de nacimiento") || validarFechaInput(v),
+    fecha_contratacion: (v) => validarRequerido(v, "La fecha de contratación") || validarFechaInput(v),
 };
 
 function validarCampo(campo) {
@@ -677,8 +715,8 @@ const cambiarVista = (nuevaVista, prof = null) => {
     if (nuevaVista === "editar" && prof) {
         form.value = { 
             ...prof, 
-            fecha_nacimiento: toDisplayDate(prof.fecha_nacimiento),
-            fecha_contratacion: toDisplayDate(prof.fecha_contratacion),
+            fecha_nacimiento: toInputDate(prof.fecha_nacimiento),
+            fecha_contratacion: toInputDate(prof.fecha_contratacion),
         };
         limpiarErrores();
     } else if (nuevaVista === "crear") {
@@ -733,8 +771,8 @@ const guardarProfesor = async () => {
     try {
         const payload = {
             ...form.value,
-            fecha_nacimiento: parseDisplayDate(form.value.fecha_nacimiento),
-            fecha_contratacion: parseDisplayDate(form.value.fecha_contratacion),
+            fecha_nacimiento: form.value.fecha_nacimiento || null,
+            fecha_contratacion: form.value.fecha_contratacion || null,
         };
         let idProfesor = null;
         if (vistaActiva.value === "crear") {
@@ -797,8 +835,13 @@ const guardarProfesor = async () => {
             exitoGuardar.value = true;
         }
 
+        toast.success(
+            vistaActiva.value === "crear"
+                ? "Docente creado correctamente."
+                : "Ficha del docente actualizada correctamente.",
+        );
         await fetchProfesores();
-        setTimeout(() => cambiarVista("lista"), 800);
+        cambiarVista("lista");
     } catch (e) {
         errorGuardar.value =
             e?.response?.data?.mensaje || "Error al guardar el profesor.";
@@ -810,6 +853,7 @@ const guardarProfesor = async () => {
 const pedirConfirmacion = (prof) => {
     profesorAEliminar.value = prof;
     errorEliminar.value = "";
+    modalEliminarAbierto.value = true;
 };
 
 const handleUsuarioData = (data) => {
@@ -830,7 +874,9 @@ const confirmarEliminar = async () => {
                 respuesta.message || "No se pudo completar la baja.";
         } else {
             await fetchProfesores();
+            modalEliminarAbierto.value = false;
             profesorAEliminar.value = null;
+            toast.success("El docente fue dado de baja correctamente.");
         }
     } catch (e) {
         errorEliminar.value =

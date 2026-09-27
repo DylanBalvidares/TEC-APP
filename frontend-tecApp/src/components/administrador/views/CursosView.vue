@@ -6,6 +6,26 @@
         <input v-model="searchText" type="text" placeholder="Buscar curso por nombre, nivel o turno..." aria-label="Buscar cursos" />
         <button v-if="searchText" class="search-clear" @click="searchText = ''; goToPage(1)" aria-label="Limpiar búsqueda"><i class="ti ti-x"></i></button>
       </div>
+
+      <label class="filtro-inline">
+        <span>Turno</span>
+        <select :value="filters.turno ?? ''" @change="setFilter('turno', $event.target.value)">
+          <option value="">Todos</option>
+          <option v-for="t in getUniqueOptions('turno')" :key="t" :value="t">{{ t }}</option>
+        </select>
+      </label>
+
+      <label class="filtro-inline">
+        <span>Estado</span>
+        <select :value="filters.estado ?? ''" @change="setFilter('estado', $event.target.value)">
+          <option value="">Todos</option>
+          <option v-for="(etiqueta, valor) in etiquetaEstadoCurso" :key="valor" :value="valor">{{ etiqueta }}</option>
+        </select>
+      </label>
+
+      <button class="tb-btn outline sm exportar-btn" @click="exportarCursos">
+        <i class="ti ti-download" aria-hidden="true"></i> Exportar
+      </button>
     </div>
 
     <div v-if="vistaActiva === 'lista'" class="card animate-fade-in">
@@ -33,12 +53,24 @@
                   <table class="mini" aria-label="Cursos registrados">
           <thead>
             <tr>
-              <th>Nombre</th>
-              <th>Nivel</th>
-              <th>Aula</th>
-              <th>Turno</th>
-              <th>Preceptor</th>
-              <th>Estado</th>
+              <th :aria-sort="ariaSort('nombre_curso')">
+                <button class="th-sort" @click="toggleSort('nombre_curso')">Nombre <i class="ti" :class="iconoSort('nombre_curso')" aria-hidden="true"></i></button>
+              </th>
+              <th :aria-sort="ariaSort('nivel')">
+                <button class="th-sort" @click="toggleSort('nivel')">Nivel <i class="ti" :class="iconoSort('nivel')" aria-hidden="true"></i></button>
+              </th>
+              <th :aria-sort="ariaSort('aula')">
+                <button class="th-sort" @click="toggleSort('aula')">Aula <i class="ti" :class="iconoSort('aula')" aria-hidden="true"></i></button>
+              </th>
+              <th :aria-sort="ariaSort('turno')">
+                <button class="th-sort" @click="toggleSort('turno')">Turno <i class="ti" :class="iconoSort('turno')" aria-hidden="true"></i></button>
+              </th>
+              <th :aria-sort="ariaSort('preceptor')">
+                <button class="th-sort" @click="toggleSort('preceptor', (c) => etiquetaPreceptor(c))">Preceptor <i class="ti" :class="iconoSort('preceptor')" aria-hidden="true"></i></button>
+              </th>
+              <th :aria-sort="ariaSort('estado')">
+                <button class="th-sort" @click="toggleSort('estado')">Estado <i class="ti" :class="iconoSort('estado')" aria-hidden="true"></i></button>
+              </th>
               <th class="action-cell">Acciones</th>
             </tr>
           </thead>
@@ -307,7 +339,6 @@
 
         <div class="card-footer" style="padding-left: 0; padding-right: 0; background: transparent; margin-top: 10px">
           <div v-if="errorGuardar" class="error-banner"><i class="ti ti-alert-circle"></i> {{ errorGuardar }}</div>
-          <div v-if="exitoGuardar" class="exito-banner"><i class="ti ti-check"></i> Curso guardado correctamente.</div>
           <button type="button" @click="cambiarVista('lista')" class="tb-btn outline">Cancelar</button>
           <button type="submit" class="tb-btn primary" :disabled="guardando">
             <i class="ti ti-loader animate-spin" v-if="guardando"></i>
@@ -317,39 +348,35 @@
       </form>
     </div>
 
-    <div v-if="cursoAEliminar" class="modal-overlay" @click.self="cursoAEliminar = null">
-      <div class="modal-card animate-fade-in">
-        <div class="modal-header">
-          <i class="ti ti-alert-triangle" style="color: #cd322c; font-size: 20px"></i>
-          <h3>Eliminar curso</h3>
-        </div>
+    <Modal v-model="modalEliminarAbierto" :title="'Eliminar curso'" variante="danger">
+      <p class="modal-texto">
+        ¿Seguro que querés cancelar el curso
+        <strong>{{ cursoAEliminar?.nombre_curso }}</strong
+        > ({{ cursoAEliminar?.nivel }} — {{ cursoAEliminar?.turno }})? El curso quedará marcado como
+        <strong>"Cancelado"</strong> y no aparecerá en listas activas, pero sus alumnos,
+        asignaciones e historial se preservarán. Podés reactivarlo después editando su ficha.
+      </p>
 
-        <p class="modal-body">
-          ¿Seguro que querés cancelar el curso
-          <strong>{{ cursoAEliminar.nombre_curso }}</strong
-          > ({{ cursoAEliminar.nivel }} — {{ cursoAEliminar.turno }})? El curso quedará marcado como
-          <strong>"Cancelado"</strong> y no aparecerá en listas activas, pero sus alumnos,
-          asignaciones e historial se preservarán. Podés reactivarlo después editando su ficha.
-        </p>
-
-        <div v-if="errorEliminar" class="error-banner" style="margin-bottom: 16px; width: 100%; box-sizing: border-box">
-          <i class="ti ti-alert-circle"></i> {{ errorEliminar }}
-        </div>
-
-        <div class="modal-footer">
-          <button class="tb-btn outline" @click="cursoAEliminar = null">Cancelar</button>
-          <button class="tb-btn danger" @click="confirmarEliminar" :disabled="eliminando">
-            <i class="ti ti-loader animate-spin" v-if="eliminando"></i>
-            {{ eliminando ? "Cancelando..." : "Sí, cancelar curso" }}
-          </button>
-        </div>
+      <div v-if="errorEliminar" class="error-banner" style="margin-bottom: 16px; width: 100%; box-sizing: border-box">
+        <i class="ti ti-alert-circle"></i> {{ errorEliminar }}
       </div>
-    </div>
+
+      <template #footer>
+        <button class="tb-btn outline" @click="modalEliminarAbierto = false">Cancelar</button>
+        <button class="tb-btn danger" @click="confirmarEliminar" :disabled="eliminando">
+          <i class="ti ti-loader animate-spin" v-if="eliminando"></i>
+          {{ eliminando ? "Cancelando..." : "Sí, cancelar curso" }}
+        </button>
+      </template>
+    </Modal>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from "vue";
+import { ref, computed, onMounted, nextTick } from "vue";
+import Modal from "../../ui/Modal.vue";
+import { toast } from "../../../services/toast-service.js";
+import { exportarCsv } from "../../../utils/exportCsv.js";
 import {
   obtenerCursos,
   obtenerAlumnosCurso,
@@ -386,6 +413,7 @@ const eliminando = ref(false);
 const vistaActiva = ref("lista");
 const cursoSeleccionado = ref(null);
 const cursoAEliminar = ref(null);
+const modalEliminarAbierto = ref(false);
 const errorEliminar = ref("");
 
 const errorCarga = ref("");
@@ -409,12 +437,53 @@ const {
   searchText,
   currentPage,
   pageSize,
+  filters,
+  sortKey,
+  sortDir,
   filteredData,
   paginatedData,
   totalItems,
   goToPage,
   setPageSize,
+  setFilter,
+  getUniqueOptions,
+  toggleSort,
 } = useTableControls(cursos, { pageSize: 10, filterFn });
+
+// ── Ordenamiento asistido para encabezados ────────────────────────────────
+const ariaSort = (key) =>
+  sortKey.value === key
+    ? sortDir.value === "asc"
+      ? "ascending"
+      : "descending"
+    : "none";
+const iconoSort = (key) =>
+  sortKey.value !== key
+    ? "ti-selector"
+    : sortDir.value === "asc"
+      ? "ti-caret-up-filled"
+      : "ti-caret-down-filled";
+
+// ── Exportación CSV ──────────────────────────────────────────────────────
+const exportarCursos = () => {
+  try {
+    exportarCsv(filteredData.value, {
+      nombreArchivo: "cursos",
+      columnas: {
+        Nombre: "nombre_curso",
+        Nivel: "nivel",
+        Aula: "aula",
+        Turno: "turno",
+        Ciclo: "ciclo_lectivo",
+        Preceptor: (c) => etiquetaPreceptor(c),
+        Estado: (c) => etiquetaEstadoCurso[c.estado] || c.estado || "",
+      },
+    });
+    toast.success("Listado de cursos exportado.");
+  } catch (e) {
+    toast.error(e?.message || "No se pudo exportar el listado.");
+  }
+};
 
 // ── Refs para autofocus ──────────────────────────────────────────────
 const primerInputRef = ref(null);
@@ -650,11 +719,10 @@ const guardarCurso = async () => {
   }
 
   exitoGuardar.value = true;
+  toast.success(vistaActiva.value === "crear" ? "Curso creado correctamente." : "Curso actualizado correctamente.");
   await fetchCursos();
 
-  setTimeout(() => {
-    cambiarVista("lista");
-  }, 800);
+  cambiarVista("lista");
 
   guardando.value = false;
 };
@@ -662,6 +730,7 @@ const guardarCurso = async () => {
 const pedirConfirmacion = (curso) => {
   cursoAEliminar.value = curso;
   errorEliminar.value = "";
+  modalEliminarAbierto.value = true;
 };
 
 const confirmarEliminar = async () => {
@@ -677,7 +746,9 @@ const confirmarEliminar = async () => {
   }
 
   await fetchCursos();
+  modalEliminarAbierto.value = false;
   cursoAEliminar.value = null;
+  toast.success("Curso cancelado correctamente.");
   eliminando.value = false;
 };
 //onMounted(fetchCursos);

@@ -834,7 +834,7 @@ onMounted(async () => {
 }
 
 /* ── Responsive ────────────────────────────────────────────────────────── */
-@media (max-width: 700px) {
+@media (max-width: 768px) {
     .stat-cards {
         grid-template-columns: 1fr;
     }

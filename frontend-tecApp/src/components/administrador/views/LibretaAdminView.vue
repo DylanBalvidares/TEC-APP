@@ -531,7 +531,7 @@ onMounted(fetchCursos);
 .hist-prev { color: #6b7280; }
 .hist-new { color: #a52420; }
 .hist-meta { font-size: 12px; color: #6b7280; margin: 4px 0 0; }
-@media (max-width: 700px) {
+@media (max-width: 768px) {
   .form-grid { grid-template-columns: 1fr; }
 }
 </style>

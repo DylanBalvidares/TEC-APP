@@ -120,6 +120,34 @@ export const modificarUsuario = async (usuarioData) => {
   }
 };
 
+// =========== VERIFICACIÓN DE CONTRASEÑA (auto-servicio de perfil) ===========
+
+export const verificarContrasena = async (email, contrasena) => {
+  try {
+    const response = await axios.post(
+      `${API_URL}/usuarios/login`,
+      { email, contrasena },
+      getConfig(),
+    );
+    return { success: true, data: response.data };
+  } catch (error) {
+    if (error.response) {
+      return {
+        success: false,
+        status: error.response.status,
+        message:
+          error.response.data?.error ||
+          error.response.data?.message ||
+          "La contraseña actual es incorrecta.",
+      };
+    }
+    return {
+      success: false,
+      message: "No se pudo conectar con el servidor.",
+    };
+  }
+};
+
 // =========== ROLES ===========
 
 export const obtenerRoles = async () => {

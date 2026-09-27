@@ -48,6 +48,17 @@ export function parseDisplayDate(display) {
 }
 
 /**
+ * Normaliza una fecha ISO (YYYY-MM-DD o ISO 8601) al formato que espera
+ * el input nativo `type="date"` (YYYY-MM-DD).
+ * @param {string|null|undefined} iso
+ * @returns {string}
+ */
+export function toInputDate(iso) {
+  if (!iso) return "";
+  return String(iso).split("T")[0];
+}
+
+/**
  * Formatea una fecha a formato legible en español (ej: "15 de julio de 2026").
  * @param {string|Date|null|undefined} input
  * @returns {string}
