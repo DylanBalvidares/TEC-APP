@@ -37,9 +37,11 @@ async function buscarUsuarioPorEmail(email) {
   }
 
   try {
-    const usuario = await Usuario.findOne({
-      where: { email },
-    });
+    const usuario = await Usuario.findOne(
+      usuariosSinContrasena({
+        where: { email },
+      }),
+    );
 
     if (!usuario) {
       throw new ErrorHandler(404, "Usuario no encontrado");
@@ -60,9 +62,11 @@ async function buscarUsuarioPorDni(dni) {
   if (!dni) throw new ErrorHandler(400, "DNI inválido");
 
   try {
-    const usuario = await Usuario.findOne({
-      where: { dni },
-    });
+    const usuario = await Usuario.findOne(
+      usuariosSinContrasena({
+        where: { dni },
+      }),
+    );
     if (!usuario) {
       throw new ErrorHandler(404, "Usuario no encontrado");
     }
@@ -122,12 +126,22 @@ async function comprobarContrasenaUsuario(email, contrasena) {
   }
 }
 
+// S2: nunca devolver el hash de una consulta directa. `buscarUsuarioPorEmail`
+// (GET /usuarios/buscar) y `buscarUsuarioPorDni` también quedan excluidos
+// porque se serializan a JSON en respuestas HTTP. `comprobarContrasenaUsuario`
+// sí necesita leer la columna, así que conserva su consulta sin exclusión.
+function usuariosSinContrasena(consulta) {
+  return { ...consulta, attributes: { exclude: ["contrasena"] } };
+}
+
 async function obtenerTodosUsuarios() {
   console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: obtenerTodosUsuarios");
   try {
-    const usuarios = await Usuario.findAll({
-      include: [{ model: Rol, as: "rol", attributes: ["nombre_rol"] }],
-    });
+    const usuarios = await Usuario.findAll(
+      usuariosSinContrasena({
+        include: [{ model: Rol, as: "rol", attributes: ["nombre_rol"] }],
+      }),
+    );
 
     if (!usuarios || usuarios.length === 0) {
       throw new ErrorHandler(404, "No se encontraron usuarios");
@@ -146,7 +160,10 @@ async function obtenerUsuario(id) {
   try {
     if (!id || id < 0) throw new ErrorHandler(400, "ID de usuario inválida");
 
-    const usuario = await Usuario.findByPk(id);
+    const usuario = await Usuario.findByPk(
+      id,
+      usuariosSinContrasena({}),
+    );
 
     if (!usuario) throw new ErrorHandler(404, "Usuario no encontrado");
     return usuario;
