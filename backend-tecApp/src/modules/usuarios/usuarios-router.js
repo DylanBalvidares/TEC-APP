@@ -1,5 +1,8 @@
 import { Router } from "express";
-import comprobarPermiso from "../../middlewares/comprobarPermisos.js";
+import rateLimit from "express-rate-limit";
+import comprobarPermiso, {
+  soloAutenticado,
+} from "../../middlewares/comprobarPermisos.js";
 import { Usuario, Rol } from "../../db/models/index.js";
 import {
   buscarUsuarioPorEmail,
@@ -89,19 +92,47 @@ usuariosRouter.get(
 );
 
 //// ============== COMPROBAR CONTRASEÑA / LOGIN INTERNO ==============
-usuariosRouter.post("/usuarios/login", async (req, res) => {
-  const { email, contrasena } = req.body;
-
-  try {
-    const usuario = await comprobarContrasenaUsuario(email, contrasena);
-    return res.status(200).json(usuario);
-  } catch (error) {
-    const statusCode = error.statusCode || error.status || 500;
-    return res.status(statusCode).json({
-      error: error.message || "Error en la validación de credenciales",
-    });
-  }
+// S3: endpoint interno "verificá tu propia contraseña" (UsuarioPerfil.vue).
+// Declarado explícito para el guardrail (soloAutenticado), con rate-limit
+// propio (fuera de /api/auth) y email acotado al del token, salvo root.
+const limitadorLoginInterno = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    ok: false,
+    error: "Demasiados intentos. Esperá unos minutos e intentá de nuevo.",
+  },
 });
+
+usuariosRouter.post(
+  "/usuarios/login",
+  comprobarPermiso(soloAutenticado),
+  limitadorLoginInterno,
+  async (req, res) => {
+    const { email, contrasena } = req.body;
+
+    try {
+      const emailPropio = String(req.headers["email"] || "").toLowerCase();
+      const emailPedido = String(email || "").toLowerCase();
+
+      if (!esActorRoot(req) && (!emailPedido || emailPedido !== emailPropio)) {
+        return res.status(403).json({
+          error: "Acceso denegado: solo podés verificar tu propia contraseña",
+        });
+      }
+
+      const usuario = await comprobarContrasenaUsuario(email, contrasena);
+      return res.status(200).json(usuario);
+    } catch (error) {
+      const statusCode = error.statusCode || error.status || 500;
+      return res.status(statusCode).json({
+        error: error.message || "Error en la validación de credenciales",
+      });
+    }
+  },
+);
 
 //// ============== ELIMINAR USUARIO ==============
 usuariosRouter.delete(
