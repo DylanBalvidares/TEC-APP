@@ -525,8 +525,8 @@ const {
 // ── Refs para autofocus ──────────────────────────────────────────────
 const primerInputRef = ref(null);
 
-// ── Lista temporal de cargos. Idealmente deberías fetchear esto de tu API
-// ej: const res = await obtenerTodosLosCargos() en el onMounted
+// ── Cargos reales de la API (GET /academico/cargos). El backend ahora exige
+// permiso, así que un 403 deja la lista vacía en vez de romper el alta.
 const listaCargos = ref([]);
 
 const formVacio = () => ({
@@ -547,9 +547,18 @@ const formVacio = () => ({
 const form = ref(formVacio());
 
 const defaultRolIdPersonal = computed(() => {
-    const cargo = Number(form.value.id_cargo);
-    if (cargo === 4) return 4;
-    if (cargo === 6) return 7;
+    // Q1: el rol por defecto sale del nombre del cargo (datos reales), no de
+    // ids hardcodeados que cambian por seed. Preceptor -> rol preceptor (4),
+    // cargos administrativos/directivos -> rol administrativo (7).
+    const nombre = (listaCargos.value.find((c) => Number(c.id_cargo ?? c.id) === Number(form.value.id_cargo))?.nombre_cargo || "").toLowerCase();
+    if (nombre.includes("preceptor")) return 4;
+    if (
+        nombre.includes("administra") ||
+        nombre.includes("director") ||
+        nombre.includes("secretar") ||
+        nombre.includes("bibliotec")
+    )
+        return 7;
     return null;
 });
 
