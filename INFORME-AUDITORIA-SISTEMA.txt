@@ -1,0 +1,264 @@
+================================================================================
+      INFORME DE AUDITORIA - TEC-APP (Tecnica N 2)
+================================================================================
+Fecha         : 26/09/2026
+Rama auditada : dev
+Alcance       : Backend Express + MySQL, Frontend Vue 3, Docker, datos, tests.
+Tipo          : Analisis estatico de SOLO LECTURA.
+Aclaracion    : No se modifico ningun archivo existente. Solo se agregaron este
+                informe (.txt) y su version Markdown (.md).
+
+
+--------------------------------------------------------------------------------
+1. RESUMEN EJECUTIVO
+--------------------------------------------------------------------------------
+El sistema esta funcionalmente completo y bien organizado por modulos. El nucleo
+academico tiene permisos por ruta y validaciones de pertenencia correctas. Pero
+la auditoria encontro 2 vulnerabilidades CRITICAS, 4 problemas ALTOS (casi todos
+de control de acceso) y varias deudas tecnicas e incoherencias antes de salir a
+produccion.
+
+  Severidad        Cantidad   Area principal
+  ---------------------------------------------------------------
+  CRITICO               2     Registro y modificacion de usuarios
+  ALTO                  4     Control de acceso (biblioteca, comunidad)
+  MEDIO                10     Hardening, Docker, logs, migraciones, contratos
+  BAJO / CALIDAD        8     Duplicacion, tests, CI, legado, accesibilidad
+
+Tamano del codigo auditado:
+  - frontend-tecApp/src : ~39.900 lineas
+  - backend-tecApp/src  : ~8.350 lineas
+  - 18 routers en backend
+  - 22 archivos de build (dist/) versionados en git
+  - 102 archivos de backend legado (old-backend/) en el repositorio
+
+
+--------------------------------------------------------------------------------
+2. VULNERABILIDADES CRITICAS
+--------------------------------------------------------------------------------
+[CRIT-1] Endpoint publico permite tomar cuentas y escalar a administrador
+  Donde    : backend-tecApp/src/modules/auth/auth-router.js
+             (ruta PATCH "/auth/") montada publica en server.js
+             -> app.use("/api/auth", authRouter)  (fuera del bloque protegido)
+  Que pasa : PATCH /api/auth/auth/ ejecuta modificarUsuario(req.body) SIN
+             autenticar y SIN comprobarPermiso. El controlador actualiza nombre,
+             apellido, email, contrasena e id_rol.
+  Impacto  : Cualquiera con acceso HTTP (el docker-compose publica el puerto
+             9000) puede cambiar email y contrasena de cualquier id_usuario, o
+             enviar id_rol: 8 y convertirse en root. Toma de cuentas + escalada.
+  Arreglo  : Eliminar la ruta, o ponerla detras de autenticar +
+             comprobarPermiso("administrativo_editar_usuario"), sin permitir
+             cambiar id_rol ni contrasena desde ahi.
+
+[CRIT-2] El registro acepta el rol que envia el cliente
+  Donde    : backend-tecApp/src/modules/auth/auth-router.js, POST /verificar-codigo
+             Fragmento: let assigned_id_rol = id_rol;  (solo si viene vacio usa
+             el rol derivado del padron: alumno=1, profesor=3, administrativo=7)
+  Impacto  : Con un codigo de verificacion valido (de un alumno o profesor
+             legitimo) se puede enviar id_rol: 8 y crear la cuenta como root.
+  Arreglo  : Ignorar id_rol del cliente; derivarlo SIEMPRE de
+             verificado.rol_asociado. Agregar test de regresion.
+
+
+--------------------------------------------------------------------------------
+3. PROBLEMAS ALTOS (CONTROL DE ACCESO)
+--------------------------------------------------------------------------------
+[ALTO-1] Biblioteca sin ningun chequeo de permisos
+  Donde    : modules/biblioteca/biblioteca-router.js, prestamos-router.js y
+             recursos-router.js  -> 0 ocurrencias de comprobarPermiso.
+  Que pasa : Montados solo con autenticar. Un alumno autenticado puede crear,
+             modificar y BORRAR libros, prestamos y recursos.
+
+[ALTO-2] Lecturas de comunidad sin filtrado por permiso
+  Donde    : modules/comunidad/comunidad-router.js
+             GET /noticias, GET /comunicados, GET /objetos-perdidos y sobre todo
+             GET /monitoreo  -> sin comprobarPermiso.
+  Impacto  : Cualquier usuario autenticado lee comunicados dirigidos a personal
+             o a un curso, y el HISTORIAL GLOBAL DE EMAILS, que la UI muestra
+             solo en el panel de administracion.
+
+[ALTO-3] comprobarPermisos() sin argumento = sin control
+  Donde    : middlewares/comprobarPermisos.js  (if (!permisoRequerido) return next();)
+             Usado asi en comunidad-router.js para POST/PUT/DELETE de
+             /objetos-perdidos.
+  Impacto  : Cualquier usuario autenticado elimina o modifica reportes de
+             objetos perdidos. El middleware deberia fallar CERRADO: permiso
+             vacio = error de configuracion, no acceso libre.
+
+[ALTO-4] Imagenes subidas sin control de acceso y con persistencia fragil
+  Donde    : server.js sirve express.static en /uploads y
+             /api/comunidad/uploads sin autenticacion.
+             docker-compose.yml NO declara volumen para uploads/ (solo db_data).
+  Impacto  : (a) cualquiera enumera y descarga imagenes por URL;
+             (b) las imagenes de noticias se pierden al recrear el contenedor
+             del backend porque quedan dentro del contenedor efimero.
+
+
+--------------------------------------------------------------------------------
+4. PROBLEMAS MEDIOS
+--------------------------------------------------------------------------------
+  MED-1  CORS abierto: app.use(cors()) sin lista de origenes (server.js).
+  MED-2  Sin rate limiting ni helmet; sin libreria de validacion de entrada
+         (express-rate-limit / helmet / zod o joi no figuran en package.json).
+  MED-3  Logs con datos sensibles: se imprime el body completo del login
+         (contrasena en texto plano) y de registros (auth-router.js,
+         comunidad-router.js).
+  MED-4  DDL al arrancar el servidor: ensureCorreosTable.js y
+         ensureLibretaDigital.js crean/alteran tablas al iniciar; no hay
+         migraciones reales en el backend activo.
+  MED-5  Secret JWT de desarrollo con guarda solo si NODE_ENV === "production",
+         pero docker-compose.yml no define NODE_ENV ni JWT_SECRET
+         (utils/jwtSecret.js).
+  MED-6  Credenciales por defecto en configuracion: MYSQL_ROOT_PASSWORD=root_pass
+         (compose) y DATABASE_PASSWORD="root_pass" + JWT_SECRET en .env.example.
+  MED-7  phpMyAdmin expuesto en :8000 con PMA_ARBITRARY=1 y MySQL en :3306.
+  MED-8  Contratos de error inconsistentes ({error} vs {message} vs {ok:false}
+         vs {success:false}); biblioteca devuelve 400/404 genericos con el
+         objeto de error crudo (filtra internos). No hay handler de 404.
+  MED-9  Frontend sin interceptor de respuesta: un token expirado produce 401
+         sueltos en cada vista, sin logout ni redireccion automatica
+         (main.js solo tiene interceptor de request).
+  MED-10 Sin tests en el backend activo ni CI: las 5 suites viven solo en la
+         copia ignorada cambios-pendientes/; no existe .github/workflows.
+
+
+--------------------------------------------------------------------------------
+5. DEUDA TECNICA Y CALIDAD
+--------------------------------------------------------------------------------
+  1. dist/ versionado (22 archivos): cada npm run build modifica archivos
+     rastreados y ensucia el estado del repo.
+  2. old-backend/ rastreado: 102 archivos de gateway y servicios viejos sin uso.
+  3. cambios-pendientes/ ocupa 248 MB (incluye un .rar y copias completas).
+  4. token.txt y token2.txt (JWT reales de ~3 KB) presentes en el disco.
+     Estan ignorados por git, pero no deberian quedar en la carpeta de trabajo.
+  5. Duplicacion masiva en frontend: componentes de 35-49 KB y 490-676 lineas de
+     CSS duplicado por vista (.card, .mini, .tb-btn, .modal-*, formularios CRUD).
+  6. Rol "administrativo" huerfano en el frontend: ROL_ROUTES no lo incluye
+     (auth-service.js) -> tras el login cae al fallback "/", y el guard del
+     dashboard exige role "root" (router.js), asi que un administrativo con
+     permisos administrativo_* NO puede entrar al panel aunque el backend se
+     los conceda.
+  7. IDs de rol magicos por todo el codigo: 8 root, 1 alumno, 3 profesor,
+     4 preceptor, 7 administrativo (routers, controladores y frontend).
+  8. Accesibilidad/consistencia: quedan textos de 10-11 px con grises de bajo
+     contraste; alumno/profesor/preceptor/bibliotecario mantienen patrones
+     visuales distintos entre si.
+  9. URL de API con fallback hardcodeado (http://localhost:9000/api) en
+     composables/useProfesor.js, distinto del resto que usa /api + proxy.
+ 10. Bundle unico de ~570 KB sin code-splitting (advertencia del build de Vite).
+
+
+--------------------------------------------------------------------------------
+6. LO QUE ESTA BIEN (MANTENER)
+--------------------------------------------------------------------------------
+  - Permisos granulares correctos en el nucleo academico: notas, asistencias,
+    alumnos, cursos, materias, personal y usuarios usan comprobarPermiso por
+    operacion (7 a 12 chequeos por router).
+  - Verificaciones de pertenencia reales en notas: el alumno solo ve lo suyo y
+    el preceptor solo lo de sus cursos; modificarNota verifica que el profesor
+    posea la asignacion. Es el patron a replicar en biblioteca y comunidad.
+  - Contrasenas con bcrypt y migracion progresiva de contrasenas legacy.
+  - SQL crudo parametrizado donde existe (email-controller.js usa replacements).
+  - Uploads con filtro de MIME y limite de 5 MB.
+  - ErrorHandler centralizado y handler de errores global.
+  - Guarda sensata: el secret JWT es obligatorio en produccion.
+  - Mejoras recientes del panel admin: toasts, modales accesibles unificados,
+    vista sincronizada con la URL, sidebar responsive, ordenamiento/filtros/
+    export CSV, aria-sort, perfil con cambio de contrasena verificado y 33 tests
+    unitarios en Vitest.
+
+
+--------------------------------------------------------------------------------
+7. QUE SE LE PUEDE AGREGAR AL SISTEMA
+--------------------------------------------------------------------------------
+7.1 PRIORIDAD 0 - Hardening (bloquea produccion)
+    - Cerrar CRIT-1 y CRIT-2; permisos en biblioteca (ALTO-1) y lecturas de
+      comunidad (ALTO-2); hacer que comprobarPermisos falle cerrado (ALTO-3).
+    - Rate limiting en /api/auth/login, /api/usuarios/usuarios/login y /registro;
+      helmet; CORS con lista blanca.
+    - Validacion y sanitizacion de entrada con esquema (Zod/Joi) + limite de body.
+    - Volumen Docker para uploads/, NODE_ENV=production, secretos obligatorios
+      por entorno; sacar phpMyAdmin y MySQL de puertos publicos.
+    - Quitar logs sensibles; verificar contrasena actual con bcrypt antes de
+      modificarla; borrar token*.txt.
+
+7.2 PRIORIDAD 1 - Robustez y observabilidad
+    - Migraciones formales con sequelize-cli (los scripts ya existen) y backups.
+    - Logs estructurados (pino) con request-id, sin datos personales;
+      healthchecks de backend y frontend.
+    - Interceptor 401/403 en el frontend -> logout y mensaje unico; refresh
+      token o renovacion deslizante.
+    - Tests de backend en el proyecto activo + CI (lint, unit, build) en cada push.
+    - Unificar contrato de API ({ok, data, error}) y agregar handler de 404.
+
+7.3 PRIORIDAD 2 - Producto (nuevas capacidades)
+    - Auditoria visible: pantalla de historial de acciones (ya existe
+      historial-notas) para ver quien cambio notas, asistencias y usuarios.
+    - Boletines y constancias en PDF; exportaciones generalizadas (CSV ya esta
+      en 3 vistas).
+    - Portal de tutores (el rol existe en el modelo pero no tiene dashboard) y
+      notificacion de inasistencias.
+    - Notificaciones push/email desde comunicados y noticias (el historial de
+      correos ya esta modelado).
+    - Busqueda global en el panel (alumnos, cursos, usuarios) y calendario escolar.
+    - Biblioteca self-service: reserva y renovacion por el alumno, con reglas y
+      permisos correctos.
+    - Dashboard analitico: tendencias de matricula, asistencia y promocion por
+      curso (evolucion del Overview actual).
+    - Modo oscuro (los tokens CSS ya estan preparados) y PWA/offline para libreta.
+
+7.4 PRIORIDAD 3 - Calidad de codigo
+    - Sistema de diseno compartido (Storybook) y eliminar CSS duplicado.
+    - Code-splitting por ruta y paginacion server-side para padrones grandes.
+    - E2E con Playwright para flujos criticos: login, alta de alumno, carga de
+      notas, prestamo.
+    - Contrato OpenAPI/Swagger para coordinar frontend y backend.
+    - Unificar roles (root/administrativo), quitar IDs magicos y que el guard
+      del dashboard use PERMISOS en lugar de nombres de rol.
+
+
+--------------------------------------------------------------------------------
+8. PLAN DE ACCION SUGERIDO (ORDEN)
+--------------------------------------------------------------------------------
+  #   Accion                                             Impacto   Esfuerzo
+  ---------------------------------------------------------------------------
+  1   Cerrar PATCH /api/auth/auth/ y el id_rol del registro  Critico  Bajo
+  2   Permisos biblioteca + lecturas comunidad + fallo cerrado Alto    Bajo-Medio
+  3   Rate limiting, helmet, CORS, validacion de entrada      Alto     Medio
+  4   NODE_ENV + JWT_SECRET obligatorios, volumen uploads     Alto     Bajo
+  5   Sacar logs sensibles y token*.txt                       Medio    Bajo
+  6   Interceptor 401 + logout en frontend                    Medio    Bajo
+  7   Alinear rol administrativo con el dashboard (permisos)  Medio    Bajo
+  8   Tests de backend + CI                                   Medio    Medio
+  9   Migraciones formales (dejar de hacer DDL al arrancar)   Medio    Medio
+ 10   Deduplicar CSS/componentes + code-splitting             Bajo     Alto
+
+
+--------------------------------------------------------------------------------
+9. COMO SE VERIFICO (TRAZABILIDAD)
+--------------------------------------------------------------------------------
+  - Rutas y montaje publico/privado: server.js y los 18 routers.
+  - Autorizacion: conteo de comprobarPermiso/autenticar por router y lectura de
+    middlewares/comprobarPermisos.js.
+  - Credenciales y tokens: utils/jwtSecret.js, auth-controller.js, .env.example,
+    docker-compose.yml.
+  - Control de pertenencia: notas-controller.js (obtenerHistorialAlumno,
+    modificarNota).
+  - Datos sensibles en disco: git check-ignore sobre token*.txt (ignorados,
+    presentes) y su tamano (3.125 bytes cada uno).
+  - Configuracion y persistencia: docker-compose.yml (sin volumen de uploads,
+    puertos expuestos, sin NODE_ENV).
+  - Estado del repositorio: git ls-files (dist 22, old-backend 102, sin CI) y
+    tamano de cambios-pendientes (248 MB).
+  - Frontend: router/router.js (guards por rol), services/auth-service.js
+    (ROL_ROUTES sin administrativo), main.js (solo interceptor de request),
+    conteo de LOC y lineas de estilo por vista.
+
+
+--------------------------------------------------------------------------------
+NOTA FINAL
+--------------------------------------------------------------------------------
+Este informe es solo de lectura. Los archivos creados (INFORME-AUDITORIA-
+SISTEMA.md y INFORME-AUDITORIA-SISTEMA.txt) son nuevos y no modifican codigo
+existente. Si se decide no versionarlos, se pueden agregar al .gitignore.
+================================================================================
