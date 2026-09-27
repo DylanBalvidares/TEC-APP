@@ -4,7 +4,7 @@ import * as comunicadosCtrl from "./comunicados-controller.js";
 import * as objetosCtrl from "./objetos-perdidos-controller.js";
 import upload from "../../middlewares/uploads.js";
 import autenticar from "../../middlewares/autenticar.js";
-import comprobarPermisos from "../../middlewares/comprobarPermisos.js";
+import comprobarPermisos, { soloAutenticado } from "../../middlewares/comprobarPermisos.js";
 import { obtenerHistorialGlobal, marcarCorreoLeido } from "./comunidad-service.js";
 
 const router = Router();
@@ -32,10 +32,6 @@ router.get("/noticias/:id", async (req, res) => {
 });
 
 router.post("/noticias", comprobarPermisos(["delegado_crear_noticia"]), upload.single("imagen"), async (req, res) => {
-  console.log("=== Datos recibidos en POST /noticias ===");
-  console.log(req.body);
-  console.log(req.file);
-  console.log("==========================================");
   try {
     const noticia = await noticiasCtrl.crearNoticia(req.body, req.file);
     return res.status(201).json(noticia);
@@ -136,7 +132,9 @@ router.get("/objetos-perdidos/:id", async (req, res) => {
   }
 });
 
-router.post("/objetos-perdidos", comprobarPermisos(), async (req, res) => {
+// Reportar un objeto perdido: abierto a cualquier usuario autenticado (feature
+// pensada para alumnos), pero SIEMPRE explícito para no dejar la ruta abierta.
+router.post("/objetos-perdidos", comprobarPermisos(soloAutenticado), async (req, res) => {
   try {
     const objeto = await objetosCtrl.reportarObjeto(req.body);
     return res.status(201).json(objeto);
@@ -145,7 +143,16 @@ router.post("/objetos-perdidos", comprobarPermisos(), async (req, res) => {
   }
 });
 
-router.put("/objetos-perdidos/:id", comprobarPermisos(), async (req, res) => {
+// Gestionar (marcar devuelto / editar) un objeto perdido: sólo staff.
+// Nota: no existe un permiso dedicado todavía; se usa el marcador
+// administrativo + root (que en el seed tiene todos los permisos).
+router.put(
+  "/objetos-perdidos/:id",
+  comprobarPermisos([
+    "administrativo_ver_reportes",
+    "root_eliminar_cualquier_contenido",
+  ]),
+  async (req, res) => {
   try {
     const resultado = await objetosCtrl.actualizarEstadoObjeto(
       req.params.id,
@@ -157,7 +164,14 @@ router.put("/objetos-perdidos/:id", comprobarPermisos(), async (req, res) => {
   }
 });
 
-router.delete("/objetos-perdidos/:id", comprobarPermisos(), async (req, res) => {
+// Eliminar un objeto perdido: sólo staff (mismo criterio que el PUT).
+router.delete(
+  "/objetos-perdidos/:id",
+  comprobarPermisos([
+    "administrativo_ver_reportes",
+    "root_eliminar_cualquier_contenido",
+  ]),
+  async (req, res) => {
   try {
     const resultado = await objetosCtrl.eliminarObjeto(req.params.id);
     return res.status(200).json({ mensaje: "Objeto eliminado", resultado });
@@ -168,7 +182,14 @@ router.delete("/objetos-perdidos/:id", comprobarPermisos(), async (req, res) => 
 
 
 // === RUTAS DE MONITOREO DE EMAILS ===
-router.get("/monitoreo", async (req, res) => {
+// SEGURIDAD (ALTO-2): el historial global de emails contiene datos de toda la
+// institución; antes lo podía leer cualquier usuario autenticado.
+const PERMISOS_MONITOREO = [
+  "root_ver_logs_sistema",
+  "administrativo_ver_reportes",
+];
+
+router.get("/monitoreo", comprobarPermisos(PERMISOS_MONITOREO), async (req, res) => {
   try {
     const { estado, fecha_desde, fecha_hasta, limit = 50 } = req.query;
     const result = await obtenerHistorialGlobal({
@@ -187,7 +208,7 @@ router.get("/monitoreo", async (req, res) => {
   }
 });
 
-router.post("/marcar-leido", async (req, res) => {
+router.post("/marcar-leido", comprobarPermisos(PERMISOS_MONITOREO), async (req, res) => {
   try {
     const { id_correo } = req.body;
     const result = await marcarCorreoLeido(id_correo);

@@ -1,5 +1,6 @@
 import ErrorHandler from "../utils/ErrorHandler.js";
 import { Rol, Permiso } from "../db/models/index.js";
+import { normalizarListaPermisos, SOLO_AUTENTICADO } from "../utils/permisosConfig.js";
 
 export async function obtenerPermisosDeRol(idRol) {
   try {
@@ -26,7 +27,23 @@ export async function obtenerPermisosDeRol(idRol) {
   }
 }
 
+/**
+ * Marca una ruta que deliberadamente sólo requiere autenticación
+ * (sin permiso específico). Debe usarse de forma explícita.
+ */
+export const soloAutenticado = SOLO_AUTENTICADO;
+
+/**
+ * Middleware de autorización.
+ *
+ * SEGURIDAD (fail-closed): si no se indica un permiso explícito ni
+ * `soloAutenticado`, la ruta responde 500 en lugar de quedar abierta.
+ *
+ * @param {string|string[]|symbol} permisoRequerido
+ */
 export function comprobarPermiso(permisoRequerido) {
+  const listaDePermisos = normalizarListaPermisos(permisoRequerido);
+
   return async (req, res, next) => {
     const rol = req.headers["id_rol"];
     const usuario = req.headers["id_usuario"];
@@ -41,28 +58,34 @@ export function comprobarPermiso(permisoRequerido) {
         );
       }
 
-      // Root (rol 8) pasa todos los chequeos: en el seed tiene TODOS los permisos.
-      // No hay bypass hardcodeado por id: se resuelve por permisos como el resto.
+      // Error de configuración: fallar cerrado (nunca abrir por olvido).
+      if (listaDePermisos === null) {
+        return next(
+          new ErrorHandler(
+            500,
+            "Configuración inválida de permisos en la ruta: usá un permiso explícito o soloAutenticado()."
+          )
+        );
+      }
 
-      const listaDePermisos = await obtenerPermisosDeRol(rol);
-
-      if (!permisoRequerido) {
+      // Ruta marcada sólo-autenticación (ya validamos usuario y rol arriba).
+      if (listaDePermisos.length === 0) {
         return next();
       }
 
-      const permisosArray = Array.isArray(permisoRequerido)
-        ? permisoRequerido
-        : [permisoRequerido];
+      // Root (rol 8) pasa todos los chequeos porque en el seed tiene TODOS los
+      // permisos. No hay bypass hardcodeado por id: se resuelve por permisos.
+      const permisosDelRol = await obtenerPermisosDeRol(rol);
 
-      const tieneAcceso = permisosArray.some((p) =>
-        listaDePermisos.includes(p)
+      const tieneAcceso = listaDePermisos.some((p) =>
+        permisosDelRol.includes(p)
       );
 
       if (!tieneAcceso) {
         return next(
           new ErrorHandler(
             403,
-            `Acceso denegado: No tenés el permiso necesario -> (${permisoRequerido})`
+            `Acceso denegado: No tenés el permiso necesario -> (${listaDePermisos.join(", ")})`
           )
         );
       }
