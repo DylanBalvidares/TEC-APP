@@ -752,7 +752,8 @@ export const obtenerCargos = async () => {
 
 export const obtenerCargo = async (id) => {
   try {
-    const response = await axios.get(`${API_URL}/cargo/${id}`, getConfig());
+    // Q2: el backend expone /cargos/:id (plural); /cargo/ caía en el 404.
+    const response = await axios.get(`${API_URL}/cargos/${id}`, getConfig());
     return { success: true, data: response.data };
   } catch (error) {
     return manejarErrorApi(error, "No se encontró el cargo");
