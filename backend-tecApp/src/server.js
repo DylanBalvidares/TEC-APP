@@ -9,6 +9,7 @@ import path from "path";
 import "./db/conexionDB.js";
 import "./db/ensureCorreosTable.js";
 import "./db/ensureLibretaDigital.js";
+import "./db/ensurePlanesEstudio.js";
 
 // Middlewares
 import autenticar from "./middlewares/autenticar.js";
@@ -27,6 +28,7 @@ import profesoresRouter from "./modules/academico/profesores-router.js";
 import asistenciasRouter from "./modules/academico/asistencias-router.js";
 import materiasRouter from "./modules/academico/materias-router.js";
 import asignacionesRouter from "./modules/academico/asignaciones-router.js";
+import planesRouter from "./modules/academico/planes-router.js";
 import notasRouter from "./modules/academico/notas-router.js";
 import personalRouter from "./modules/academico/personal-router.js";
 import cargosRouter from "./modules/academico/cargos-router.js";
@@ -174,6 +176,7 @@ app.use("/api/academico", autenticar, profesoresRouter);
 app.use("/api/academico", autenticar, asistenciasRouter);
 app.use("/api/academico", autenticar, materiasRouter);
 app.use("/api/academico", autenticar, asignacionesRouter);
+app.use("/api/academico", autenticar, planesRouter);
 app.use("/api/academico", autenticar, notasRouter);
 app.use("/api/academico", autenticar, personalRouter);
 app.use("/api/academico", autenticar, cargosRouter);

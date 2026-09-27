@@ -1,5 +1,6 @@
 import ErrorHandler from "../../utils/ErrorHandler.js";
 import { Asignacion, Curso, Materia, Profesor, Nota } from "../../db/models/index.js";
+import { anotarEnPlan } from "./planes-controller.js";
 import sequelize from "../../db/conexionDB.js";
 
 async function obtenerTodasAsignaciones() {
@@ -20,7 +21,7 @@ async function obtenerTodasAsignaciones() {
         {
           model: Curso,
           as: "cursoAsignacion",
-          attributes: ["nombre_curso", "aula", "nivel", "turno"],
+          attributes: ["nombre_curso", "aula", "nivel", "turno", "anio"],
         },
       ],
     });
@@ -29,7 +30,7 @@ async function obtenerTodasAsignaciones() {
       throw new ErrorHandler(404, "No se encontraron asignaciones");
     }
 
-    return asignaciones;
+    return anotarEnPlan(asignaciones);
   } catch (error) {
     if (error instanceof ErrorHandler) throw error;
     console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en obtenerTodasAsignaciones:", error);
@@ -62,7 +63,7 @@ async function obtenerAsignacionesProfesor(id) {
         {
           model: Curso,
           as: "cursoAsignacion",
-          attributes: ["nombre_curso", "aula", "nivel", "turno"],
+          attributes: ["nombre_curso", "aula", "nivel", "turno", "anio"],
         },
       ],
     });
@@ -71,7 +72,7 @@ async function obtenerAsignacionesProfesor(id) {
       throw new ErrorHandler(404, "No se encontraron asignaciones");
     }
 
-    return asignaciones;
+    return anotarEnPlan(asignaciones);
   } catch (error) {
     if (error instanceof ErrorHandler) {
       throw error;
@@ -106,16 +107,16 @@ async function obtenerAsignacionesCurso(id) {
         {
           model: Curso,
           as: "cursoAsignacion",
-          attributes: ["nombre_curso", "aula", "nivel", "turno"],
+          attributes: ["nombre_curso", "aula", "nivel", "turno", "anio"],
         },
       ],
     });
 
     if (!asignaciones.length) {
-      throw new ErrorHandler(404, "No se encontraron asignaciones para este curso");
+      throw new ErrorHandler(404, "No se encontraron asignaciones");
     }
 
-    return asignaciones;
+    return anotarEnPlan(asignaciones);
   } catch (error) {
     if (error instanceof ErrorHandler) throw error;
     console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en obtenerAsignacionesCurso:", error);

@@ -109,6 +109,16 @@ async function crearCurso(curso) {
   try {
     const datos = { ...curso };
     datos.id_preceptor = await validarPreceptorAsignado(datos.id_preceptor);
+    // Año del plan de estudios (opcional, 1-7).
+    if (datos.anio !== undefined && datos.anio !== null && datos.anio !== "") {
+      const anioNum = Number(datos.anio);
+      if (!Number.isInteger(anioNum) || anioNum < 1 || anioNum > 7) {
+        throw new ErrorHandler(400, "Año de curso inválido (1-7)");
+      }
+      datos.anio = anioNum;
+    } else {
+      datos.anio = null;
+    }
     // Se crea el curso directamente con los datos recibidos del body
     const nuevoCurso = await Curso.create(datos);
     return nuevoCurso;
@@ -174,6 +184,17 @@ async function modificarCurso(curso) {
   } = curso; // Puede ser req.body, cursoData, o el objeto que contenga la información
   try {
     if (!id_curso || id_curso < 0) throw new ErrorHandler(400, "ID inválida");
+
+    // Año del plan de estudios (opcional, 1-7).
+    if (curso.anio !== undefined && curso.anio !== null && curso.anio !== "") {
+      const anioNum = Number(curso.anio);
+      if (!Number.isInteger(anioNum) || anioNum < 1 || anioNum > 7) {
+        throw new ErrorHandler(400, "Año de curso inválido (1-7)");
+      }
+      curso.anio = anioNum;
+    } else {
+      curso.anio = null;
+    }
 
     // Actualizamos usando el objeto completo, evitando sobrescribir el ID
     delete curso.id_curso;

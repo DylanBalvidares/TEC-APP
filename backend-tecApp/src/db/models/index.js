@@ -13,6 +13,9 @@ import Nota from "./notas-model.js";
 import HistorialNota from "./historial-notas-model.js";
 import Asignacion from "./asignaciones-model.js";
 import Cargo from "./cargos-model.js";
+import PlanEstudio from "./planes-estudio-model.js";
+import PlanMateria from "./plan-materias-model.js";
+import Correlativa from "./correlativas-model.js";
 
 import Biblioteca from "./biblioteca-model.js";
 import Prestamo from "./prestamos-model.js";
@@ -86,6 +89,19 @@ Cargo.hasMany(Personal, { foreignKey: "id_cargo" });
 Personal.belongsTo(Cargo, { foreignKey: "id_cargo", as: "cargoPersonal" });
 
 // ==========================================
+// Relaciones: Planes de estudio
+// ==========================================
+PlanEstudio.hasMany(PlanMateria, { foreignKey: "id_plan", as: "materiasPlan" });
+PlanMateria.belongsTo(PlanEstudio, { foreignKey: "id_plan", as: "plan" });
+
+Materia.hasMany(PlanMateria, { foreignKey: "id_materia" });
+PlanMateria.belongsTo(Materia, { foreignKey: "id_materia", as: "materia" });
+
+PlanMateria.hasMany(Correlativa, { foreignKey: "id_plan_materia", as: "correlativas" });
+Correlativa.belongsTo(PlanMateria, { foreignKey: "id_plan_materia", as: "planMateria" });
+Correlativa.belongsTo(PlanMateria, { foreignKey: "id_plan_materia_req", as: "requerida" });
+
+// ==========================================
 // Relaciones: Biblioteca
 // ==========================================
 Biblioteca.hasMany(Recurso, { foreignKey: "id_biblioteca" });
@@ -109,6 +125,9 @@ export {
   Nota,
   HistorialNota,
   Materia,
+  PlanEstudio,
+  PlanMateria,
+  Correlativa,
   Biblioteca,
   Prestamo,
   Recurso,

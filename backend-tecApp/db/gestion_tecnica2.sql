@@ -130,6 +130,13 @@ INSERT IGNORE INTO `permisos` (`nombre_permiso`) VALUES
     ('administrativo_crear_materia'),
     ('administrativo_editar_materia'),
     ('administrativo_eliminar_materia'),
+    -- Planes de estudio
+    ('administrativo_ver_planes'),
+    ('administrativo_crear_plan'),
+    ('administrativo_editar_plan'),
+    ('administrativo_eliminar_plan'),
+    ('profesor_ver_planes'),
+    ('preceptor_ver_planes'),
     -- Comunicados (nuevo)
     ('comunicado_crear'),
     ('comunicado_editar'),
@@ -174,7 +181,8 @@ INSERT IGNORE INTO `rol_permisos` (`id_rol`, `id_permiso`)
 SELECT 3, id_permiso FROM `permisos` WHERE `nombre_permiso` IN (
     'profesor_ver_curso','profesor_ver_alumnos_de_curso','profesor_ver_perfil_alumno',
     'profesor_ver_todos_notas','profesor_crear_nota','profesor_editar_nota',
-    'profesor_eliminar_nota','profesor_gestionar_asistencias','profesor_ver_horario'
+    'profesor_eliminar_nota','profesor_gestionar_asistencias','profesor_ver_horario',
+    'profesor_ver_planes'
 );
 
 -- Preceptor (id_rol=4)
@@ -184,7 +192,7 @@ SELECT 4, id_permiso FROM `permisos` WHERE `nombre_permiso` IN (
     'preceptor_registrar_asistencias','preceptor_ver_asistencias',
     'preceptor_gestionar_sanciones','preceptor_ver_sanciones',
     'preceptor_crear_alumno','preceptor_editar_alumno','preceptor_eliminar_alumno',
-    'preceptor_enviar_email_alumno','preceptor_ver_notas'
+    'preceptor_enviar_email_alumno','preceptor_ver_notas','preceptor_ver_planes'
 );
 
 -- Bibliotecario (id_rol=5)
@@ -218,6 +226,8 @@ SELECT 7, id_permiso FROM `permisos` WHERE `nombre_permiso` IN (
     'administrativo_eliminar_asignacion','administrativo_ver_todos_materias',
     'administrativo_crear_materia','administrativo_editar_materia',
     'administrativo_eliminar_materia',
+    'administrativo_ver_planes','administrativo_crear_plan',
+    'administrativo_editar_plan','administrativo_eliminar_plan',
     'comunicado_crear','comunicado_editar','comunicado_eliminar','comunicado_ver'
 );
 
@@ -320,6 +330,7 @@ CREATE TABLE `cursos` (
     `nombre_curso`        varchar(50) NOT NULL,
     `nivel`               ENUM('Ciclo basico','Ciclo superior') NOT NULL,
     `ciclo_lectivo`       smallint unsigned NOT NULL,
+    `anio`                tinyint unsigned DEFAULT NULL COMMENT 'Año del plan de estudios (1-7)',
     `capacidad_maxima`    int(11)   DEFAULT 30,
     `aula`                varchar(20) DEFAULT NULL,
     `turno`               varchar(100) DEFAULT NULL,
@@ -372,6 +383,52 @@ CREATE TABLE `asignaciones` (
     CONSTRAINT `fk_asig_curso`    FOREIGN KEY (`id_curso`)    REFERENCES `cursos`    (`id_curso`),
     CONSTRAINT `fk_asig_materia`  FOREIGN KEY (`id_materia`)  REFERENCES `materias`  (`id_materia`),
     CONSTRAINT `fk_asig_profesor` FOREIGN KEY (`id_profesor`) REFERENCES `profesores`(`id_profesor`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- PLANES DE ESTUDIO
+-- ============================================================
+
+CREATE TABLE `planes_estudio` (
+    `id_plan`               int(11)      NOT NULL AUTO_INCREMENT,
+    `nombre`                varchar(150) NOT NULL,
+    `codigo`                varchar(30)  NOT NULL,
+    `orientacion`           varchar(100) NOT NULL,
+    `descripcion`           text         DEFAULT NULL,
+    `duracion_anios`        tinyint unsigned DEFAULT NULL,
+    `estado`                ENUM('borrador','vigente','historico') NOT NULL DEFAULT 'borrador',
+    `fecha_vigencia_desde`  date         DEFAULT NULL,
+    `fecha_vigencia_hasta`  date         DEFAULT NULL,
+    PRIMARY KEY (`id_plan`),
+    UNIQUE KEY `uq_plan_nombre` (`nombre`),
+    UNIQUE KEY `uq_plan_codigo` (`codigo`),
+    KEY `idx_plan_orientacion` (`orientacion`),
+    KEY `idx_plan_estado` (`estado`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `plan_materias` (
+    `id_plan_materia` int(11) NOT NULL AUTO_INCREMENT,
+    `id_plan`         int(11) NOT NULL,
+    `id_materia`      int(11) NOT NULL,
+    `anio`            tinyint unsigned NOT NULL,
+    `cuatrimestre`    ENUM('anual','1','2') NOT NULL DEFAULT 'anual',
+    PRIMARY KEY (`id_plan_materia`),
+    UNIQUE KEY `uq_plan_materia_anio` (`id_plan`,`id_materia`,`anio`),
+    KEY `idx_pm_plan` (`id_plan`),
+    KEY `idx_pm_materia` (`id_materia`),
+    CONSTRAINT `fk_pm_plan`    FOREIGN KEY (`id_plan`)    REFERENCES `planes_estudio`(`id_plan`) ON DELETE CASCADE,
+    CONSTRAINT `fk_pm_materia` FOREIGN KEY (`id_materia`) REFERENCES `materias`(`id_materia`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `correlativas` (
+    `id_correlativa`      int(11) NOT NULL AUTO_INCREMENT,
+    `id_plan_materia`     int(11) NOT NULL,
+    `id_plan_materia_req` int(11) NOT NULL,
+    PRIMARY KEY (`id_correlativa`),
+    UNIQUE KEY `uq_correlativa` (`id_plan_materia`,`id_plan_materia_req`),
+    KEY `idx_corr_pm` (`id_plan_materia`),
+    CONSTRAINT `fk_corr_pm`     FOREIGN KEY (`id_plan_materia`)     REFERENCES `plan_materias`(`id_plan_materia`) ON DELETE CASCADE,
+    CONSTRAINT `fk_corr_pm_req` FOREIGN KEY (`id_plan_materia_req`) REFERENCES `plan_materias`(`id_plan_materia`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================

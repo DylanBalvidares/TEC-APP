@@ -23,6 +23,12 @@ const Curso = sequelize.define("cursos", {
     allowNull: false,
   },
 
+  anio: {
+    type: DataTypes.TINYINT.UNSIGNED,
+    allowNull: true,
+    validate: { min: 1, max: 7 },
+  },
+
   capacidad_maxima: {
     type: DataTypes.INTEGER(11),
     allowNull: true,
