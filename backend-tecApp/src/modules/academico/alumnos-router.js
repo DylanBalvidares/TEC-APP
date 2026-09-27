@@ -41,29 +41,41 @@ alumnosRouter.get(
   },
 );
 
-alumnosRouter.post("/alumnos/validar-identidad", async (req, res) => {
-  
-  try {
-    console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m VALIDAR-IDENTIDAD BODY:", req.body);
-    const alumno = await validarIdentidadAlumno(req.body);
-    return res.status(200).json(alumno);
-  } catch (error) {
-    console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m VALIDAR-IDENTIDAD ERROR:", error);
-    return res.status(error.status || 500).json({ message: error.message });
-  }
-});
+alumnosRouter.post(
+  "/alumnos/validar-identidad",
+  comprobarPermiso([
+    "administrativo_ver_todos_alumnos",
+    "preceptor_ver_perfil_alumno",
+  ]),
+  async (req, res) => {
+    try {
+      console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m VALIDAR-IDENTIDAD BODY:", req.body);
+      const alumno = await validarIdentidadAlumno(req.body);
+      return res.status(200).json(alumno);
+    } catch (error) {
+      console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m VALIDAR-IDENTIDAD ERROR:", error);
+      return res.status(error.status || 500).json({ message: error.message });
+    }
+  },
+);
 
-alumnosRouter.patch("/alumnos/sincronizar-usuario-alumno", async (req, res) => {
-  
-  try {
-    console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m SINCRONIZAR-USUARIO-ALUMNO:", req.body);
-    const alumno = await sincronizarUsuarioAlumno(req.body);
-    return res.status(200).json(alumno);
-  } catch (error) {
-    console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m VALIDAR-IDENTIDAD ERROR:", error);
-    return res.status(error.status || 500).json({ message: error.message });
-  }
-});
+alumnosRouter.patch(
+  "/alumnos/sincronizar-usuario-alumno",
+  comprobarPermiso([
+    "administrativo_crear_alumno",
+    "administrativo_editar_alumno",
+  ]),
+  async (req, res) => {
+    try {
+      console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m SINCRONIZAR-USUARIO-ALUMNO:", req.body);
+      const alumno = await sincronizarUsuarioAlumno(req.body);
+      return res.status(200).json(alumno);
+    } catch (error) {
+      console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m VALIDAR-IDENTIDAD ERROR:", error);
+      return res.status(error.status || 500).json({ message: error.message });
+    }
+  },
+);
 
 alumnosRouter.get(
   "/alumnos/:id",

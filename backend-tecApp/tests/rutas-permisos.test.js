@@ -37,7 +37,7 @@ test("toda ruta de módulo declara permiso, soloAutenticado o está en la allowl
   // si aparece una ruta nueva sin permiso, este número cambia y el test falla.
   assert.equal(
     sinPermiso.length,
-    10,
+    6,
     "Cambió la cantidad de rutas sin permiso. Si cerraste S1–S5, corré con EXIGIR_PERMISOS=1. Si agregaste una ruta, declarale permiso o allowlist.",
   );
 });

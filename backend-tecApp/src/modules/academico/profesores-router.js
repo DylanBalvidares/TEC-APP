@@ -44,27 +44,38 @@ profesoresRouter.get("/profesores/:id", comprobarPermiso("administrativo_ver_tod
   }
 });
 
-profesoresRouter.post("/profesores/validar-identidad", async (req, res) => {
-  try {
-    console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m VALIDAR-IDENTIDAD BODY:", req.body);
-    const profesor = await validarIdentidadProfesor(req.body);
-    return res.status(200).json(profesor);
-  } catch (error) {
-    console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m VALIDAR-IDENTIDAD ERROR:", error);
-    return res.status(error.status || 500).json({ message: error.message });
-  }
-});
+profesoresRouter.post(
+  "/profesores/validar-identidad",
+  comprobarPermiso("administrativo_ver_todos_profesores"),
+  async (req, res) => {
+    try {
+      console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m VALIDAR-IDENTIDAD BODY:", req.body);
+      const profesor = await validarIdentidadProfesor(req.body);
+      return res.status(200).json(profesor);
+    } catch (error) {
+      console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m VALIDAR-IDENTIDAD ERROR:", error);
+      return res.status(error.status || 500).json({ message: error.message });
+    }
+  },
+);
 
-profesoresRouter.patch("/profesores/sincronizar-usuario-profesor", async (req, res) => {
-  try {
-    console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m SINCRONIZAR-USUARIO-PROFESOR:", req.body);
-    const profesor = await sincronizarUsuarioProfesor(req.body);
-    return res.status(200).json(profesor);
-  } catch (error) {
-    console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m SINCRONIZAR-USUARIO-PROFESOR ERROR:", error);
-    return res.status(error.status || 500).json({ message: error.message });
-  }
-});
+profesoresRouter.patch(
+  "/profesores/sincronizar-usuario-profesor",
+  comprobarPermiso([
+    "administrativo_crear_profesor",
+    "administrativo_editar_profesor",
+  ]),
+  async (req, res) => {
+    try {
+      console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m SINCRONIZAR-USUARIO-PROFESOR:", req.body);
+      const profesor = await sincronizarUsuarioProfesor(req.body);
+      return res.status(200).json(profesor);
+    } catch (error) {
+      console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m SINCRONIZAR-USUARIO-PROFESOR ERROR:", error);
+      return res.status(error.status || 500).json({ message: error.message });
+    }
+  },
+);
 
 profesoresRouter.get("/profesores", comprobarPermiso("administrativo_ver_todos_profesores"), async (req, res) => {
   try {
