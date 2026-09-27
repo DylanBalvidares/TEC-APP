@@ -221,6 +221,24 @@
           </li>
 
 
+          <!-- PLAN DE ESTUDIOS -->
+
+          <li @click="sidebarAbierto = false">
+
+            <RouterLink
+              to="/preceptor/plan"
+              active-class="active"
+            >
+
+              <i class="fas fa-layer-group"></i>
+
+              Plan de Estudios
+
+            </RouterLink>
+
+          </li>
+
+
           <!-- CURSOS -->
 
           <li>

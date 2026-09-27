@@ -84,6 +84,7 @@
                                 <th>Profesor Designado</th>
                                 <th>Materia</th>
                                 <th>Curso / División</th>
+                                <th>En plan</th>
                                 <th class="action-cell">Acciones</th>
                             </tr>
                         </thead>
@@ -116,6 +117,25 @@
                                     asignacion.cursoAsignacion?.nombre_curso ||
                                     "Sin asignar"
                                 }}
+                            </td>
+                            <td>
+                                <span
+                                    v-if="asignacion.en_plan === true"
+                                    class="metric-badge badge-green"
+                                    title="La materia figura en un plan vigente para el año del curso"
+                                >
+                                    <i class="ti ti-check"></i> En plan
+                                </span>
+                                <span
+                                    v-else-if="asignacion.en_plan === false"
+                                    class="metric-badge badge-gray"
+                                    title="Advertencia: la materia no figura en ningún plan vigente para el año del curso"
+                                >
+                                    <i class="ti ti-alert-triangle"></i> Fuera de plan
+                                </span>
+                                <span v-else class="metric-badge badge-gray" title="El curso no tiene año cargado">
+                                    S/D
+                                </span>
                             </td>
 
                             <td class="action-cell">

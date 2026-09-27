@@ -63,6 +63,7 @@ export const crearCurso = async (cursoData) => {
       nombre_curso: cursoData.nombre_curso,
       nivel: cursoData.nivel,
       ciclo_lectivo: cursoData.ciclo_lectivo,
+      anio: cursoData.anio ?? null,
       capacidad_maxima: cursoData.capacidad_maxima,
       aula: cursoData.aula,
       turno: cursoData.turno,
@@ -84,6 +85,7 @@ export const modificarCurso = async (cursoData) => {
       nombre_curso: cursoData.nombre_curso,
       nivel: cursoData.nivel,
       ciclo_lectivo: cursoData.ciclo_lectivo,
+      anio: cursoData.anio ?? null,
       capacidad_maxima: cursoData.capacidad_maxima,
       aula: cursoData.aula,
       turno: cursoData.turno,
@@ -511,6 +513,111 @@ export const eliminarMateria = async (id) => {
     return { success: true, data: response.data };
   } catch (error) {
     return manejarErrorApi(error, "No se puede eliminar la materia.");
+  }
+};
+
+// ==========================================
+//             PLANES DE ESTUDIO
+// ==========================================
+
+export const obtenerPlanes = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/planes`, getConfig());
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "No se pudieron obtener los planes de estudio");
+  }
+};
+
+export const obtenerPlan = async (id) => {
+  try {
+    const response = await axios.get(`${API_URL}/planes/${id}`, getConfig());
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "No se pudo obtener el plan de estudio");
+  }
+};
+
+export const obtenerPlanesVigentes = async ({ anio = null, curso = null } = {}) => {
+  try {
+    const params = new URLSearchParams();
+    if (anio) params.append("anio", anio);
+    if (curso) params.append("curso", curso);
+    const qs = params.toString() ? `?${params.toString()}` : "";
+    const response = await axios.get(`${API_URL}/planes/vigentes${qs}`, getConfig());
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "No se pudieron obtener los planes vigentes");
+  }
+};
+
+export const crearPlan = async (planData) => {
+  try {
+    const response = await axios.post(`${API_URL}/planes`, planData, getConfig());
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "Error al crear el plan de estudio");
+  }
+};
+
+export const modificarPlan = async (planData) => {
+  try {
+    const response = await axios.patch(`${API_URL}/planes`, planData, getConfig());
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "Error al modificar el plan de estudio");
+  }
+};
+
+export const eliminarPlan = async (id) => {
+  try {
+    const response = await axios.delete(`${API_URL}/planes/${id}`, getConfig());
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "No se puede eliminar el plan de estudio.");
+  }
+};
+
+export const agregarMateriaAPlan = async (idPlan, vinculo) => {
+  try {
+    const response = await axios.post(`${API_URL}/planes/${idPlan}/materias`, vinculo, getConfig());
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "Error al agregar la materia al plan");
+  }
+};
+
+export const quitarMateriaDePlan = async (idPlanMateria) => {
+  try {
+    const response = await axios.delete(`${API_URL}/planes/materias/${idPlanMateria}`, getConfig());
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "Error al quitar la materia del plan");
+  }
+};
+
+export const agregarCorrelativa = async (idPlanMateria, idRequerida) => {
+  try {
+    const response = await axios.post(
+      `${API_URL}/planes/materias/${idPlanMateria}/correlativas`,
+      { id_plan_materia_req: idRequerida },
+      getConfig(),
+    );
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "Error al agregar la correlativa");
+  }
+};
+
+export const quitarCorrelativa = async (idPlanMateria, idRequerida) => {
+  try {
+    const response = await axios.delete(
+      `${API_URL}/planes/materias/${idPlanMateria}/correlativas/${idRequerida}`,
+      getConfig(),
+    );
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "Error al quitar la correlativa");
   }
 };
 

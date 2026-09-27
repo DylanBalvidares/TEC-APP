@@ -286,6 +286,14 @@
               <option value="cancelado">Cancelado</option>
             </select>
           </div>
+          <div class="form-group">
+            <label for="anio">Año del plan (1-7)</label>
+            <select id="anio" v-model="form.anio" :class="{ 'input-error': erroresForm.anio }" @blur="validarCampo('anio')">
+              <option :value="null">Sin definir</option>
+              <option v-for="a in 7" :key="a" :value="a">{{ a }}º año</option>
+            </select>
+            <span v-if="erroresForm.anio" class="field-error">{{ erroresForm.anio }}</span>
+          </div>
         </div>
 
         <div class="form-row">
@@ -475,6 +483,7 @@ const exportarCursos = () => {
         Aula: "aula",
         Turno: "turno",
         Ciclo: "ciclo_lectivo",
+        Año: "anio",
         Preceptor: (c) => etiquetaPreceptor(c),
         Estado: (c) => etiquetaEstadoCurso[c.estado] || c.estado || "",
       },
@@ -494,6 +503,7 @@ const formVacio = () => ({
   nombre_curso: "",
   nivel: "",
   ciclo_lectivo: new Date().getFullYear(), // Por defecto el año actual
+  anio: null,
   capacidad_maxima: null,
   aula: "",
   turno: "",
@@ -510,6 +520,7 @@ const REGLAS_VALIDACION = {
   nombre_curso: (v) => validarRequerido(v, "El nombre del curso"),
   nivel: (v) => validarRequerido(v, "El nivel"),
   ciclo_lectivo: validarAnioLectivo,
+  anio: (v) => v === null || v === "" || v === undefined ? "" : (Number.isInteger(Number(v)) && Number(v) >= 1 && Number(v) <= 7 ? "" : "El año debe estar entre 1 y 7"),
   aula: (v) => validarRequerido(v, "El aula"),
   turno: (v) => validarRequerido(v, "El turno"),
   capacidad_maxima: (v) => v ? validarNumeroPositivo(v, "La capacidad máxima") : "",
@@ -700,6 +711,7 @@ const guardarCurso = async () => {
   guardando.value = true;
 
   form.value.ciclo_lectivo = parseInt(form.value.ciclo_lectivo);
+  form.value.anio = form.value.anio ? parseInt(form.value.anio) : null;
   form.value.capacidad_maxima = form.value.capacidad_maxima ? parseInt(form.value.capacidad_maxima) : null;
   form.value.id_profesor_titular = form.value.id_profesor_titular ? parseInt(form.value.id_profesor_titular) : null;
   form.value.id_preceptor = form.value.id_preceptor ? parseInt(form.value.id_preceptor) : null;

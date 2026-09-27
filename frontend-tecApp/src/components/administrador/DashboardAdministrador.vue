@@ -52,6 +52,7 @@ import NoticiasView from "./views/NoticiasView.vue";
 import ComunicadosView from "./views/ComunicadosView.vue";
 import AsignacionesView from "./views/AsignacionesView.vue";
 import MateriasView from "./views/MateriasView.vue";
+import PlanesEstudioView from "./views/PlanesEstudioView.vue";
 import LibretaAdminView from "./views/LibretaAdminView.vue";
 import PersonalView from "./views/PersonalView.vue";
 import UsuariosView from "./views/UsuariosView.vue";
@@ -69,6 +70,7 @@ const componentesMap = {
   comunicados: ComunicadosView,
   asignaciones: AsignacionesView,
   materias: MateriasView,
+  planes: PlanesEstudioView,
   libreta: LibretaAdminView,
   personal: PersonalView,
   usuarios: UsuariosView,
@@ -87,6 +89,7 @@ const pageNames = {
   comunicados: "Comunicados",
   asignaciones: "Asignaciones de Materias",
   materias: "Materias",
+  planes: "Planes de Estudio",
   libreta: "Libreta Digital",
   personal: "Personal",
   usuarios: "Usuarios",

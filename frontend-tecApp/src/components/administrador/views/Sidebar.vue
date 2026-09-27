@@ -45,6 +45,7 @@ const grupos = [
             { vista: "asistencias", nombre: "Asistencias", icono: "ti-calendar-check" },
             { vista: "materias", nombre: "Materias", icono: "ti-books" },
             { vista: "asignaciones", nombre: "Asignaciones", icono: "ti-git-branch" },
+            { vista: "planes", nombre: "Planes de Estudio", icono: "ti-layers" },
             { vista: "libreta", nombre: "Libreta Digital", icono: "ti-book-open" },
         ],
     },

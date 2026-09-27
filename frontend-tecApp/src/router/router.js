@@ -43,6 +43,10 @@ import LibretaAlumnoView from "../components/alumno/views/LibretaAlumnoView.vue"
 import LibretaDigitalViewProfesor from "../components/profesores/views/LibretaDigitalView.vue";
 import LibretaPreceptorView from "../components/preceptor/views/LibretaPreceptorView.vue";
 
+// Planes de Estudio (consulta por rol)
+import PlanEstudioViewProfesor from "../components/profesores/views/PlanEstudioView.vue";
+import PlanEstudioViewPreceptor from "../components/preceptor/views/PlanEstudioView.vue";
+
 const routes = [
   { path: "/", component: Inicio },
   { path: "/login", component: Login },
@@ -111,6 +115,7 @@ const routes = [
       { path: "materias", component: MateriasView },
       { path: "asistencias", component: AsistenciasView },
       { path: "libreta", component: LibretaDigitalViewProfesor },
+      { path: "plan", component: PlanEstudioViewProfesor },
       { path: "", redirect: "/profesor/inicio" }, // Si entran a /alumno, van a inicio
     ],
   },
@@ -131,6 +136,11 @@ const routes = [
       {
         path: "libreta",
         component: LibretaPreceptorView,
+      },
+
+      {
+        path: "plan",
+        component: PlanEstudioViewPreceptor,
       },
 
       {
