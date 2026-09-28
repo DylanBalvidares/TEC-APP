@@ -64,6 +64,7 @@ const grupos = [
             { vista: "usuarios", nombre: "Usuarios", icono: "ti-user-shield" },
             { vista: "roles", nombre: "Roles y permisos", icono: "ti-lock" },
             { vista: "monitorcorreos", nombre: "Historial de Emails", icono: "ti-envelope" },
+            { vista: "auditoria", nombre: "Auditoría", icono: "ti-history" },
         ],
     },
 ];
