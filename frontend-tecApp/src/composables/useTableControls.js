@@ -1,4 +1,12 @@
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+
+// Claves reservadas del query string para la sincronización de URL (Q5).
+const QUERY_Q = "q";
+const QUERY_PAG = "pag";
+const QUERY_ORDEN = "orden";
+const QUERY_DIR = "dir";
+const QUERY_RESERVADAS = [QUERY_Q, QUERY_PAG, QUERY_ORDEN, QUERY_DIR];
 
 /**
  * Composable que maneja filtrado local y paginación para tablas.
@@ -7,6 +15,10 @@ import { ref, computed } from "vue";
  * @param {Object} options
  * @param {number} [options.pageSize=10] - Cantidad inicial de items por página
  * @param {Function} [options.filterFn] - Función custom de filtrado (item, searchText) => boolean
+ * @param {boolean|Object} [options.syncUrl=false] - Sincroniza búsqueda, filtros,
+ *   página y orden con el query string. Acepta `true` (usa useRoute/useRouter del
+ *   setup) o `{ route, router, debounce }` explícitos (útil en tests).
+ * @param {number} [options.syncDebounce=300] - Espera en ms antes de escribir la URL
  */
 export function useTableControls(dataRef, options = {}) {
     const { pageSize: defaultPageSize = 10 } = options;
@@ -167,6 +179,66 @@ export function useTableControls(dataRef, options = {}) {
             }
         });
         return Array.from(values).sort();
+    }
+
+    // ── Sincronización con la URL (Q5) ────────────────────────────────────
+    // Lee ?q=, ?pag=, ?orden=, ?dir= y cualquier otro parámetro como filtro
+    // por campo; escribe de vuelta con router.replace debounced.
+    const syncOpts = options.syncUrl === true ? {} : options.syncUrl || null;
+    if (syncOpts) {
+        const ruta = syncOpts.route || useRoute();
+        const navegador = syncOpts.router || useRouter();
+        const espera = syncOpts.debounce ?? options.syncDebounce ?? 300;
+
+        const leerQuery = () => ruta.query ?? ruta.value?.query ?? {};
+
+        // Hidratación inicial desde la URL (no dispara escritura: el watch
+        // no es immediate).
+        const inicial = leerQuery();
+        if (typeof inicial[QUERY_Q] === "string" && inicial[QUERY_Q]) {
+            searchText.value = inicial[QUERY_Q];
+        }
+        const paginaInicial = parseInt(inicial[QUERY_PAG], 10);
+        if (Number.isFinite(paginaInicial) && paginaInicial >= 1) {
+            currentPage.value = paginaInicial;
+        }
+        if (typeof inicial[QUERY_ORDEN] === "string" && inicial[QUERY_ORDEN]) {
+            sortKey.value = inicial[QUERY_ORDEN];
+        }
+        if (inicial[QUERY_DIR] === "asc" || inicial[QUERY_DIR] === "desc") {
+            sortDir.value = inicial[QUERY_DIR];
+        }
+        const filtrosIniciales = {};
+        for (const [clave, valor] of Object.entries(inicial)) {
+            if (QUERY_RESERVADAS.includes(clave)) continue;
+            if (valor === "" || valor === undefined || valor === null) continue;
+            filtrosIniciales[clave] = Array.isArray(valor) ? valor[0] : valor;
+        }
+        filters.value = filtrosIniciales;
+
+        let temporizador = null;
+        const escribirUrl = () => {
+            const query = {};
+            if (searchText.value.trim()) query[QUERY_Q] = searchText.value.trim();
+            if (currentPage.value > 1) query[QUERY_PAG] = String(currentPage.value);
+            if (sortKey.value) {
+                query[QUERY_ORDEN] = sortKey.value;
+                query[QUERY_DIR] = sortDir.value;
+            }
+            for (const [clave, valor] of Object.entries(filters.value)) {
+                if (valor === "" || valor === null || valor === undefined) continue;
+                query[clave] = String(valor);
+            }
+            Promise.resolve(navegador.replace({ query })).catch(() => {});
+        };
+        watch(
+            [searchText, currentPage, sortKey, sortDir, filters],
+            () => {
+                clearTimeout(temporizador);
+                temporizador = setTimeout(escribirUrl, espera);
+            },
+            { deep: true },
+        );
     }
 
     return {
