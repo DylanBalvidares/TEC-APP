@@ -8,6 +8,7 @@ import "./db/ensureLibretaDigital.js";
 import "./db/ensurePlanesEstudio.js";
 import "./db/ensureMensajesWhatsapp.js";
 import "./db/ensureCargos.js";
+import "./db/ensureAuditoria.js";
 
 // La app (middlewares, routers, 404 y error handler) vive en app.js para poder
 // montarla en tests sin abrir un puerto fijo.

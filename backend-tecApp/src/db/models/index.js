@@ -27,6 +27,7 @@ import ObjetoPerdido from "./objetos-perdidos-model.js";
 import CodigoDeVerificacion from "./codigoDeVerificacion-model.js";
 import Correo from "./correo-model.js";
 import MensajeWhatsapp from "./mensaje-whatsapp-model.js";
+import Auditoria from "./auditoria-model.js";
 
 // ==========================================
 // Relaciones: Usuarios & RBAC
@@ -138,4 +139,5 @@ export {
   CodigoDeVerificacion,
   Correo,
   MensajeWhatsapp,
+  Auditoria,
 };
