@@ -71,7 +71,30 @@
                     {{ asistenciaTotal }} registros
                 </span>
             </div>
-            <div v-if="asistenciaTotal > 0" class="progress-row">
+            <div v-if="asistenciaTotal > 0" class="asistencia-cuerpo">
+                <svg
+                    class="donut"
+                    viewBox="0 0 42 42"
+                    role="img"
+                    aria-label="Distribución de asistencia de hoy"
+                >
+                    <circle cx="21" cy="21" r="15.9" fill="none" stroke="#f3f4f6" stroke-width="6" />
+                    <circle
+                        cx="21"
+                        cy="21"
+                        r="15.9"
+                        fill="none"
+                        stroke="#3b6d11"
+                        stroke-width="6"
+                        :stroke-dasharray="`${pctPresentes} ${100 - pctPresentes}`"
+                        stroke-dashoffset="25"
+                        stroke-linecap="round"
+                    />
+                    <text x="21" y="21" text-anchor="middle" dominant-baseline="middle" class="donut-texto">
+                        {{ pctPresentes }}%
+                    </text>
+                </svg>
+            <div class="progress-row">
                 <div class="prog-item">
                     <div class="prog-label">
                         <span>Presentes</span><span>{{ pctPresentes }}%</span>
@@ -96,6 +119,7 @@
                         <div class="prog-fill" :style="{ width: pctTardanzas + '%' }"></div>
                     </div>
                 </div>
+            </div>
             </div>
             <div v-else class="empty-inline">
                 <i class="ti ti-calendar-off" aria-hidden="true"></i>
@@ -175,150 +199,63 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import { obtenerTodosComunicados } from "../../../services/comunidad-service.js";
-import {
-    obtenerAlumnos,
-    obtenerProfesores,
-    obtenerCursos,
-    obtenerHistorialAsistencias,
-} from "../../../services/academico-service.js";
+import { obtenerMetricas } from "../../../services/admin-service.js";
 
 defineEmits(["cambiar-vista"]);
 
-const totalComunicados = ref(0);
+// Una sola request (GET /api/admin/metricas) alimenta todo el panel.
 const totalAlumnos = ref(0);
 const totalProfesores = ref(0);
 const totalCursos = ref(0);
-const listaAlumnos = ref([]);
-const listaComunicados = ref([]);
-const asistenciaHoy = ref([]);
+const alumnosSinCurso = ref(0);
+const asistencia = ref({ total: 0, presente: 0, ausente: 0, tarde: 0 });
+const ultimosAlumnos = ref([]);
+const ultimosComunicados = ref([]);
 const errorCarga = ref("");
 
-const ultimosAlumnos = computed(() =>
-    [...listaAlumnos.value]
-        .sort((a, b) => (b.id_alumno || 0) - (a.id_alumno || 0))
-        .slice(0, 3)
-        .map((a) => ({
-            nombre: `${a.nombre} ${a.apellido || ""}`.trim(),
-            curso: a.curso?.nombre_curso || a.nombre_curso || "—",
-            fecha: fechaCorta(a.fecha_ingreso || a.createdAt) || "—",
-        })),
-);
-
-const alumnosSinCurso = computed(
-    () => listaAlumnos.value.filter((a) => !a.id_curso).length,
-);
-
-const ultimosComunicados = computed(() =>
-    [...listaComunicados.value]
-        .sort(
-            (a, b) =>
-                new Date(b.fecha_publicacion || 0) -
-                new Date(a.fecha_publicacion || 0),
-        )
-        .slice(0, 4)
-        .map((c) => ({
-            id_comunicado: c.id_comunicado,
-            titulo: c.titulo || "Sin título",
-            destino: cap(c.destino),
-            fecha: fechaCorta(c.fecha_publicacion) || "sin fecha",
-        })),
-);
-
-const asistenciaTotal = computed(() => asistenciaHoy.value.length);
-const contar = (estado) =>
-    asistenciaHoy.value.filter((r) => r.estado === estado).length;
+const asistenciaTotal = computed(() => asistencia.value.total || 0);
 const pct = (n) =>
     asistenciaTotal.value > 0
         ? Math.round((n / asistenciaTotal.value) * 100)
         : 0;
-const pctPresentes = computed(() => pct(contar("presente")));
-const pctAusentes = computed(() => pct(contar("ausente")));
-const pctTardanzas = computed(() =>
-    pct(contar("tarde") + contar("tardanza")),
-);
+const pctPresentes = computed(() => pct(asistencia.value.presente));
+const pctAusentes = computed(() => pct(asistencia.value.ausente));
+const pctTardanzas = computed(() => pct(asistencia.value.tarde));
 
 const cap = (s) =>
     s ? String(s).charAt(0).toUpperCase() + String(s).slice(1) : "—";
 
-const fechaCorta = (iso) => {
-    if (!iso) return "sin fecha";
-    const [y, m, d] = String(iso).split("T")[0].split("-");
-    if (!y || !m || !d) return String(iso);
-    return `${d}/${m}/${y}`;
-};
-
-const hoyISO = () => {
-    const d = new Date();
-    const pad = (n) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-};
-
-const normalizar = (res) => {
-    const data = res?.data || res;
-    if (Array.isArray(data)) return data;
-    if (Array.isArray(data?.data)) return data.data;
-    if (Array.isArray(data?.lista)) return data.lista;
-    return [];
-};
-
 const cargarDatos = async () => {
     errorCarga.value = "";
-    const [comunicados, alumnos, profesores, cursos] =
-        await Promise.allSettled([
-            obtenerTodosComunicados(),
-            obtenerAlumnos(),
-            obtenerProfesores(),
-            obtenerCursos(),
-        ]);
-
-    const fallos = [];
-    // El 404 significa "sin registros": se muestra como lista vacía, no como error.
-    // Solo 401/403/500 o errores de red cuentan como fallo de carga.
-    const esListaVacia = (settled) => settled.value?.status === 404;
-    const esExito = (settled) =>
-        settled.status === "fulfilled" &&
-        (settled.value?.success !== false || esListaVacia(settled));
-    if (esExito(comunicados)) {
-        listaComunicados.value = esListaVacia(comunicados) ? [] : normalizar(comunicados.value);
-        totalComunicados.value = listaComunicados.value.length;
-    } else {
-        fallos.push("comunicados");
+    const res = await obtenerMetricas();
+    if (res?.success === false) {
+        errorCarga.value =
+            res.message || "No se pudieron cargar las métricas del panel.";
+        return;
     }
-    if (esExito(alumnos)) {
-        listaAlumnos.value = esListaVacia(alumnos) ? [] : normalizar(alumnos.value);
-        totalAlumnos.value = listaAlumnos.value.length;
-    } else {
-        fallos.push("alumnos");
-    }
-    if (esExito(profesores)) {
-        totalProfesores.value = esListaVacia(profesores)
-            ? 0
-            : normalizar(profesores.value).length;
-    } else {
-        fallos.push("docentes");
-    }
-    if (esExito(cursos)) {
-        totalCursos.value = esListaVacia(cursos) ? 0 : normalizar(cursos.value).length;
-    } else {
-        fallos.push("cursos");
-    }
-    if (fallos.length > 0) {
-        errorCarga.value = `No se pudieron cargar: ${fallos.join(", ")}. Verificá la conexión con el servidor.`;
-    }
-
-    // Asistencia de hoy (el 404 del backend significa "sin registros", no es error)
-    try {
-        const hoy = hoyISO();
-        const res = await obtenerHistorialAsistencias({
-            fecha_desde: hoy,
-            fecha_hasta: hoy,
-        });
-        asistenciaHoy.value =
-            res?.success === false ? [] : normalizar(res);
-    } catch {
-        asistenciaHoy.value = [];
-    }
+    const m = res.data || {};
+    totalAlumnos.value = m.totales?.alumnos ?? 0;
+    totalProfesores.value = m.totales?.profesores ?? 0;
+    totalCursos.value = m.totales?.cursos ?? 0;
+    alumnosSinCurso.value = m.totales?.alumnosSinCurso ?? 0;
+    asistencia.value = {
+        total: m.asistenciaHoy?.total ?? 0,
+        presente: m.asistenciaHoy?.presente ?? 0,
+        ausente: m.asistenciaHoy?.ausente ?? 0,
+        tarde: m.asistenciaHoy?.tarde ?? 0,
+    };
+    ultimosAlumnos.value = (m.ultimosAlumnos || []).map((a) => ({
+        dni: a.dni || a.id_alumno,
+        nombre: `${a.nombre} ${a.apellido || ""}`.trim(),
+        curso: a.Curso?.nombre_curso || a.curso?.nombre_curso || "—",
+        fecha: "—",
+    }));
+    ultimosComunicados.value = (m.comunicadosRecientes || []).map((c) => ({
+        id_comunicado: c.id_comunicado,
+        titulo: c.titulo || "Sin título",
+        destino: cap(c.destino),
+        fecha: c.fecha_publicacion || "sin fecha",
+    }));
 };
 
 onMounted(cargarDatos);
@@ -518,10 +455,26 @@ onMounted(cargarDatos);
     text-decoration: underline;
 }
 
+.asistencia-cuerpo {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.donut {
+    width: 84px;
+    height: 84px;
+    flex-shrink: 0;
+}
+.donut-texto {
+    font-size: 9px;
+    font-weight: 700;
+    fill: #111827;
+}
 .progress-row {
     display: flex;
     flex-direction: column;
     gap: 6px;
+    flex: 1;
 }
 
 .prog-item {

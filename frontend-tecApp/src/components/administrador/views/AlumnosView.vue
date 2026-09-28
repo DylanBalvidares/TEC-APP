@@ -777,7 +777,7 @@ const cambiarVista = (nuevaVista, alumno = null) => {
 
 // ── Controladores CRUD Async con Manejo de Errores Corregido ─────────────────
 // Lista completa solo para las tarjetas de métricas del encabezado
-// (la tabla pagina en el servidor). C3 la reemplazará por /api/admin/metricas.
+// (la tabla pagina en el servidor).
 const fetchAlumnos = async () => {
     try {
         const res = await obtenerAlumnos();
