@@ -28,6 +28,7 @@ import CodigoDeVerificacion from "./codigoDeVerificacion-model.js";
 import Correo from "./correo-model.js";
 import MensajeWhatsapp from "./mensaje-whatsapp-model.js";
 import Auditoria from "./auditoria-model.js";
+import Horario from "./horario-model.js";
 
 // ==========================================
 // Relaciones: Usuarios & RBAC
@@ -90,6 +91,9 @@ HistorialNota.belongsTo(Usuario, { foreignKey: "modificado_por", as: "usuarioMod
 Cargo.hasMany(Personal, { foreignKey: "id_cargo" });
 Personal.belongsTo(Cargo, { foreignKey: "id_cargo", as: "cargoPersonal" });
 
+Asignacion.hasMany(Horario, { foreignKey: "id_asignacion" });
+Horario.belongsTo(Asignacion, { foreignKey: "id_asignacion" });
+
 // ==========================================
 // Relaciones: Planes de estudio
 // ==========================================
@@ -140,4 +144,5 @@ export {
   Correo,
   MensajeWhatsapp,
   Auditoria,
+  Horario,
 };

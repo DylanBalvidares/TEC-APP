@@ -216,6 +216,40 @@ export const darDeBajaProfesor = async (id) => {
 };
 
 // ==========================================
+//                 HORARIOS (E3)
+// ==========================================
+
+export const obtenerHorarios = async (idCurso = null) => {
+  try {
+    const response = await axios.get(`${API_URL}/horarios`, {
+      ...getConfig(),
+      ...(idCurso ? { params: { id_curso: idCurso } } : {}),
+    });
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "No se pudieron obtener los horarios");
+  }
+};
+
+export const crearHorario = async (datos) => {
+  try {
+    const response = await axios.post(`${API_URL}/horarios`, datos, getConfig());
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "No se pudo crear el horario");
+  }
+};
+
+export const eliminarHorario = async (id) => {
+  try {
+    const response = await axios.delete(`${API_URL}/horarios/${id}`, getConfig());
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "No se pudo eliminar el horario");
+  }
+};
+
+// ==========================================
 //                 ALUMNOS
 // ==========================================
 

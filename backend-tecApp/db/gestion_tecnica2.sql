@@ -150,6 +150,9 @@ INSERT IGNORE INTO `permisos` (`nombre_permiso`) VALUES
     -- Cargos
     ('administrativo_ver_cargos'),
     ('root_gestionar_cargos'),
+    -- Horarios
+    ('horario_ver'),
+    ('horario_gestionar'),
     -- Root
     ('root_gestionar_roles'),
     ('root_gestionar_permisos'),
@@ -173,7 +176,8 @@ CREATE TABLE `rol_permisos` (
 INSERT IGNORE INTO `rol_permisos` (`id_rol`, `id_permiso`)
 SELECT 1, id_permiso FROM `permisos` WHERE `nombre_permiso` IN (
     'alumno_ver_perfil','alumno_ver_horario','alumno_ver_mis_notas',
-    'alumno_ver_mis_asistencias','alumno_ver_mi_curso'
+    'alumno_ver_mis_asistencias','alumno_ver_mi_curso',
+    'horario_ver'
 );
 
 -- Delegado (id_rol=2): hereda alumno + propios
@@ -191,7 +195,8 @@ SELECT 3, id_permiso FROM `permisos` WHERE `nombre_permiso` IN (
     'profesor_ver_todos_notas','profesor_crear_nota','profesor_editar_nota',
     'profesor_eliminar_nota','profesor_gestionar_asistencias','profesor_ver_horario',
     'profesor_ver_planes',
-    'whatsapp_enviar','whatsapp_ver_propio'
+    'whatsapp_enviar','whatsapp_ver_propio',
+    'horario_ver'
 );
 
 -- Preceptor (id_rol=4)
@@ -202,7 +207,8 @@ SELECT 4, id_permiso FROM `permisos` WHERE `nombre_permiso` IN (
     'preceptor_gestionar_sanciones','preceptor_ver_sanciones',
     'preceptor_crear_alumno','preceptor_editar_alumno','preceptor_eliminar_alumno',
     'preceptor_enviar_email_alumno','preceptor_ver_notas','preceptor_ver_planes',
-    'whatsapp_enviar','whatsapp_ver_propio'
+    'whatsapp_enviar','whatsapp_ver_propio',
+    'horario_ver'
 );
 
 -- Bibliotecario (id_rol=5)
@@ -240,7 +246,8 @@ SELECT 7, id_permiso FROM `permisos` WHERE `nombre_permiso` IN (
     'administrativo_ver_planes','administrativo_crear_plan',
     'administrativo_editar_plan','administrativo_eliminar_plan',
     'comunicado_crear','comunicado_editar','comunicado_eliminar','comunicado_ver',
-    'whatsapp_ver_todos'
+    'whatsapp_ver_todos',
+    'horario_ver','horario_gestionar'
 );
 
 -- Root (id_rol=8): todos los permisos
@@ -500,6 +507,23 @@ CREATE TABLE `asistencias` (
     CONSTRAINT `asistencias_ibfk_1` FOREIGN KEY (`id_alumno`)      REFERENCES `alumnos` (`id_alumno`),
     CONSTRAINT `asistencias_ibfk_2` FOREIGN KEY (`id_curso`)       REFERENCES `cursos`  (`id_curso`),
     CONSTRAINT `asistencias_ibfk_3` FOREIGN KEY (`registrado_por`) REFERENCES `usuarios`(`id_usuario`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- ============================================================
+-- HORARIOS (grilla semanal por asignación)
+-- ============================================================
+
+CREATE TABLE `horarios` (
+    `id_horario`    int(11)     NOT NULL AUTO_INCREMENT,
+    `id_asignacion` int(11)     NOT NULL,
+    `dia`           tinyint     NOT NULL,
+    `hora_inicio`   varchar(5)  NOT NULL,
+    `hora_fin`      varchar(5)  NOT NULL,
+    `aula`          varchar(50) DEFAULT NULL,
+    PRIMARY KEY (`id_horario`),
+    KEY `idx_hor_asignacion` (`id_asignacion`),
+    KEY `idx_hor_dia` (`dia`),
+    CONSTRAINT `horarios_ibfk_1` FOREIGN KEY (`id_asignacion`) REFERENCES `asignaciones` (`id_asignacion`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ============================================================

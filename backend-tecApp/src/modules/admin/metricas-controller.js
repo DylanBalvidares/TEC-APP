@@ -8,6 +8,8 @@ import {
   Comunicado,
 } from "../../db/models/index.js";
 
+
+
 // Caché en memoria de 60 s: las métricas agregan varias tablas y el panel
 // las pide en cada visita a Overview.
 const CACHE_TTL_MS = 60 * 1000;
@@ -45,6 +47,7 @@ async function calcularMetricas() {
       order: [["id_alumno", "DESC"]],
       limit: 3,
       attributes: ["id_alumno", "nombre", "apellido", "dni", "id_curso"],
+      include: [{ model: Curso, attributes: ["nombre_curso"] }],
     }),
     Comunicado.findAll({
       order: [["fecha_publicacion", "DESC"]],
@@ -53,9 +56,11 @@ async function calcularMetricas() {
     }),
   ]);
 
+  // El seed histórico usa 'tardanza' y el modelo 'tarde': se unifican.
   const porEstado = { presente: 0, ausente: 0, tarde: 0, justificado: 0 };
   for (const r of asistenciaHoy) {
-    const estado = r.estado ?? r?.dataValues?.estado;
+    let estado = r.estado ?? r?.dataValues?.estado;
+    if (estado === "tardanza") estado = "tarde";
     if (estado in porEstado) porEstado[estado] += 1;
   }
 
