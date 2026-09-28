@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { obtenerServidor, cerrarServidor } from "./helpers/http.js";
 import { ROLES, token, mockearPermisosDeRol } from "./helpers/auth.js";
 import { Auditoria } from "../src/db/models/index.js";
+import { listarAuditoria } from "../src/modules/admin/auditoria-controller.js";
 import {
   sanearAuditoria,
   registrarAuditoria,
@@ -80,4 +81,39 @@ test("auditarEscritura deriva actor e IP del request", async (t) => {
   assert.equal(datos.ip, "10.0.0.2");
   assert.equal(datos.accion, "modificar");
   assert.equal(datos.id_entidad, 9);
+});
+
+test("listarAuditoria filtra por entidad/accion y pagina con el contrato uniforme", async (t) => {
+  const llamadas = [];
+  t.mock.method(Auditoria, "findAndCountAll", async (opciones) => {
+    llamadas.push(opciones);
+    return { count: 2, rows: [{ id_auditoria: 1 }, { id_auditoria: 2 }] };
+  });
+
+  const r = await listarAuditoria({ entidad: "usuario", accion: "crear", page: "1", limit: "10" });
+
+  assert.deepEqual(r, { data: [{ id_auditoria: 1 }, { id_auditoria: 2 }], total: 2, page: 1, limit: 10 });
+  assert.equal(llamadas[0].where.entidad, "usuario");
+  assert.equal(llamadas[0].where.accion, "crear");
+});
+
+test("GET /api/admin/auditoria exige root_ver_logs_sistema y filtra", async (t) => {
+  t.mock.method(Auditoria, "findAndCountAll", async () => ({
+    count: 1,
+    rows: [{ id_auditoria: 7, entidad: "alumno" }],
+  }));
+  mockearPermisosDeRol(t, { [ROLES.ROOT]: ["root_ver_logs_sistema"] });
+  const srv = await obtenerServidor();
+
+  const sinPermiso = await srv.request("GET", "/api/admin/auditoria", {
+    token: token({ id_rol: ROLES.ALUMNO }),
+  });
+  assert.equal(sinPermiso.status, 403);
+
+  const root = await srv.request("GET", "/api/admin/auditoria?entidad=alumno", {
+    token: token({ id_rol: ROLES.ROOT }),
+  });
+  assert.equal(root.status, 200);
+  assert.equal(root.data.ok, true);
+  assert.equal(root.data.total, 1);
 });

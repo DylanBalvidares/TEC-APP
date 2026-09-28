@@ -18,6 +18,7 @@ import { enviarEmailAAlumno } from "./email-controller.js";
 
 import comprobarPermiso from "../../middlewares/comprobarPermisos.js";
 import validarCursoPreceptor from "../../middlewares/validarCursoPreceptor.js";
+import { auditarEscritura } from "../../utils/auditoria.js";
 
 const alumnosRouter = Router();
 
@@ -156,6 +157,12 @@ alumnosRouter.post(
     console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m ALUMNO REQUEST:", req.body); //DEBUG
     try {
       const alumno = await crearAlumno(req.body);
+      await auditarEscritura(req, {
+        accion: "crear",
+        entidad: "alumno",
+        id_entidad: alumno?.id_alumno ?? null,
+        despues: req.body,
+      });
       return res.status(201).json(alumno);
     } catch (error) {
       return res.status(error.status || 500).json({ message: error.message });
@@ -172,6 +179,7 @@ alumnosRouter.delete(
     const id = req.params.id;
     try {
       const resultado = await eliminarAlumno(id);
+      await auditarEscritura(req, { accion: "eliminar", entidad: "alumno", id_entidad: id });
       return res.status(200).json(resultado);
     } catch (error) {
       return res.status(error.status || 500).json({ message: error.message });
@@ -186,6 +194,7 @@ alumnosRouter.patch(
     const id = req.params.id;
     try {
       const resultado = await darDeBajaAlumno(id);
+      await auditarEscritura(req, { accion: "baja", entidad: "alumno", id_entidad: id });
       return res.status(200).json(resultado);
     } catch (error) {
       return res.status(error.status || 500).json({ message: error.message });
@@ -201,6 +210,12 @@ alumnosRouter.patch(
     
     try {
       const resultado = await modificarAlumno(req.body);
+      await auditarEscritura(req, {
+        accion: "modificar",
+        entidad: "alumno",
+        id_entidad: req.body?.id_alumno ?? null,
+        despues: req.body,
+      });
       return res.status(200).json(resultado);
     } catch (error) {
       return res.status(error.status || 500).json({ message: error.message });

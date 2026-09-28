@@ -13,6 +13,7 @@ import {
   modificarUsuario,
   comprobarContrasenaUsuario,
 } from "./usuarios-controller.js";
+import { auditarEscritura } from "../../utils/auditoria.js";
 
 const usuariosRouter = Router();
 
@@ -148,6 +149,11 @@ usuariosRouter.delete(
       }
 
       const usuario = await eliminarUsuario(req.params.id);
+      await auditarEscritura(req, {
+        accion: "eliminar",
+        entidad: "usuario",
+        id_entidad: req.params.id,
+      });
       return res.status(200).json({
         ok: true,
         mensaje: "Usuario eliminado con éxito",
@@ -176,6 +182,12 @@ usuariosRouter.post(
       }
 
       const usuarioCreado = await crearUsuario(req.body);
+      await auditarEscritura(req, {
+        accion: "crear",
+        entidad: "usuario",
+        id_entidad: usuarioCreado?.id_usuario ?? null,
+        despues: req.body,
+      });
       return res.status(201).json(usuarioCreado);
     } catch (error) {
       const statusCode = error.statusCode || error.status || 500;
@@ -200,6 +212,12 @@ usuariosRouter.patch(
       }
 
       const usuarioModificado = await modificarUsuario(req.body);
+      await auditarEscritura(req, {
+        accion: "modificar",
+        entidad: "usuario",
+        id_entidad: req.body?.id_usuario ?? null,
+        despues: req.body,
+      });
       return res.status(200).json(usuarioModificado);
     } catch (error) {
       const statusCode = error.statusCode || error.status || 500;
