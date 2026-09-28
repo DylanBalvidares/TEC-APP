@@ -39,72 +39,60 @@
             </div>
 
             <div class="table-responsive">
-                <div v-if="cargando" class="empty-state">
-                    <i class="ti ti-loader animate-spin" style="font-size: 24px; color: #cd322c"></i>
-                    <p>Cargando planes de estudio...</p>
-                </div>
-
-                <div v-else-if="errorCarga" class="error-banner" style="margin: 16px">
-                    <i class="ti ti-alert-circle"></i> {{ errorCarga }}
-                    <button class="tb-btn sm outline" @click="fetchPlanes" style="margin-left: auto">
-                        Reintentar
-                    </button>
-                </div>
-
-                <template v-else-if="filteredData.length > 0">
-                    <table class="mini" aria-label="Listado de planes de estudio">
-                        <thead>
-                            <tr>
-                                <th>Nombre</th>
-                                <th>Código</th>
-                                <th>Orientación</th>
-                                <th>Estado</th>
-                                <th>Materias</th>
-                                <th class="action-cell">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="plan in paginatedData" :key="plan.id_plan" class="table-row">
-                                <td><strong>{{ plan.nombre }}</strong></td>
-                                <td><span class="mono">{{ plan.codigo }}</span></td>
-                                <td>{{ plan.orientacion }}</td>
-                                <td>
-                                    <span class="metric-badge" :class="plan.estado === 'vigente' ? 'badge-green' : 'badge-gray'">
-                                        {{ etiquetaEstado(plan.estado) }}
-                                    </span>
-                                </td>
-                                <td>{{ (plan.materiasPlan || []).length }}</td>
-                                <td class="action-cell">
-                                    <div class="action-buttons">
-                                        <button @click="cambiarVista('detalles', plan)" class="icon-btn view" title="Ver detalles">
-                                            <i class="ti ti-eye"></i>
-                                        </button>
-                                        <button @click="cambiarVista('editar', plan)" class="icon-btn edit" title="Editar">
-                                            <i class="ti ti-edit"></i>
-                                        </button>
-                                        <button @click="pedirConfirmacion(plan)" class="icon-btn delete" title="Eliminar">
-                                            <i class="ti ti-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </template>
-
-                <div v-else class="empty-state">
-                    <i class="ti ti-file-x" style="font-size: 28px; opacity: 0.4"></i>
-                    <p v-if="searchText">No se encontraron planes que coincidan con "{{ searchText }}".</p>
-                    <p v-else>No hay planes de estudio registrados.</p>
-                </div>
+                <DataTable
+                    :columnas="columnasPlanes"
+                    :filas="paginatedData"
+                    clave-fila="id_plan"
+                    :total="totalItems"
+                    :pagina="currentPage"
+                    :por-pagina="pageSize"
+                    :orden-key="sortKey"
+                    :orden-dir="sortDir"
+                    :cargando="cargando"
+                    texto-carga="Cargando planes de estudio..."
+                    :error="errorCarga"
+                    etiqueta="Listado de planes de estudio"
+                    icono-vacio="ti-file-x"
+                    :busqueda-activa="!!searchText"
+                    @ordenar="toggleSort"
+                    @pagina="goToPage"
+                    @por-pagina="setPageSize"
+                    @reintentar="fetchPlanes"
+                >
+                    <template #celda-nombre="{ fila: plan }">
+                        <strong>{{ plan.nombre }}</strong>
+                    </template>
+                    <template #celda-codigo="{ fila: plan }">
+                        <span class="mono">{{ plan.codigo }}</span>
+                    </template>
+                    <template #celda-estado="{ fila: plan }">
+                        <span class="metric-badge" :class="plan.estado === 'vigente' ? 'badge-green' : 'badge-gray'">
+                            {{ etiquetaEstado(plan.estado) }}
+                        </span>
+                    </template>
+                    <template #celda-materias="{ fila: plan }">
+                        {{ (plan.materiasPlan || []).length }}
+                    </template>
+                    <template #acciones="{ fila: plan }">
+                        <div class="action-buttons">
+                            <button @click="cambiarVista('detalles', plan)" class="icon-btn view" title="Ver detalles">
+                                <i class="ti ti-eye"></i>
+                            </button>
+                            <button @click="cambiarVista('editar', plan)" class="icon-btn edit" title="Editar">
+                                <i class="ti ti-edit"></i>
+                            </button>
+                            <button @click="pedirConfirmacion(plan)" class="icon-btn delete" title="Eliminar">
+                                <i class="ti ti-trash"></i>
+                            </button>
+                        </div>
+                    </template>
+                    <template #vacio>
+                        <i class="ti ti-file-x" style="font-size: 28px; opacity: 0.4"></i>
+                        <p v-if="searchText">No se encontraron planes que coincidan con "{{ searchText }}".</p>
+                        <p v-else>No hay planes de estudio registrados.</p>
+                    </template>
+                </DataTable>
             </div>
-            <Pagination
-                :current-page="currentPage"
-                :total-items="totalItems"
-                :page-size="pageSize"
-                @page-change="goToPage"
-                @page-size-change="setPageSize"
-            />
         </div>
 
         <!-- DETALLES + GESTIÓN DE CONTENIDO -->
@@ -382,7 +370,7 @@ import {
     validarFormulario,
 } from "../../../utils/validators.js";
 import { useTableControls } from "../../../composables/useTableControls.js";
-import Pagination from "../../ui/Pagination.vue";
+import DataTable from "../../ui/DataTable.vue";
 
 // ── Estado ─────────────────────────────────────────────────────────────
 const planes = ref([]);
@@ -415,8 +403,18 @@ const filterFn = (item, q) => {
     const texto = `${item.nombre} ${item.codigo} ${item.orientacion || ""}`.toLowerCase();
     return texto.includes(q);
 };
-const { searchText, currentPage, pageSize, filteredData, paginatedData, totalItems, goToPage, setPageSize } =
+const { searchText, currentPage, pageSize, sortKey, sortDir, filteredData, paginatedData, totalItems, goToPage, setPageSize, toggleSort } =
     useTableControls(planes, { pageSize: 10, filterFn });
+
+// ── Columnas del DataTable ─────────────────────────────────────────────────
+const columnasPlanes = [
+    { key: "nombre", titulo: "Nombre", ordenable: true },
+    { key: "codigo", titulo: "Código", ordenable: true },
+    { key: "orientacion", titulo: "Orientación", ordenable: true },
+    { key: "estado", titulo: "Estado", ordenable: true },
+    { key: "materias", titulo: "Materias", ordenable: true, getter: (p) => (p.materiasPlan || []).length },
+    { key: "__acciones", titulo: "Acciones" },
+];
 
 // ── Formularios ────────────────────────────────────────────────────────
 const primerInputRef = ref(null);

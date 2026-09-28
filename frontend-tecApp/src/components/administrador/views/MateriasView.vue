@@ -47,110 +47,76 @@
             </div>
 
             <div class="table-responsive">
-                <div v-if="cargando" class="empty-state">
-                    <i
-                        class="ti ti-loader animate-spin"
-                        style="font-size: 24px; color: #cd322c"
-                    ></i>
-                    <p>Cargando registros de materias...</p>
-                </div>
-
-                <div
-                    v-else-if="errorCarga"
-                    class="error-banner"
-                    style="margin: 16px"
+                <DataTable
+                    :columnas="columnasMaterias"
+                    :filas="paginatedData"
+                    clave-fila="id_materia"
+                    :total="totalItems"
+                    :pagina="currentPage"
+                    :por-pagina="pageSize"
+                    :orden-key="sortKey"
+                    :orden-dir="sortDir"
+                    :cargando="cargando"
+                    texto-carga="Cargando registros de materias..."
+                    :error="errorCarga"
+                    etiqueta="Listado de materias"
+                    icono-vacio="ti-file-x"
+                    :busqueda-activa="!!searchText"
+                    @ordenar="toggleSort"
+                    @pagina="goToPage"
+                    @por-pagina="setPageSize"
+                    @reintentar="fetchMaterias"
                 >
-                    <i class="ti ti-alert-circle"></i> {{ errorCarga }}
-                    <button
-                        class="tb-btn sm outline"
-                        @click="fetchMaterias"
-                        style="margin-left: auto"
-                    >
-                        Reintentar
-                    </button>
-                </div>
-
-                <template v-else-if="filteredData.length > 0">
-                    <table
-                        class="mini"
-                        aria-label="Listado de materias"
-                    >
-                        <thead>
-                            <tr>
-                                <th>Nombre de la Materia</th>
-                                <th>Descripción</th>
-                                <th>Carga Horaria</th>
-                                <th class="action-cell">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr
-                                v-for="materia in paginatedData"
-                                :key="materia.id_materia"
-                            class="table-row"
-                        >
-                            <td>
-                                <strong>{{ materia.nombre_materia }}</strong>
-                            </td>
-                            <td>
-                                {{ materia.descripcion || "Sin descripción" }}
-                            </td>
-                            <td>
-                                {{
-                                    materia.carga_horaria
-                                        ? `${materia.carga_horaria} hs/sem`
-                                        : "No definida"
-                                }}
-                            </td>
-
-                            <td class="action-cell">
-                                <div class="action-buttons">
-                                    <button
-                                        @click="
-                                            cambiarVista('detalles', materia)
-                                        "
-                                        class="icon-btn view"
-                                        title="Ver detalles"
-                                    >
-                                        <i class="ti ti-eye"></i>
-                                    </button>
-                                    <button
-                                        @click="cambiarVista('editar', materia)"
-                                        class="icon-btn edit"
-                                        title="Editar"
-                                    >
-                                        <i class="ti ti-edit"></i>
-                                    </button>
-                                    <button
-                                        @click="pedirConfirmacion(materia)"
-                                        class="icon-btn delete"
-                                        title="Eliminar"
-                                    >
-                                        <i class="ti ti-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                        </template>
-
-                        <div v-else class="empty-state">
-                            <i
-                                class="ti ti-file-x"
-                                style="font-size: 28px; opacity: 0.4"
-                            ></i>
-                            <p v-if="searchText">No se encontraron materias que coincidan con "{{ searchText }}".</p>
-                            <p v-else>No se encontraron materias en el sistema.</p>
+                    <template #celda-nombre_materia="{ fila: materia }">
+                        <strong>{{ materia.nombre_materia }}</strong>
+                    </template>
+                    <template #celda-descripcion="{ fila: materia }">
+                        {{ materia.descripcion || "Sin descripción" }}
+                    </template>
+                    <template #celda-carga_horaria="{ fila: materia }">
+                        {{
+                            materia.carga_horaria
+                                ? `${materia.carga_horaria} hs/sem`
+                                : "No definida"
+                        }}
+                    </template>
+                    <template #acciones="{ fila: materia }">
+                        <div class="action-buttons">
+                            <button
+                                @click="
+                                    cambiarVista('detalles', materia)
+                                "
+                                class="icon-btn view"
+                                title="Ver detalles"
+                            >
+                                <i class="ti ti-eye"></i>
+                            </button>
+                            <button
+                                @click="cambiarVista('editar', materia)"
+                                class="icon-btn edit"
+                                title="Editar"
+                            >
+                                <i class="ti ti-edit"></i>
+                            </button>
+                            <button
+                                @click="pedirConfirmacion(materia)"
+                                class="icon-btn delete"
+                                title="Eliminar"
+                            >
+                                <i class="ti ti-trash"></i>
+                            </button>
                         </div>
-                        </div>
-                        <Pagination
-                            :current-page="currentPage"
-                            :total-items="totalItems"
-                            :page-size="pageSize"
-                            @page-change="goToPage"
-                            @page-size-change="setPageSize"
-                        />
+                    </template>
+                    <template #vacio>
+                        <i
+                            class="ti ti-file-x"
+                            style="font-size: 28px; opacity: 0.4"
+                        ></i>
+                        <p v-if="searchText">No se encontraron materias que coincidan con "{{ searchText }}".</p>
+                        <p v-else>No se encontraron materias en el sistema.</p>
+                    </template>
+                </DataTable>
+            </div>
         </div>
 
         <div
@@ -411,7 +377,7 @@ import {
     validarFormulario,
 } from "../../../utils/validators.js";
 import { useTableControls } from "../../../composables/useTableControls.js";
-import Pagination from "../../ui/Pagination.vue";
+import DataTable from "../../ui/DataTable.vue";
 
 // ── Estado Reactivo ──────────────────────────────────────────────────────────
 const materias = ref([]);
@@ -446,12 +412,23 @@ const {
     searchText,
     currentPage,
     pageSize,
+    sortKey,
+    sortDir,
     filteredData,
     paginatedData,
     totalItems,
     goToPage,
     setPageSize,
+    toggleSort,
 } = useTableControls(materias, { pageSize: 10, filterFn });
+
+// ── Columnas del DataTable ─────────────────────────────────────────────────
+const columnasMaterias = [
+    { key: "nombre_materia", titulo: "Nombre de la Materia", ordenable: true },
+    { key: "descripcion", titulo: "Descripción", ordenable: true },
+    { key: "carga_horaria", titulo: "Carga Horaria", ordenable: true },
+    { key: "__acciones", titulo: "Acciones" },
+];
 
 // ── Refs para autofocus ──────────────────────────────────────────────
 const primerInputRef = ref(null);

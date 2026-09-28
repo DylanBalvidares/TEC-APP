@@ -41,87 +41,61 @@
       </div>
 
       <div class="table-responsive">
-        <div v-if="cargando" class="empty-state">
-          <i class="ti ti-loader animate-spin" style="font-size: 24px; color: #cd322c"></i>
-          <p>Cargando cursos...</p>
-        </div>
-
-        <div v-else-if="errorCarga" class="error-banner" style="margin: 16px">
-          <i class="ti ti-alert-circle"></i> {{ errorCarga }}
-          <button class="tb-btn sm outline" @click="fetchCursos" style="margin-left: auto">Reintentar</button>
-        </div>                <template v-else-if="filteredData.length > 0">
-                  <table class="mini" aria-label="Cursos registrados">
-          <thead>
-            <tr>
-              <th :aria-sort="ariaSort('nombre_curso')">
-                <button class="th-sort" @click="toggleSort('nombre_curso')">Nombre <i class="ti" :class="iconoSort('nombre_curso')" aria-hidden="true"></i></button>
-              </th>
-              <th :aria-sort="ariaSort('nivel')">
-                <button class="th-sort" @click="toggleSort('nivel')">Nivel <i class="ti" :class="iconoSort('nivel')" aria-hidden="true"></i></button>
-              </th>
-              <th :aria-sort="ariaSort('aula')">
-                <button class="th-sort" @click="toggleSort('aula')">Aula <i class="ti" :class="iconoSort('aula')" aria-hidden="true"></i></button>
-              </th>
-              <th :aria-sort="ariaSort('turno')">
-                <button class="th-sort" @click="toggleSort('turno')">Turno <i class="ti" :class="iconoSort('turno')" aria-hidden="true"></i></button>
-              </th>
-              <th :aria-sort="ariaSort('preceptor')">
-                <button class="th-sort" @click="toggleSort('preceptor', (c) => etiquetaPreceptor(c))">Preceptor <i class="ti" :class="iconoSort('preceptor')" aria-hidden="true"></i></button>
-              </th>
-              <th :aria-sort="ariaSort('estado')">
-                <button class="th-sort" @click="toggleSort('estado')">Estado <i class="ti" :class="iconoSort('estado')" aria-hidden="true"></i></button>
-              </th>
-              <th class="action-cell">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="curso in paginatedData" :key="curso.id_curso" class="table-row">
-              <td style="font-weight: 500">
-                {{ curso.nombre_curso }}
-              </td>
-              <td>{{ curso.nivel }}</td>
-              <td>{{ curso.aula }}</td>
-              <td>
-                <span :class="['badge', badgeClass(curso.turno)]">
-                  {{ curso.turno || "Sin definir" }}
-                </span>
-              </td>
-              <td>{{ etiquetaPreceptor(curso) }}</td>
-              <td>
-                <span :class="['estado-dot', curso.estado]"></span>
-                {{ etiquetaEstadoCurso[curso.estado] || curso.estado || "Sin estado" }}
-              </td>
-              <td class="action-cell">
-                <div class="action-buttons">
-                  <button @click="cambiarVista('detalles', curso)" class="icon-btn view" title="Ver detalles" aria-label="Ver detalles">
-                    <i class="ti ti-eye"></i>
-                  </button>
-                  <button @click="cambiarVista('editar', curso)" class="icon-btn edit" title="Editar" aria-label="Editar">
-                    <i class="ti ti-edit"></i>
-                  </button>
-                  <button @click="pedirConfirmacion(curso)" class="icon-btn delete" title="Eliminar" aria-label="Eliminar">
-                    <i class="ti ti-trash"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-                  </template>
-
-        <div v-else class="empty-state">
-          <i class="ti ti-inbox" style="font-size: 28px; opacity: 0.4"></i>
-          <p v-if="searchText">No se encontraron cursos que coincidan con "{{ searchText }}".</p>
-          <p v-else>No hay cursos registrados todavía.</p>
-        </div>
+        <DataTable
+          :columnas="columnasCursos"
+          :filas="paginatedData"
+          clave-fila="id_curso"
+          :total="totalItems"
+          :pagina="currentPage"
+          :por-pagina="pageSize"
+          :orden-key="sortKey"
+          :orden-dir="sortDir"
+          :cargando="cargando"
+          texto-carga="Cargando cursos..."
+          :error="errorCarga"
+          etiqueta="Cursos registrados"
+          icono-vacio="ti-inbox"
+          :busqueda-activa="!!searchText"
+          @ordenar="toggleSort"
+          @pagina="goToPage"
+          @por-pagina="setPageSize"
+          @reintentar="fetchCursos"
+        >
+          <template #celda-nombre_curso="{ fila: curso }">
+            <span style="font-weight: 500">{{ curso.nombre_curso }}</span>
+          </template>
+          <template #celda-turno="{ fila: curso }">
+            <span :class="['badge', badgeClass(curso.turno)]">
+              {{ curso.turno || "Sin definir" }}
+            </span>
+          </template>
+          <template #celda-preceptor="{ fila: curso }">
+            {{ etiquetaPreceptor(curso) }}
+          </template>
+          <template #celda-estado="{ fila: curso }">
+            <span :class="['estado-dot', curso.estado]"></span>
+            {{ etiquetaEstadoCurso[curso.estado] || curso.estado || "Sin estado" }}
+          </template>
+          <template #acciones="{ fila: curso }">
+            <div class="action-buttons">
+              <button @click="cambiarVista('detalles', curso)" class="icon-btn view" title="Ver detalles" aria-label="Ver detalles">
+                <i class="ti ti-eye"></i>
+              </button>
+              <button @click="cambiarVista('editar', curso)" class="icon-btn edit" title="Editar" aria-label="Editar">
+                <i class="ti ti-edit"></i>
+              </button>
+              <button @click="pedirConfirmacion(curso)" class="icon-btn delete" title="Eliminar" aria-label="Eliminar">
+                <i class="ti ti-trash"></i>
+              </button>
+            </div>
+          </template>
+          <template #vacio>
+            <i class="ti ti-inbox" style="font-size: 28px; opacity: 0.4"></i>
+            <p v-if="searchText">No se encontraron cursos que coincidan con "{{ searchText }}".</p>
+            <p v-else>No hay cursos registrados todavía.</p>
+          </template>
+        </DataTable>
       </div>
-                  <Pagination
-                    :current-page="currentPage"
-                    :total-items="totalItems"
-                    :page-size="pageSize"
-                    @page-change="goToPage"
-                    @page-size-change="setPageSize"
-                  />
     </div>
 
     <div v-if="vistaActiva === 'detalles' && cursoSeleccionado" class="card animate-fade-in">
@@ -402,7 +376,7 @@ import {
   validarFormulario,
 } from "../../../utils/validators.js";
 import { useTableControls } from "../../../composables/useTableControls.js";
-import Pagination from "../../ui/Pagination.vue";
+import DataTable from "../../ui/DataTable.vue";
 
 // ── Opciones de Selects ────────────────────────────────────────────────────
 const turnos = ["8:00 a 15:25", "12:00 a 19:00", "8:00 a 12:00", "13:15 a 17:45", "13:15 a 19:00"];
@@ -458,19 +432,16 @@ const {
   toggleSort,
 } = useTableControls(cursos, { pageSize: 10, filterFn });
 
-// ── Ordenamiento asistido para encabezados ────────────────────────────────
-const ariaSort = (key) =>
-  sortKey.value === key
-    ? sortDir.value === "asc"
-      ? "ascending"
-      : "descending"
-    : "none";
-const iconoSort = (key) =>
-  sortKey.value !== key
-    ? "ti-selector"
-    : sortDir.value === "asc"
-      ? "ti-caret-up-filled"
-      : "ti-caret-down-filled";
+// ── Columnas del DataTable ─────────────────────────────────────────────────
+const columnasCursos = [
+  { key: "nombre_curso", titulo: "Nombre", ordenable: true },
+  { key: "nivel", titulo: "Nivel", ordenable: true },
+  { key: "aula", titulo: "Aula", ordenable: true },
+  { key: "turno", titulo: "Turno", ordenable: true },
+  { key: "preceptor", titulo: "Preceptor", ordenable: true, getter: (c) => etiquetaPreceptor(c) },
+  { key: "estado", titulo: "Estado", ordenable: true },
+  { key: "__acciones", titulo: "Acciones" },
+];
 
 // ── Exportación CSV ──────────────────────────────────────────────────────
 const exportarCursos = () => {

@@ -51,143 +51,108 @@
             </div>
 
             <div class="table-responsive">
-                <div v-if="cargando" class="empty-state">
-                    <i
-                        class="ti ti-loader animate-spin"
-                        style="font-size: 24px; color: #cd322c"
-                    ></i>
-                    <p>Cargando registros de asignaciones...</p>
-                </div>
-
-                <div
-                    v-else-if="errorCarga"
-                    class="error-banner"
-                    style="margin: 16px"
+                <DataTable
+                    :columnas="columnasAsignaciones"
+                    :filas="paginatedData"
+                    clave-fila="id_asignacion"
+                    :total="totalItems"
+                    :pagina="currentPage"
+                    :por-pagina="pageSize"
+                    :orden-key="sortKey"
+                    :orden-dir="sortDir"
+                    :cargando="cargando"
+                    texto-carga="Cargando registros de asignaciones..."
+                    :error="errorCarga"
+                    etiqueta="Listado de asignaciones"
+                    icono-vacio="ti-file-x"
+                    :busqueda-activa="!!searchText"
+                    @ordenar="toggleSort"
+                    @pagina="goToPage"
+                    @por-pagina="setPageSize"
+                    @reintentar="fetchDependenciasYDatos"
                 >
-                    <i class="ti ti-alert-circle"></i> {{ errorCarga }}
-                    <button
-                        class="tb-btn sm outline"
-                        @click="fetchDependenciasYDatos"
-                        style="margin-left: auto"
-                    >
-                        Reintentar
-                    </button>
-                </div>
-
-                <template v-else-if="filteredData.length > 0">
-                    <table
-                        class="mini"
-                        aria-label="Listado de asignaciones"
-                    >
-                        <thead>
-                            <tr>
-                                <th>Profesor Designado</th>
-                                <th>Materia</th>
-                                <th>Curso / División</th>
-                                <th>En plan</th>
-                                <th class="action-cell">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr
-                                v-for="asignacion in paginatedData"
-                                :key="asignacion.id_asignacion"
-                            class="table-row"
+                    <template #celda-profesor="{ fila: asignacion }">
+                        <strong
+                            >{{
+                                asignacion.profesorAsignacion?.apellido ||
+                                ""
+                            }}
+                            {{
+                                asignacion.profesorAsignacion?.nombre ||
+                                "Sin profesor"
+                            }}
+                        </strong>
+                    </template>
+                    <template #celda-materia="{ fila: asignacion }">
+                        {{
+                            asignacion.materiaAsignacion
+                                ?.nombre_materia || "N/A"
+                        }}
+                    </template>
+                    <template #celda-curso="{ fila: asignacion }">
+                        {{
+                            asignacion.cursoAsignacion?.nombre_curso ||
+                            "Sin asignar"
+                        }}
+                    </template>
+                    <template #celda-en_plan="{ fila: asignacion }">
+                        <span
+                            v-if="asignacion.en_plan === true"
+                            class="metric-badge badge-green"
+                            title="La materia figura en un plan vigente para el año del curso"
                         >
-                            <td>
-                                <strong
-                                    >{{
-                                        asignacion.profesorAsignacion?.apellido ||
-                                        ""
-                                    }}
-                                    {{
-                                        asignacion.profesorAsignacion?.nombre ||
-                                        "Sin profesor"
-                                    }}
-                                </strong>
-                            </td>
-                            <td>
-                                {{
-                                    asignacion.materiaAsignacion
-                                        ?.nombre_materia || "N/A"
-                                }}
-                            </td>
-                            <td>
-                                {{
-                                    asignacion.cursoAsignacion?.nombre_curso ||
-                                    "Sin asignar"
-                                }}
-                            </td>
-                            <td>
-                                <span
-                                    v-if="asignacion.en_plan === true"
-                                    class="metric-badge badge-green"
-                                    title="La materia figura en un plan vigente para el año del curso"
-                                >
-                                    <i class="ti ti-check"></i> En plan
-                                </span>
-                                <span
-                                    v-else-if="asignacion.en_plan === false"
-                                    class="metric-badge badge-gray"
-                                    title="Advertencia: la materia no figura en ningún plan vigente para el año del curso"
-                                >
-                                    <i class="ti ti-alert-triangle"></i> Fuera de plan
-                                </span>
-                                <span v-else class="metric-badge badge-gray" title="El curso no tiene año cargado">
-                                    S/D
-                                </span>
-                            </td>
-
-                            <td class="action-cell">
-                                <div class="action-buttons">
-                                    <button
-                                        @click="
-                                            cambiarVista('detalles', asignacion)
-                                        "
-                                        class="icon-btn view"
-                                        title="Ver detalles"
-                                    >
-                                        <i class="ti ti-eye"></i>
-                                    </button>
-                                    <button
-                                        @click="
-                                            cambiarVista('editar', asignacion)
-                                        "
-                                        class="icon-btn edit"
-                                        title="Editar"
-                                    >
-                                        <i class="ti ti-edit"></i>
-                                    </button>
-                                    <button
-                                        @click="pedirConfirmacion(asignacion)"
-                                        class="icon-btn delete"
-                                        title="Eliminar"
-                                    >
-                                        <i class="ti ti-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                        </template>
-
-                        <div v-else class="empty-state">
-                            <i
-                                class="ti ti-file-x"
-                                style="font-size: 28px; opacity: 0.4"
-                            ></i>
-                            <p v-if="searchText">No se encontraron asignaciones que coincidan con "{{ searchText }}".</p>
-                            <p v-else>No se encontraron asignaciones de materias registradas.</p>
+                            <i class="ti ti-check"></i> En plan
+                        </span>
+                        <span
+                            v-else-if="asignacion.en_plan === false"
+                            class="metric-badge badge-gray"
+                            title="Advertencia: la materia no figura en ningún plan vigente para el año del curso"
+                        >
+                            <i class="ti ti-alert-triangle"></i> Fuera de plan
+                        </span>
+                        <span v-else class="metric-badge badge-gray" title="El curso no tiene año cargado">
+                            S/D
+                        </span>
+                    </template>
+                    <template #acciones="{ fila: asignacion }">
+                        <div class="action-buttons">
+                            <button
+                                @click="
+                                    cambiarVista('detalles', asignacion)
+                                "
+                                class="icon-btn view"
+                                title="Ver detalles"
+                            >
+                                <i class="ti ti-eye"></i>
+                            </button>
+                            <button
+                                @click="
+                                    cambiarVista('editar', asignacion)
+                                "
+                                class="icon-btn edit"
+                                title="Editar"
+                            >
+                                <i class="ti ti-edit"></i>
+                            </button>
+                            <button
+                                @click="pedirConfirmacion(asignacion)"
+                                class="icon-btn delete"
+                                title="Eliminar"
+                            >
+                                <i class="ti ti-trash"></i>
+                            </button>
                         </div>
-                        </div>
-                        <Pagination
-                            :current-page="currentPage"
-                            :total-items="totalItems"
-                            :page-size="pageSize"
-                            @page-change="goToPage"
-                            @page-size-change="setPageSize"
-                        />
+                    </template>
+                    <template #vacio>
+                        <i
+                            class="ti ti-file-x"
+                            style="font-size: 28px; opacity: 0.4"
+                        ></i>
+                        <p v-if="searchText">No se encontraron asignaciones que coincidan con "{{ searchText }}".</p>
+                        <p v-else>No se encontraron asignaciones de materias registradas.</p>
+                    </template>
+                </DataTable>
+            </div>
         </div>
 
         <div
@@ -506,7 +471,7 @@ import {
     validarFormulario,
 } from "../../../utils/validators.js";
 import { useTableControls } from "../../../composables/useTableControls.js";
-import Pagination from "../../ui/Pagination.vue";
+import DataTable from "../../ui/DataTable.vue";
 
 // ── Estado Reactivo ──────────────────────────────────────────────────────────
 const asignaciones = ref([]);
@@ -537,12 +502,26 @@ const {
     searchText,
     currentPage,
     pageSize,
+    sortKey,
+    sortDir,
     filteredData,
     paginatedData,
     totalItems,
     goToPage,
     setPageSize,
+    toggleSort,
 } = useTableControls(asignaciones, { pageSize: 10, filterFn });
+
+// ── Columnas del DataTable ─────────────────────────────────────────────────
+const nombreProfesor = (a) =>
+    `${a.profesorAsignacion?.apellido || ""} ${a.profesorAsignacion?.nombre || ""}`.trim();
+const columnasAsignaciones = [
+    { key: "profesor", titulo: "Profesor Designado", ordenable: true, getter: nombreProfesor },
+    { key: "materia", titulo: "Materia", ordenable: true, getter: (a) => a.materiaAsignacion?.nombre_materia },
+    { key: "curso", titulo: "Curso / División", ordenable: true, getter: (a) => a.cursoAsignacion?.nombre_curso },
+    { key: "en_plan", titulo: "En plan", ordenable: true },
+    { key: "__acciones", titulo: "Acciones" },
+];
 
 // ── Refs para autofocus ──────────────────────────────────────────────
 const primerInputRef = ref(null);
