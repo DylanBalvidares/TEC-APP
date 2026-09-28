@@ -67,6 +67,8 @@ const grupos = [
             { vista: "roles", nombre: "Roles y permisos", icono: "ti-lock" },
             { vista: "monitorcorreos", nombre: "Historial de Emails", icono: "ti-envelope" },
             { vista: "auditoria", nombre: "Auditoría", icono: "ti-history" },
+            { vista: "biblioteca", nombre: "Biblioteca", icono: "ti-books" },
+            { vista: "objetos", nombre: "Objetos perdidos", icono: "ti-package" },
             { vista: "reportes", nombre: "Reportes", icono: "ti-chart-bar" },
             { vista: "config", nombre: "Configuración", icono: "ti-settings" },
         ],

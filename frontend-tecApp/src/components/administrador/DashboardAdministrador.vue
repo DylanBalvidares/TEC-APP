@@ -63,6 +63,8 @@ import ReportesView from "./views/ReportesView.vue";
 import ConfigView from "./views/ConfigView.vue";
 import HorariosView from "./views/HorariosView.vue";
 import ConvivenciaView from "./views/ConvivenciaView.vue";
+import BibliotecaView from "./views/BibliotecaView.vue";
+import ObjetosView from "./views/ObjetosView.vue";
 import UsuarioPerfil from "./views/UsuarioPerfil.vue";
 
 const componentesMap = {
@@ -87,6 +89,8 @@ const componentesMap = {
   config: ConfigView,
   horarios: HorariosView,
   convivencia: ConvivenciaView,
+  biblioteca: BibliotecaView,
+  objetos: ObjetosView,
   perfil: UsuarioPerfil,
 };
 const VISTAS_VALIDAS = Object.keys(componentesMap);
@@ -112,6 +116,8 @@ const pageNames = {
   config: "Configuración",
   horarios: "Horarios",
   convivencia: "Convivencia",
+  biblioteca: "Biblioteca",
+  objetos: "Objetos perdidos",
   perfil: "Mi Perfil",
 };
 const nombrePagina = (vista) => pageNames[vista] || "Inicio";
