@@ -14,6 +14,20 @@ function esRolSistema(rol) {
   return IDS_ROLES_SISTEMA.includes(Number(rol?.id_rol));
 }
 
+// Anota el flag derivado es_sistema (no persistido: la tabla roles no tiene
+// esa columna). En instancias Sequelize usa setDataValue para que propague a
+// toJSON(); en objetos planos asigna la propiedad directa.
+function anotarEsSistema(rol) {
+  if (!rol) return rol;
+  const flag = esRolSistema(rol);
+  if (typeof rol.setDataValue === "function") {
+    rol.setDataValue("es_sistema", flag);
+  } else {
+    rol.es_sistema = flag;
+  }
+  return rol;
+}
+
 function sanitizarNombreRol(nombreRol) {
   if (!nombreRol || !String(nombreRol).trim()) {
     throw new ErrorHandler(400, "El nombre del rol es obligatorio");
@@ -40,7 +54,7 @@ async function obtenerTodosRoles() {
       throw new ErrorHandler(404, "No se encontraron roles!");
     }
 
-    return roles;
+    return roles.map(anotarEsSistema);
   } catch (error) {
     if (error instanceof ErrorHandler) {
       throw error;
@@ -64,7 +78,7 @@ async function crearRol(datosRol) {
 
     const rol = await Rol.create({ nombre_rol: nombre });
 
-    return rol;
+    return anotarEsSistema(rol);
   } catch (error) {
     if (error instanceof ErrorHandler) {
       throw error;
@@ -110,7 +124,7 @@ async function modificarRol(idRol, datosRol) {
 
     await rol.update({ nombre_rol: nombre });
 
-    return rol;
+    return anotarEsSistema(rol);
   } catch (error) {
     if (error instanceof ErrorHandler) {
       throw error;
@@ -160,4 +174,12 @@ async function eliminarRol(idRol) {
   }
 }
 
-export { obtenerTodosRoles, crearRol, modificarRol, eliminarRol };
+export {
+  obtenerTodosRoles,
+  crearRol,
+  modificarRol,
+  eliminarRol,
+  esRolSistema,
+  anotarEsSistema,
+  IDS_ROLES_SISTEMA,
+};
