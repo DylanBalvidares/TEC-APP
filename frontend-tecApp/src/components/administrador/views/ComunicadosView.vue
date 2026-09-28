@@ -6,6 +6,9 @@
                 <input v-model="searchText" type="text" placeholder="Buscar comunicado por título o destino..." aria-label="Buscar comunicados" />
                 <button v-if="searchText" class="search-clear" @click="searchText = ''; goToPage(1)" aria-label="Limpiar búsqueda"><i class="ti ti-x"></i></button>
             </div>
+            <button class="tb-btn outline sm exportar-btn" @click="exportarComunicados">
+                <i class="ti ti-download" aria-hidden="true"></i> Exportar
+            </button>
         </div>
 
         <div v-if="vistaActiva === 'lista'" class="card animate-fade-in">
@@ -312,6 +315,7 @@
 import { ref, onMounted, nextTick } from "vue";
 import Modal from "../../ui/Modal.vue";
 import { toast } from "../../../services/toast-service.js";
+import { exportarCsv } from "../../../utils/exportCsv.js";
 // IMPORTANTE: Ajustá esta ruta al archivo de servicios que estés utilizando para los comunicados.
 import {
     obtenerTodosComunicados,
@@ -380,6 +384,24 @@ const columnasComunicados = [
     { key: "fecha_publicacion", titulo: "Fecha de Publicación", ordenable: true },
     { key: "__acciones", titulo: "Acciones" },
 ];
+
+// ── Exportación CSV ──────────────────────────────────────────────────────────
+const exportarComunicados = () => {
+    try {
+        exportarCsv(filteredData.value, {
+            nombreArchivo: "comunicados",
+            columnas: {
+                Titulo: "titulo",
+                Destino: "destino",
+                Importancia: "importancia",
+                Fecha: "fecha_publicacion",
+            },
+        });
+        toast.success("Listado de comunicados exportado.");
+    } catch (e) {
+        toast.error(e?.message || "No se pudo exportar el listado.");
+    }
+};
 
 // ── Refs para autofocus ──────────────────────────────────────────────
 const primerInputRef = ref(null);

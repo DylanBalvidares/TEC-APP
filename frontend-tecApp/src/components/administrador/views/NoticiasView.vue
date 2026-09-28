@@ -27,6 +27,9 @@
                 <input v-model="searchText" type="text" placeholder="Buscar noticia por título..." aria-label="Buscar noticias" />
                 <button v-if="searchText" class="search-clear" @click="searchText = ''; goToPage(1)" aria-label="Limpiar búsqueda"><i class="ti ti-x"></i></button>
             </div>
+            <button class="tb-btn outline sm exportar-btn" @click="exportarNoticias">
+                <i class="ti ti-download" aria-hidden="true"></i> Exportar
+            </button>
         </div>
 
         <div
@@ -476,6 +479,7 @@
 import { ref, computed, onMounted, nextTick } from "vue";
 import Modal from "../../ui/Modal.vue";
 import { toast } from "../../../services/toast-service.js";
+import { exportarCsv } from "../../../utils/exportCsv.js";
 import {
     obtenerNoticias,
     crearNoticia,
@@ -531,6 +535,22 @@ const columnasNoticias = [
     { key: "fecha", titulo: "Fecha", ordenable: true },
     { key: "__acciones", titulo: "Acciones" },
 ];
+
+// ── Exportación CSV ──────────────────────────────────────────────────────────
+const exportarNoticias = () => {
+    try {
+        exportarCsv(filteredData.value, {
+            nombreArchivo: "noticias",
+            columnas: {
+                Titulo: "titulo",
+                Fecha: "fecha",
+            },
+        });
+        toast.success("Listado de noticias exportado.");
+    } catch (e) {
+        toast.error(e?.message || "No se pudo exportar el listado.");
+    }
+};
 
 // ── Refs para autofocus ──────────────────────────────────────────────
 const primerInputRef = ref(null);

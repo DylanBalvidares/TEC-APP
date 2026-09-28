@@ -6,6 +6,9 @@
                 <input v-model="searchText" type="text" placeholder="Buscar personal por nombre, email o cargo..." aria-label="Buscar personal" />
                 <button v-if="searchText" class="search-clear" @click="searchText = ''; goToPage(1)" aria-label="Limpiar búsqueda"><i class="ti ti-x"></i></button>
             </div>
+            <button class="tb-btn outline sm exportar-btn" @click="exportarPersonal">
+                <i class="ti ti-download" aria-hidden="true"></i> Exportar
+            </button>
         </div>
 
         <div v-if="vistaActiva === 'lista'" class="card animate-fade-in">
@@ -429,6 +432,7 @@
 import { ref, computed, onMounted, nextTick } from "vue";
 import Modal from "../../ui/Modal.vue";
 import { toast } from "../../../services/toast-service.js";
+import { exportarCsv } from "../../../utils/exportCsv.js";
 
 import {
     obtenerTodoPersonal,
@@ -500,6 +504,26 @@ const columnasPersonal = [
     { key: "estado", titulo: "Estado", ordenable: true },
     { key: "__acciones", titulo: "Acciones" },
 ];
+
+// ── Exportación CSV ──────────────────────────────────────────────────────────
+const exportarPersonal = () => {
+    try {
+        exportarCsv(filteredData.value, {
+            nombreArchivo: "personal",
+            columnas: {
+                Nombre: "nombre",
+                Apellido: "apellido",
+                Email: "email",
+                Cargo: (e) => e.cargoPersonal?.nombre_cargo || "Sin cargo",
+                Estado: "estado",
+                Telefono: "telefono",
+            },
+        });
+        toast.success("Listado de personal exportado.");
+    } catch (e) {
+        toast.error(e?.message || "No se pudo exportar el listado.");
+    }
+};
 
 // ── Refs para autofocus ──────────────────────────────────────────────
 const primerInputRef = ref(null);

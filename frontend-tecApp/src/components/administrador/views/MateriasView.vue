@@ -26,6 +26,9 @@
                 <input v-model="searchText" type="text" placeholder="Buscar materia por nombre..." aria-label="Buscar materias" />
                 <button v-if="searchText" class="search-clear" @click="searchText = ''; goToPage(1)" aria-label="Limpiar búsqueda"><i class="ti ti-x"></i></button>
             </div>
+            <button class="tb-btn outline sm exportar-btn" @click="exportarMaterias">
+                <i class="ti ti-download" aria-hidden="true"></i> Exportar
+            </button>
         </div>
 
         <div
@@ -363,6 +366,7 @@
 import { ref, computed, onMounted, nextTick } from "vue";
 import Modal from "../../ui/Modal.vue";
 import { toast } from "../../../services/toast-service.js";
+import { exportarCsv } from "../../../utils/exportCsv.js";
 // IMPORTANTE: Ajustar esta ruta según la estructura de tus servicios
 import {
     obtenerMaterias,
@@ -429,6 +433,23 @@ const columnasMaterias = [
     { key: "carga_horaria", titulo: "Carga Horaria", ordenable: true },
     { key: "__acciones", titulo: "Acciones" },
 ];
+
+// ── Exportación CSV ──────────────────────────────────────────────────────────
+const exportarMaterias = () => {
+    try {
+        exportarCsv(filteredData.value, {
+            nombreArchivo: "materias",
+            columnas: {
+                Nombre: "nombre_materia",
+                Descripcion: "descripcion",
+                CargaHoraria: "carga_horaria",
+            },
+        });
+        toast.success("Listado de materias exportado.");
+    } catch (e) {
+        toast.error(e?.message || "No se pudo exportar el listado.");
+    }
+};
 
 // ── Refs para autofocus ──────────────────────────────────────────────
 const primerInputRef = ref(null);

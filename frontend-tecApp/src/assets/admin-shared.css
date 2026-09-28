@@ -501,6 +501,23 @@
     gap: 10px;
 }
 
+/* ── Barra de acciones masivas (C5) ─────────────────────────────────────── */
+.bulk-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: #eff6ff;
+    border-bottom: 1px solid #bfdbfe;
+    flex-wrap: wrap;
+}
+.bulk-count {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #1e3a8a;
+    margin-right: auto;
+}
+
 /* ── Status Pills / Badges ────────────────────────────────────────────── */
 .status-pill {
     font-size: 10.5px;
@@ -562,3 +579,25 @@
 }
 .badge-green { background: #eaf3de; color: #3b6d11; }
 .badge-gray { background: #f3f4f6; color: #4b5563; }
+
+/* ── Impresión (C5): solo el contenido, sin navegación ni acciones ──────── */
+@media print {
+    .sidebar,
+    .topbar,
+    .search-bar-wrapper,
+    .bulk-bar,
+    .action-cell,
+    .action-buttons,
+    .pagination-wrapper,
+    .exportar-btn,
+    .modal-overlay {
+        display: none !important;
+    }
+    .card {
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+    .table-responsive {
+        overflow: visible;
+    }
+}

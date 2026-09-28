@@ -93,6 +93,18 @@
                 </div>
 
             <div class="table-responsive">
+                <div v-if="seleccionAlumnos.length > 0" class="bulk-bar" role="toolbar" aria-label="Acciones masivas">
+                    <span class="bulk-count">{{ seleccionAlumnos.length }} seleccionados</span>
+                    <button class="tb-btn outline sm" @click="exportarSeleccion">
+                        <i class="ti ti-download" aria-hidden="true"></i> Exportar selección
+                    </button>
+                    <button class="tb-btn danger sm" @click="modalBajaMasivaAbierto = true">
+                        <i class="ti ti-trash" aria-hidden="true"></i> Dar de baja
+                    </button>
+                    <button class="tb-btn sm" @click="seleccionAlumnos = []">
+                        Limpiar
+                    </button>
+                </div>
                 <DataTable
                     :columnas="columnasAlumnos"
                     :filas="paginatedData"
@@ -108,6 +120,9 @@
                     etiqueta="Listado de alumnos"
                     :busqueda-activa="!!searchText"
                     :clase-fila="(alumno) => ({ 'row-baja': alumno.estado === 'baja' })"
+                    seleccionable
+                    :seleccion="seleccionAlumnos"
+                    @update:seleccion="seleccionAlumnos = $event"
                     @ordenar="toggleSort"
                     @pagina="goToPage"
                     @por-pagina="setPageSize"
@@ -545,6 +560,42 @@
                 </button>
             </template>
         </Modal>
+
+        <Modal
+            v-model="modalBajaMasivaAbierto"
+            title="Dar de baja masiva"
+            variante="danger"
+        >
+            <p class="modal-texto">
+                ¿Dar de baja a los
+                <strong>{{ seleccionAlumnos.length }} alumnos seleccionados</strong>?
+                Se procesan uno por uno y se informa el resultado.
+            </p>
+
+            <template #footer>
+                <button
+                    class="tb-btn outline"
+                    @click="modalBajaMasivaAbierto = false"
+                >
+                    Cancelar
+                </button>
+                <button
+                    class="tb-btn danger"
+                    @click="confirmarBajaMasiva"
+                    :disabled="eliminando"
+                >
+                    <i
+                        class="ti ti-loader animate-spin"
+                        v-if="eliminando"
+                    ></i>
+                    {{
+                        eliminando
+                            ? "Procesando..."
+                            : "Sí, dar de baja"
+                    }}
+                </button>
+            </template>
+        </Modal>
     </div>
 </template>
 
@@ -588,6 +639,8 @@ const vistaActiva = ref("lista");
 const alumnoSeleccionado = ref(null);
 const alumnoAEliminar = ref(null);
 const modalEliminarAbierto = ref(false);
+const modalBajaMasivaAbierto = ref(false);
+const seleccionAlumnos = ref([]);
 
 const errorCarga = ref("");
 const errorGuardar = ref("");
@@ -955,6 +1008,53 @@ const confirmarEliminar = async () => {
             error?.response?.data?.mensaje ||
             error?.message ||
             "Ocurrió un error inesperado al dar de baja el registro.";
+    } finally {
+        eliminando.value = false;
+    }
+};
+
+// ── Acciones masivas (C5) ────────────────────────────────────────────────────
+const filasSeleccionadas = () => {
+    const ids = new Set(seleccionAlumnos.value);
+    const fuente = alumnos.value.length > 0 ? alumnos.value : paginatedData.value;
+    return fuente.filter((a) => ids.has(a.id_alumno));
+};
+
+const exportarSeleccion = () => {
+    try {
+        exportarCsv(filasSeleccionadas(), {
+            nombreArchivo: "alumnos-seleccion",
+            columnas: {
+                Nombre: "nombre",
+                Apellido: "apellido",
+                DNI: "dni",
+                Curso: (a) => a.curso?.nombre_curso || "Sin asignar",
+                Estado: (a) => etiquetaEstado[a.estado] || a.estado || "",
+            },
+        });
+        toast.success("Selección exportada.");
+    } catch (e) {
+        toast.error(e?.message || "No se pudo exportar la selección.");
+    }
+};
+
+const confirmarBajaMasiva = async () => {
+    const ids = [...seleccionAlumnos.value];
+    if (ids.length === 0) return;
+    eliminando.value = true;
+    try {
+        const resultados = await Promise.allSettled(ids.map((id) => darDeBajaAlumno(id)));
+        const ok = resultados.filter((r) => r.status === "fulfilled" && r.value?.success !== false).length;
+        const fallos = ids.length - ok;
+        seleccionAlumnos.value = [];
+        modalBajaMasivaAbierto.value = false;
+        await fetchAlumnos();
+        await recargarTabla();
+        if (fallos === 0) {
+            toast.success(`${ok} alumnos dados de baja.`);
+        } else {
+            toast.error(`${ok} bajas ok, ${fallos} con error. Revisá el listado.`);
+        }
     } finally {
         eliminando.value = false;
     }

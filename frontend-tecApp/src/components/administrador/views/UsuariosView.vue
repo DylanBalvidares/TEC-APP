@@ -18,6 +18,9 @@
                         <i class="ti ti-x"></i>
                     </button>
                 </div>
+                <button class="tb-btn outline sm exportar-btn" @click="exportarUsuarios">
+                    <i class="ti ti-download" aria-hidden="true"></i> Exportar
+                </button>
             </div>
 
             <div v-if="vistaActiva === 'lista'" class="card animate-fade-in">
@@ -346,6 +349,7 @@
 import { ref, onMounted, nextTick } from "vue";
 import Modal from "../../ui/Modal.vue";
 import { toast } from "../../../services/toast-service.js";
+import { exportarCsv } from "../../../utils/exportCsv.js";
 
 import {
     obtenerUsuarios,
@@ -395,6 +399,24 @@ const columnasUsuarios = [
     { key: "rol", titulo: "Rol", ordenable: true, getter: (u) => u.rol?.nombre_rol },
     { key: "__acciones", titulo: "Acciones" },
 ];
+
+// ── Exportación CSV ──────────────────────────────────────────────────────────
+const exportarUsuarios = () => {
+    try {
+        exportarCsv(filteredData.value, {
+            nombreArchivo: "usuarios",
+            columnas: {
+                Nombre: "nombre",
+                Apellido: "apellido",
+                Email: "email",
+                Rol: (u) => u.rol?.nombre_rol || "Sin rol",
+            },
+        });
+        toast.success("Listado de usuarios exportado.");
+    } catch (e) {
+        toast.error(e?.message || "No se pudo exportar el listado.");
+    }
+};
 const cargando = ref(false);
 const guardando = ref(false);
 const eliminando = ref(false);
