@@ -48,112 +48,82 @@
             </div>
 
             <div class="table-responsive">
-                <div v-if="cargando" class="empty-state">
-                    <i
-                        class="ti ti-loader animate-spin"
-                        style="font-size: 24px; color: #cd322c"
-                    ></i>
-                    <p>Cargando noticias de la comunidad...</p>
-                </div>
-
-                <div
-                    v-else-if="errorCarga"
-                    class="error-banner"
-                    style="margin: 16px"
+                <DataTable
+                    :columnas="columnasNoticias"
+                    :filas="paginatedData"
+                    clave-fila="id_noticia"
+                    :total="totalItems"
+                    :pagina="currentPage"
+                    :por-pagina="pageSize"
+                    :orden-key="sortKey"
+                    :orden-dir="sortDir"
+                    :cargando="cargando"
+                    texto-carga="Cargando noticias de la comunidad..."
+                    :error="errorCarga"
+                    etiqueta="Listado de noticias"
+                    icono-vacio="ti-notes-off"
+                    :busqueda-activa="!!searchText"
+                    @ordenar="toggleSort"
+                    @pagina="goToPage"
+                    @por-pagina="setPageSize"
+                    @reintentar="fetchNoticias"
                 >
-                    <i class="ti ti-alert-circle"></i> {{ errorCarga }}
-                    <button
-                        class="tb-btn sm outline"
-                        @click="fetchNoticias"
-                        style="margin-left: auto"
-                    >
-                        Reintentar
-                    </button>
-                </div>
-
-                <template v-else-if="filteredData.length > 0">
-                    <table
-                        class="mini"
-                        aria-label="Listado de noticias"
-                    >
-                        <thead>
-                            <tr>
-                                <th>Título de la Noticia</th>
-                                <th>Fecha</th>
-                                <th class="action-cell">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr
-                                v-for="noticia in paginatedData"
-                                :key="noticia.id_noticia"
-                            class="table-row"
-                        >
-                            <td>
-                                <div class="noticia-titulo-cell">
-                                    <img
-                                        v-if="noticia.imagen_url"
-                                        :src="noticia.imagen_url"
-                                        class="thumb"
-                                        :alt="noticia.titulo"
-                                    />
-                                    <div v-else class="thumb fallback-thumb">
-                                        <i class="ti ti-photo-off"></i>
-                                    </div>
-                                    <strong>{{ noticia.titulo }}</strong>
-                                </div>
-                            </td>
-                            <td class="mono">
-                                {{ formatearFecha(noticia.fecha) }}
-                            </td>
-                            <td class="action-cell">
-                                <div class="action-buttons">
-                                    <button
-                                        @click="
-                                            cambiarVista('detalles', noticia)
-                                        "
-                                        class="icon-btn view"
-                                        title="Leer noticia completa"
-                                    >
-                                        <i class="ti ti-eye"></i>
-                                    </button>
-                                    <button
-                                        @click="cambiarVista('editar', noticia)"
-                                        class="icon-btn edit"
-                                        title="Editar noticia"
-                                    >
-                                        <i class="ti ti-edit"></i>
-                                    </button>
-                                    <button
-                                        @click="pedirConfirmacion(noticia)"
-                                        class="icon-btn delete"
-                                        title="Eliminar"
-                                    >
-                                        <i class="ti ti-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                        </template>
-
-                        <div v-else class="empty-state">
-                            <i
-                                class="ti ti-notes-off"
-                                style="font-size: 28px; opacity: 0.4"
-                            ></i>
-                            <p v-if="searchText">No se encontraron noticias que coincidan con "{{ searchText }}".</p>
-                            <p v-else>No hay noticias publicadas actualmente.</p>
+                    <template #celda-titulo="{ fila: noticia }">
+                        <div class="noticia-titulo-cell">
+                            <img
+                                v-if="noticia.imagen_url"
+                                :src="noticia.imagen_url"
+                                class="thumb"
+                                :alt="noticia.titulo"
+                            />
+                            <div v-else class="thumb fallback-thumb">
+                                <i class="ti ti-photo-off"></i>
+                            </div>
+                            <strong>{{ noticia.titulo }}</strong>
                         </div>
+                    </template>
+                    <template #celda-fecha="{ fila: noticia }">
+                        <span class="mono">
+                            {{ formatearFecha(noticia.fecha) }}
+                        </span>
+                    </template>
+                    <template #acciones="{ fila: noticia }">
+                        <div class="action-buttons">
+                            <button
+                                @click="
+                                    cambiarVista('detalles', noticia)
+                                "
+                                class="icon-btn view"
+                                title="Leer noticia completa"
+                            >
+                                <i class="ti ti-eye"></i>
+                            </button>
+                            <button
+                                @click="cambiarVista('editar', noticia)"
+                                class="icon-btn edit"
+                                title="Editar noticia"
+                            >
+                                <i class="ti ti-edit"></i>
+                            </button>
+                            <button
+                                @click="pedirConfirmacion(noticia)"
+                                class="icon-btn delete"
+                                title="Eliminar"
+                            >
+                                <i class="ti ti-trash"></i>
+                            </button>
                         </div>
-                        <Pagination
-                            :current-page="currentPage"
-                            :total-items="totalItems"
-                            :page-size="pageSize"
-                            @page-change="goToPage"
-                            @page-size-change="setPageSize"
-                        />
+                    </template>
+                    <template #vacio>
+                        <i
+                            class="ti ti-notes-off"
+                            style="font-size: 28px; opacity: 0.4"
+                        ></i>
+                        <p v-if="searchText">No se encontraron noticias que coincidan con "{{ searchText }}".</p>
+                        <p v-else>No hay noticias publicadas actualmente.</p>
+                    </template>
+                </DataTable>
+            </div>
         </div>
 
         <!-- ── DETALLES ───────────────────────────────────────────────────── -->
@@ -517,7 +487,7 @@ import { useAuthStore } from "../../../stores/auth.js";
 
 import { toDisplayDate } from "../../../utils/formatters.js";
 import { useTableControls } from "../../../composables/useTableControls.js";
-import Pagination from "../../ui/Pagination.vue";
+import DataTable from "../../ui/DataTable.vue";
 
 const authStore = useAuthStore();
 // ── Estado ────────────────────────────────────────────────────────────────────
@@ -545,12 +515,22 @@ const {
     searchText,
     currentPage,
     pageSize,
+    sortKey,
+    sortDir,
     filteredData,
     paginatedData,
     totalItems,
     goToPage,
     setPageSize,
+    toggleSort,
 } = useTableControls(noticias, { pageSize: 10, filterFn });
+
+// ── Columnas del DataTable ─────────────────────────────────────────────────
+const columnasNoticias = [
+    { key: "titulo", titulo: "Título de la Noticia", ordenable: true },
+    { key: "fecha", titulo: "Fecha", ordenable: true },
+    { key: "__acciones", titulo: "Acciones" },
+];
 
 // ── Refs para autofocus ──────────────────────────────────────────────
 const primerInputRef = ref(null);

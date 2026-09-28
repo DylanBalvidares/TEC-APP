@@ -35,107 +35,75 @@
                 </div>
 
             <div class="table-responsive">
-                <div v-if="cargando" class="empty-state">
-                    <i
-                        class="ti ti-loader animate-spin"
-                        style="font-size: 24px; color: #cd322c"
-                    ></i>
-                    <p>Cargando usuarios...</p>
-                </div>
-
-                <div
-                    v-else-if="errorCarga"
-                    class="error-banner"
-                    style="margin: 16px"
+                <DataTable
+                    :columnas="columnasUsuarios"
+                    :filas="paginatedData"
+                    clave-fila="id_usuario"
+                    :total="totalItems"
+                    :pagina="currentPage"
+                    :por-pagina="pageSize"
+                    :orden-key="sortKey"
+                    :orden-dir="sortDir"
+                    :cargando="cargando"
+                    texto-carga="Cargando usuarios..."
+                    :error="errorCarga"
+                    etiqueta="Listado de usuarios"
+                    icono-vacio="ti-users"
+                    :busqueda-activa="!!searchText"
+                    @ordenar="toggleSort"
+                    @pagina="goToPage"
+                    @por-pagina="setPageSize"
+                    @reintentar="fetchUsuarios"
                 >
-                    <i class="ti ti-alert-circle"></i> {{ errorCarga }}
-                    <button
-                        class="tb-btn sm outline"
-                        @click="fetchUsuarios"
-                        style="margin-left: auto"
-                    >
-                        Reintentar
-                    </button>
-                </div>
-
-                <template v-else-if="filteredData.length > 0">
-                    <table
-                        class="mini"
-                        aria-label="Listado de usuarios"
-                    >
-                        <thead>
-                            <tr>
-                                <th>Usuario</th>
-                                <th>Email</th>
-                                <th>Rol</th>
-                                <th class="action-cell">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr
-                                v-for="usuario in paginatedData"
-                                :key="usuario.id_usuario"
-                                class="table-row"
+                    <template #celda-apellido="{ fila: usuario }">
+                        <strong>{{ usuario.apellido }}</strong
+                        >, {{ usuario.nombre }}
+                    </template>
+                    <template #celda-email="{ fila: usuario }">
+                        <span class="email-cell">{{ usuario.email }}</span>
+                    </template>
+                    <template #celda-rol="{ fila: usuario }">
+                        <span class="status-pill sp-cargo">
+                            {{ usuario.rol?.nombre_rol || "Sin rol" }}
+                        </span>
+                    </template>
+                    <template #acciones="{ fila: usuario }">
+                        <div class="action-buttons">
+                            <button
+                                @click="cambiarVista('detalles', usuario)"
+                                class="icon-btn view"
+                                title="Ver detalles"
+                                aria-label="Ver detalles"
                             >
-                                <td>
-                                    <strong>{{ usuario.apellido }}</strong
-                                    >, {{ usuario.nombre }}
-                                </td>
-                                <td class="email-cell">{{ usuario.email }}</td>
-                                <td>
-                                    <span class="status-pill sp-cargo">
-                                        {{ usuario.rol?.nombre_rol || "Sin rol" }}
-                                    </span>
-                                </td>
-
-                                <td class="action-cell">
-                                    <div class="action-buttons">
-                                        <button
-                                            @click="cambiarVista('detalles', usuario)"
-                                            class="icon-btn view"
-                                            title="Ver detalles"
-                                            aria-label="Ver detalles"
-                                        >
-                                            <i class="ti ti-eye"></i>
-                                        </button>
-                                        <button
-                                            @click="cambiarVista('editar', usuario)"
-                                            class="icon-btn edit"
-                                            title="Editar"
-                                            aria-label="Editar"
-                                        >
-                                            <i class="ti ti-edit"></i>
-                                        </button>
-                                        <button
-                                            @click="pedirConfirmacion(usuario)"
-                                            class="icon-btn delete"
-                                            title="Eliminar"
-                                            aria-label="Eliminar"
-                                        >
-                                            <i class="ti ti-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <Pagination
-                        :current-page="currentPage"
-                        :total-items="totalItems"
-                        :page-size="pageSize"
-                        @page-change="goToPage"
-                        @page-size-change="setPageSize"
-                    />
-                </template>
-
-                <div v-else class="empty-state">
-                    <i
-                        class="ti ti-users"
-                        style="font-size: 28px; opacity: 0.4"
-                    ></i>
-                    <p v-if="searchText">No hay usuarios que coincidan con "{{ searchText }}".</p>
-                    <p v-else>No hay usuarios registrados todavía.</p>
-                </div>
+                                <i class="ti ti-eye"></i>
+                            </button>
+                            <button
+                                @click="cambiarVista('editar', usuario)"
+                                class="icon-btn edit"
+                                title="Editar"
+                                aria-label="Editar"
+                            >
+                                <i class="ti ti-edit"></i>
+                            </button>
+                            <button
+                                @click="pedirConfirmacion(usuario)"
+                                class="icon-btn delete"
+                                title="Eliminar"
+                                aria-label="Eliminar"
+                            >
+                                <i class="ti ti-trash"></i>
+                            </button>
+                        </div>
+                    </template>
+                    <template #vacio>
+                        <i
+                            class="ti ti-users"
+                            style="font-size: 28px; opacity: 0.4"
+                        ></i>
+                        <p v-if="searchText">No hay usuarios que coincidan con "{{ searchText }}".</p>
+                        <p v-else>No hay usuarios registrados todavía.</p>
+                    </template>
+                </DataTable>
             </div>
         </div>
 
@@ -394,7 +362,7 @@ import {
     validarFormulario,
 } from "../../../utils/validators.js";
 import { useTableControls } from "../../../composables/useTableControls.js";
-import Pagination from "../../ui/Pagination.vue";
+import DataTable from "../../ui/DataTable.vue";
 
 const usuarios = ref([]);
 
@@ -410,12 +378,23 @@ const {
     searchText,
     currentPage,
     pageSize,
+    sortKey,
+    sortDir,
     filteredData,
     paginatedData,
     totalItems,
     goToPage,
     setPageSize,
+    toggleSort,
 } = useTableControls(usuarios, { pageSize: 10, filterFn });
+
+// ── Columnas del DataTable ─────────────────────────────────────────────────
+const columnasUsuarios = [
+    { key: "apellido", titulo: "Usuario", ordenable: true },
+    { key: "email", titulo: "Email", ordenable: true },
+    { key: "rol", titulo: "Rol", ordenable: true, getter: (u) => u.rol?.nombre_rol },
+    { key: "__acciones", titulo: "Acciones" },
+];
 const cargando = ref(false);
 const guardando = ref(false);
 const eliminando = ref(false);

@@ -119,158 +119,132 @@
             </div>
 
             <div class="table-responsive">
-                <div v-if="cargando" class="empty-state">
-                    <i
-                        class="ti ti-loader animate-spin"
-                        style="font-size: 24px; color: #cd322c"
-                    ></i>
-                    <p>Cargando historial...</p>
-                </div>
-
-                <div
-                    v-else-if="errorCarga"
-                    class="error-banner"
-                    style="margin: 16px"
+                <DataTable
+                    :columnas="columnasCorreos"
+                    :filas="paginatedData"
+                    clave-fila="id"
+                    :total="totalItems"
+                    :pagina="currentPage"
+                    :por-pagina="pageSize"
+                    :orden-key="sortKey"
+                    :orden-dir="sortDir"
+                    :cargando="cargando"
+                    texto-carga="Cargando historial..."
+                    :error="errorCarga"
+                    etiqueta="Historial de emails"
+                    icono-vacio="ti-mail-off"
+                    :busqueda-activa="!!(searchText || hayFiltrosActivos)"
+                    :clase-fila="(email) => ({ 'row-unread': !email.leido })"
+                    @ordenar="toggleSort"
+                    @pagina="goToPage"
+                    @por-pagina="setPageSize"
+                    @reintentar="cargarHistorial"
                 >
-                    <i class="ti ti-alert-circle"></i> {{ errorCarga }}
-                    <button
-                        class="tb-btn sm outline"
-                        @click="cargarHistorial"
-                        style="margin-left: auto"
-                    >
-                        Reintentar
-                    </button>
-                </div>
-
-                <template v-else-if="filteredData.length > 0">
-                    <table class="mini" aria-label="Historial de emails">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Fecha de envío</th>
-                                <th>Remitente</th>
-                                <th>Destinatario</th>
-                                <th>Asunto</th>
-                                <th>Estado</th>
-                                <th>Lectura</th>
-                                <th class="action-cell">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr
-                                v-for="email in paginatedData"
-                                :key="email.id"
-                                class="table-row"
-                                :class="{ 'row-unread': !email.leido }"
+                    <template #celda-id="{ fila: email }">
+                        <span class="mono">{{ email.id }}</span>
+                    </template>
+                    <template #celda-fecha_envio="{ fila: email }">
+                        <span class="nowrap">
+                            {{ formatFechaHora(email.fecha_envio) }}
+                        </span>
+                    </template>
+                    <template #celda-remitente="{ fila: email }">
+                        <span
+                            v-if="email.remitente == null"
+                            class="email-cell"
+                            >Sistema</span
+                        >
+                        <span v-else class="remitente-cell">
+                            <span class="mono"
+                                >ID {{ email.remitente }}</span
                             >
-                                <td class="mono">{{ email.id }}</td>
-                                <td class="nowrap">
-                                    {{ formatFechaHora(email.fecha_envio) }}
-                                </td>
-                                <td>
-                                    <span
-                                        v-if="email.remitente == null"
-                                        class="email-cell"
-                                        >Sistema</span
-                                    >
-                                    <span v-else class="remitente-cell">
-                                        <span class="mono"
-                                            >ID {{ email.remitente }}</span
-                                        >
-                                        <span
-                                            v-if="rolRemitente(email.remitente)"
-                                            class="status-pill sp-rol"
-                                            >{{
-                                                rolRemitente(email.remitente)
-                                            }}</span
-                                        >
-                                    </span>
-                                </td>
-                                <td class="email-cell">
-                                    {{ email.destinatario }}
-                                </td>
-                                <td
-                                    class="asunto-cell"
-                                    :title="email.asunto"
-                                >
-                                    {{ email.asunto }}
-                                </td>
-                                <td>
-                                    <span
-                                        :class="[
-                                            'status-pill',
-                                            email.estado === 'enviado'
-                                                ? 'sp-activo'
-                                                : 'sp-baja',
-                                        ]"
-                                    >
-                                        {{
-                                            email.estado === "enviado"
-                                                ? "Enviado"
-                                                : "Fallido"
-                                        }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span
-                                        :class="[
-                                            'status-pill',
-                                            email.leido
-                                                ? 'sp-leido'
-                                                : 'sp-pendiente',
-                                        ]"
-                                    >
-                                        {{ email.leido ? "Leído" : "Pendiente" }}
-                                    </span>
-                                </td>
-                                <td class="action-cell">
-                                    <div class="action-buttons">
-                                        <button
-                                            v-if="!email.leido"
-                                            @click="marcarLeido(email.id)"
-                                            class="icon-btn check"
-                                            title="Marcar como leído"
-                                            aria-label="Marcar como leído"
-                                            :disabled="marcandoId === email.id"
-                                        >
-                                            <i
-                                                class="ti"
-                                                :class="
-                                                    marcandoId === email.id
-                                                        ? 'ti-loader animate-spin'
-                                                        : 'ti-check'
-                                                "
-                                            ></i>
-                                        </button>
-                                        <span v-else class="email-cell"
-                                            >—</span
-                                        >
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </template>
-
-                <div v-else class="empty-state">
-                    <i
-                        class="ti ti-mail-off"
-                        style="font-size: 28px; opacity: 0.4"
-                    ></i>
-                    <p v-if="searchText || hayFiltrosActivos">
-                        No se encontraron emails que coincidan con los
-                        criterios.
-                    </p>
-                    <p v-else>No hay emails registrados todavía.</p>
-                </div>
+                            <span
+                                v-if="rolRemitente(email.remitente)"
+                                class="status-pill sp-rol"
+                                >{{
+                                    rolRemitente(email.remitente)
+                                }}</span
+                            >
+                        </span>
+                    </template>
+                    <template #celda-destinatario="{ fila: email }">
+                        <span class="email-cell">
+                            {{ email.destinatario }}
+                        </span>
+                    </template>
+                    <template #celda-asunto="{ fila: email }">
+                        <span
+                            class="asunto-cell"
+                            :title="email.asunto"
+                        >
+                            {{ email.asunto }}
+                        </span>
+                    </template>
+                    <template #celda-estado="{ fila: email }">
+                        <span
+                            :class="[
+                                'status-pill',
+                                email.estado === 'enviado'
+                                    ? 'sp-activo'
+                                    : 'sp-baja',
+                            ]"
+                        >
+                            {{
+                                email.estado === "enviado"
+                                    ? "Enviado"
+                                    : "Fallido"
+                            }}
+                        </span>
+                    </template>
+                    <template #celda-leido="{ fila: email }">
+                        <span
+                            :class="[
+                                'status-pill',
+                                email.leido
+                                    ? 'sp-leido'
+                                    : 'sp-pendiente',
+                            ]"
+                        >
+                            {{ email.leido ? "Leído" : "Pendiente" }}
+                        </span>
+                    </template>
+                    <template #acciones="{ fila: email }">
+                        <div class="action-buttons">
+                            <button
+                                v-if="!email.leido"
+                                @click="marcarLeido(email.id)"
+                                class="icon-btn check"
+                                title="Marcar como leído"
+                                aria-label="Marcar como leído"
+                                :disabled="marcandoId === email.id"
+                            >
+                                <i
+                                    class="ti"
+                                    :class="
+                                        marcandoId === email.id
+                                            ? 'ti-loader animate-spin'
+                                            : 'ti-check'
+                                    "
+                                ></i>
+                            </button>
+                            <span v-else class="email-cell"
+                                >—</span
+                            >
+                        </div>
+                    </template>
+                    <template #vacio>
+                        <i
+                            class="ti ti-mail-off"
+                            style="font-size: 28px; opacity: 0.4"
+                        ></i>
+                        <p v-if="searchText || hayFiltrosActivos">
+                            No se encontraron emails que coincidan con los
+                            criterios.
+                        </p>
+                        <p v-else>No hay emails registrados todavía.</p>
+                    </template>
+                </DataTable>
             </div>
-            <Pagination
-                :current-page="currentPage"
-                :total-items="totalItems"
-                :page-size="pageSize"
-                @page-change="goToPage"
-                @page-size-change="setPageSize"
-            />
         </div>
     </div>
 </template>
@@ -283,7 +257,7 @@ import {
 } from "../../../services/comunidad-service.js";
 import { obtenerUsuarios } from "../../../services/usuarios-services.js";
 import { useTableControls } from "../../../composables/useTableControls.js";
-import Pagination from "../../ui/Pagination.vue";
+import DataTable from "../../ui/DataTable.vue";
 
 const filtro = ref({
     estado: "",
@@ -310,12 +284,27 @@ const {
     searchText,
     currentPage,
     pageSize,
+    sortKey,
+    sortDir,
     filteredData,
     paginatedData,
     totalItems,
     goToPage,
     setPageSize,
+    toggleSort,
 } = useTableControls(emails, { pageSize: 10, filterFn });
+
+// ── Columnas del DataTable ─────────────────────────────────────────────────
+const columnasCorreos = [
+    { key: "id", titulo: "#", ordenable: true },
+    { key: "fecha_envio", titulo: "Fecha de envío", ordenable: true },
+    { key: "remitente", titulo: "Remitente", ordenable: true },
+    { key: "destinatario", titulo: "Destinatario", ordenable: true },
+    { key: "asunto", titulo: "Asunto", ordenable: true },
+    { key: "estado", titulo: "Estado", ordenable: true },
+    { key: "leido", titulo: "Lectura", ordenable: true },
+    { key: "__acciones", titulo: "Acciones" },
+];
 
 const hayFiltrosActivos = computed(
     () => filtro.value.estado !== "" || filtro.value.fecha_desde !== "" || filtro.value.fecha_hasta !== "",

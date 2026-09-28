@@ -20,88 +20,74 @@
             </div>
 
             <div class="table-responsive">
-                <div v-if="cargando" class="empty-state">
-                    <i class="ti ti-loader animate-spin" style="font-size: 24px; color: #cd322c"></i>
-                    <p>Cargando comunicados...</p>
-                </div>
-
-                <div v-else-if="errorCarga" class="error-banner" style="margin: 16px">
-                    <i class="ti ti-alert-circle"></i> {{ errorCarga }}
-                    <button class="tb-btn sm outline" @click="fetchComunicados" style="margin-left: auto">
-                        Reintentar
-                    </button>
-                </div>
-
-                <template v-else-if="filteredData.length > 0">
-                    <table class="mini" aria-label="Listado de comunicados">
-                        <thead>
-                            <tr>
-                                <th>Título</th>
-                                <th>Destino</th>
-                                <th>Importancia</th>
-                                <th>Fecha de Publicación</th>
-                                <th class="action-cell">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="comunicado in paginatedData" :key="comunicado.id_comunicado" class="table-row">
-                            <td>
-                                <strong>{{ comunicado.titulo }}</strong>
-                            </td>
-                            <td style="text-transform: capitalize">
-                                {{ comunicado.destino }}
-                            </td>
-                            <td>
-                                <span :class="[
-                                    'status-pill',
-                                    claseImportancia(
-                                        comunicado.importancia,
-                                    ),
-                                ]">
-                                    {{ comunicado.importancia }}
-                                </span>
-                            </td>
-                            <td>
-                                {{
-                                    formatearFecha(comunicado.fecha_publicacion)
-                                }}
-                            </td>
-                            <td class="action-cell">
-                                <div class="action-buttons">
-                                    <button @click="
-                                        cambiarVista('detalles', comunicado)
-                                        " class="icon-btn view" title="Ver detalles">
-                                        <i class="ti ti-eye"></i>
-                                    </button>
-                                    <button @click="
-                                        cambiarVista('editar', comunicado)
-                                        " class="icon-btn edit" title="Editar">
-                                        <i class="ti ti-edit"></i>
-                                    </button>
-                                    <button @click="pedirConfirmacion(comunicado)" class="icon-btn delete"
-                                        title="Eliminar">
-                                        <i class="ti ti-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                        <Pagination
-                            :current-page="currentPage"
-                            :total-items="totalItems"
-                            :page-size="pageSize"
-                            @page-change="goToPage"
-                            @page-size-change="setPageSize"
-                        />
-                        </template>
-
-                        <div v-else class="empty-state">
-                            <i class="ti ti-speakerphone" style="font-size: 28px; opacity: 0.4"></i>
-                            <p v-if="searchText">No se encontraron comunicados que coincidan con "{{ searchText }}".</p>
-                            <p v-else>No hay comunicados registrados todavía.</p>
+                <DataTable
+                    :columnas="columnasComunicados"
+                    :filas="paginatedData"
+                    clave-fila="id_comunicado"
+                    :total="totalItems"
+                    :pagina="currentPage"
+                    :por-pagina="pageSize"
+                    :orden-key="sortKey"
+                    :orden-dir="sortDir"
+                    :cargando="cargando"
+                    texto-carga="Cargando comunicados..."
+                    :error="errorCarga"
+                    etiqueta="Listado de comunicados"
+                    icono-vacio="ti-speakerphone"
+                    :busqueda-activa="!!searchText"
+                    @ordenar="toggleSort"
+                    @pagina="goToPage"
+                    @por-pagina="setPageSize"
+                    @reintentar="fetchComunicados"
+                >
+                    <template #celda-titulo="{ fila: comunicado }">
+                        <strong>{{ comunicado.titulo }}</strong>
+                    </template>
+                    <template #celda-destino="{ fila: comunicado }">
+                        <span style="text-transform: capitalize">
+                            {{ comunicado.destino }}
+                        </span>
+                    </template>
+                    <template #celda-importancia="{ fila: comunicado }">
+                        <span :class="[
+                            'status-pill',
+                            claseImportancia(
+                                comunicado.importancia,
+                            ),
+                        ]">
+                            {{ comunicado.importancia }}
+                        </span>
+                    </template>
+                    <template #celda-fecha_publicacion="{ fila: comunicado }">
+                        {{
+                            formatearFecha(comunicado.fecha_publicacion)
+                        }}
+                    </template>
+                    <template #acciones="{ fila: comunicado }">
+                        <div class="action-buttons">
+                            <button @click="
+                                cambiarVista('detalles', comunicado)
+                                " class="icon-btn view" title="Ver detalles">
+                                <i class="ti ti-eye"></i>
+                            </button>
+                            <button @click="
+                                cambiarVista('editar', comunicado)
+                                " class="icon-btn edit" title="Editar">
+                                <i class="ti ti-edit"></i>
+                            </button>
+                            <button @click="pedirConfirmacion(comunicado)" class="icon-btn delete"
+                                title="Eliminar">
+                                <i class="ti ti-trash"></i>
+                            </button>
                         </div>
-                        </div>
+                    </template>
+                    <template #vacio>
+                        <i class="ti ti-speakerphone" style="font-size: 28px; opacity: 0.4"></i>
+                        <p v-if="searchText">No se encontraron comunicados que coincidan con "{{ searchText }}".</p>
+                        <p v-else>No hay comunicados registrados todavía.</p>
+                    </template>
+                </DataTable>
+            </div>
         </div>
 
         <div v-if="vistaActiva === 'detalles' && comunicadoSeleccionado" class="card animate-fade-in">
@@ -336,7 +322,7 @@ import {
 import { obtenerCursos } from "../../../services/academico-service.js";
 import { obtenerUsuarios } from "../../../services/usuarios-services.js";
 import { useTableControls } from "../../../composables/useTableControls.js";
-import Pagination from "../../ui/Pagination.vue";
+import DataTable from "../../ui/DataTable.vue";
 
 // ── Estado ──────────────────────────────────────────────────────────────────
 const comunicados = ref([]);
@@ -376,12 +362,24 @@ const {
     searchText,
     currentPage,
     pageSize,
+    sortKey,
+    sortDir,
     filteredData,
     paginatedData,
     totalItems,
     goToPage,
     setPageSize,
+    toggleSort,
 } = useTableControls(comunicados, { pageSize: 10, filterFn });
+
+// ── Columnas del DataTable ─────────────────────────────────────────────────
+const columnasComunicados = [
+    { key: "titulo", titulo: "Título", ordenable: true },
+    { key: "destino", titulo: "Destino", ordenable: true },
+    { key: "importancia", titulo: "Importancia", ordenable: true },
+    { key: "fecha_publicacion", titulo: "Fecha de Publicación", ordenable: true },
+    { key: "__acciones", titulo: "Acciones" },
+];
 
 // ── Refs para autofocus ──────────────────────────────────────────────
 const primerInputRef = ref(null);
