@@ -1,7 +1,15 @@
 import bcrypt from "bcryptjs";
+import { Op } from "sequelize";
 import ErrorHandler from "../../utils/ErrorHandler.js";
 import { Usuario, Rol } from "../../db/models/index.js";
 import { obtenerPermisosDeRol } from "../../middlewares/comprobarPermisos.js";
+import {
+  pidePaginacion,
+  parsearPaginacion,
+  respuestaPaginada,
+} from "../../utils/paginacion.js";
+
+const COLUMNAS_USUARIOS = ["id_usuario", "nombre", "apellido", "email", "id_rol"];
 
 const RONDAS_BCRYPT = 10;
 
@@ -134,9 +142,36 @@ function usuariosSinContrasena(consulta) {
   return { ...consulta, attributes: { exclude: ["contrasena"] } };
 }
 
-async function obtenerTodosUsuarios() {
+async function obtenerTodosUsuarios(query = {}) {
   console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: obtenerTodosUsuarios");
   try {
+    if (pidePaginacion(query)) {
+      const { page, limit, offset, q, sort, order } = parsearPaginacion(query, {
+        columnas: COLUMNAS_USUARIOS,
+      });
+      const where = {};
+      if (query.id_rol !== undefined && query.id_rol !== "") {
+        where.id_rol = Number(query.id_rol);
+      }
+      if (q) {
+        where[Op.or] = [
+          { nombre: { [Op.like]: `%${q}%` } },
+          { apellido: { [Op.like]: `%${q}%` } },
+          { email: { [Op.like]: `%${q}%` } },
+        ];
+      }
+      const { count, rows } = await Usuario.findAndCountAll(
+        usuariosSinContrasena({
+          where,
+          include: [{ model: Rol, as: "rol", attributes: ["nombre_rol"] }],
+          limit,
+          offset,
+          order: sort ? [[sort, order]] : [["id_usuario", "ASC"]],
+        }),
+      );
+      return respuestaPaginada({ filas: rows, total: count, page, limit });
+    }
+
     const usuarios = await Usuario.findAll(
       usuariosSinContrasena({
         include: [{ model: Rol, as: "rol", attributes: ["nombre_rol"] }],

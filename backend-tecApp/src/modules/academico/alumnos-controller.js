@@ -1,7 +1,16 @@
+import { Op } from "sequelize";
 import ErrorHandler from "../../utils/ErrorHandler.js";
 import { Alumno, Curso, Asistencia } from "../../db/models/index.js";
 import sequelize from "../../db/conexionDB.js";
 import { validarTelefonoAR } from "../../utils/whatsappProvider.js";
+import {
+  pidePaginacion,
+  parsearPaginacion,
+  respuestaPaginada,
+} from "../../utils/paginacion.js";
+
+const COLUMNAS_ALUMNOS = ["id_alumno", "nombre", "apellido", "dni", "estado", "id_curso"];
+const ALIAS_ALUMNOS = { curso: "id_curso" };
 
 async function validarIdentidadAlumno(data) {
   console.log("\x1b[1m\x1b[34m[CTRL]\x1b[0m Ejecutando controlador: validarIdentidadAlumno");
@@ -36,19 +45,48 @@ async function validarIdentidadAlumno(data) {
   }
 }
 
-async function obtenerTodosAlumnos() {
+async function obtenerTodosAlumnos(query = {}) {
   console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: obtenerTodosAlumnos");
   try {
-    const alumnos = await Alumno.findAll({
-      include: [
-        {
-          model: Curso,
-          attributes: ["nombre_curso"],
-        },
-      ],
-    });
+    const incluir = [
+      {
+        model: Curso,
+        attributes: ["nombre_curso"],
+      },
+    ];
 
-    return alumnos;
+    // Sin page/limit: listado completo como antes (compatibilidad).
+    if (!pidePaginacion(query)) {
+      const alumnos = await Alumno.findAll({ include: incluir });
+      return alumnos;
+    }
+
+    const { page, limit, offset, q, sort, order } = parsearPaginacion(query, {
+      columnas: COLUMNAS_ALUMNOS,
+      alias: ALIAS_ALUMNOS,
+    });
+    const where = {};
+    if (query.id_curso !== undefined && query.id_curso !== "") {
+      where.id_curso = Number(query.id_curso);
+    }
+    if (query.estado !== undefined && query.estado !== "") {
+      where.estado = String(query.estado);
+    }
+    if (q) {
+      where[Op.or] = [
+        { nombre: { [Op.like]: `%${q}%` } },
+        { apellido: { [Op.like]: `%${q}%` } },
+        { dni: { [Op.like]: `%${q}%` } },
+      ];
+    }
+    const { count, rows } = await Alumno.findAndCountAll({
+      where,
+      include: incluir,
+      limit,
+      offset,
+      order: sort ? [[sort, order]] : [["id_alumno", "ASC"]],
+    });
+    return respuestaPaginada({ filas: rows, total: count, page, limit });
   } catch (error) {
     if (error instanceof ErrorHandler) {
       throw error;

@@ -1,5 +1,13 @@
+import { Op } from "sequelize";
 import { Curso, Profesor, Personal, Cargo } from "../../db/models/index.js";
 import ErrorHandler from "../../utils/ErrorHandler.js";
+import {
+  pidePaginacion,
+  parsearPaginacion,
+  respuestaPaginada,
+} from "../../utils/paginacion.js";
+
+const COLUMNAS_CURSOS = ["id_curso", "nombre_curso", "nivel", "aula", "turno", "estado"];
 
 // Valida el preceptor a asignar a un curso.
 // Devuelve el id normalizado (número) o null cuando se quiere quitar.
@@ -40,25 +48,52 @@ async function validarPreceptorAsignado(idPreceptor) {
   return preceptor.id_personal;
 }
 
-async function obtenerTodosCursos() {
+async function obtenerTodosCursos(query = {}) {
   console.log("\x1b[1m\x1b[34m[CTRL]\x1b[0m Ejecutando controlador: obtenerTodosCursos");
   try {
-    const cursos = await Curso.findAll({
-      include: [
-        {
-          model: Profesor,
-          as: "profesorTitular",
-          attributes: ["nombre", "apellido"],
-        },
-        {
-          model: Personal,
-          as: "preceptorAsignado",
-          attributes: ["nombre", "apellido"],
-        },
-      ],
-    });
+    const incluir = [
+      {
+        model: Profesor,
+        as: "profesorTitular",
+        attributes: ["nombre", "apellido"],
+      },
+      {
+        model: Personal,
+        as: "preceptorAsignado",
+        attributes: ["nombre", "apellido"],
+      },
+    ];
 
-    return cursos;
+    if (!pidePaginacion(query)) {
+      const cursos = await Curso.findAll({ include: incluir });
+      return cursos;
+    }
+
+    const { page, limit, offset, q, sort, order } = parsearPaginacion(query, {
+      columnas: COLUMNAS_CURSOS,
+    });
+    const where = {};
+    if (query.estado !== undefined && query.estado !== "") {
+      where.estado = String(query.estado);
+    }
+    if (query.turno !== undefined && query.turno !== "") {
+      where.turno = String(query.turno);
+    }
+    if (q) {
+      where[Op.or] = [
+        { nombre_curso: { [Op.like]: `%${q}%` } },
+        { nivel: { [Op.like]: `%${q}%` } },
+        { aula: { [Op.like]: `%${q}%` } },
+      ];
+    }
+    const { count, rows } = await Curso.findAndCountAll({
+      where,
+      include: incluir,
+      limit,
+      offset,
+      order: sort ? [[sort, order]] : [["id_curso", "ASC"]],
+    });
+    return respuestaPaginada({ filas: rows, total: count, page, limit });
   } catch (error) {
     if (error instanceof ErrorHandler) {
       throw error;

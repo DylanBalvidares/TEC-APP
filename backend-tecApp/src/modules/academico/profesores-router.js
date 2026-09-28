@@ -79,7 +79,7 @@ profesoresRouter.patch(
 
 profesoresRouter.get("/profesores", comprobarPermiso("administrativo_ver_todos_profesores"), async (req, res) => {
   try {
-    const profesores = await obtenerTodosProfesores();
+    const profesores = await obtenerTodosProfesores(req.query);
     return res.status(200).json(profesores);
   } catch (error) {
     return res.status(error.status || 500).json({ message: error.message });

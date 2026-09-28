@@ -1,6 +1,14 @@
+import { Op } from "sequelize";
 import ErrorHandler from "../../utils/ErrorHandler.js";
 import { Profesor } from "../../db/models/index.js";
 import { validarTelefonoAR } from "../../utils/whatsappProvider.js";
+import {
+  pidePaginacion,
+  parsearPaginacion,
+  respuestaPaginada,
+} from "../../utils/paginacion.js";
+
+const COLUMNAS_PROFESORES = ["id_profesor", "nombre", "apellido", "email", "estado"];
 
 async function validarIdentidadProfesor(data) {
   console.log("\x1b[1m\x1b[34m[CTRL]\x1b[0m Ejecutando controlador: validarIdentidadProfesor");
@@ -35,12 +43,35 @@ async function validarIdentidadProfesor(data) {
   }
 }
 
-async function obtenerTodosProfesores() {
+async function obtenerTodosProfesores(query = {}) {
   console.log("\x1b[1m\x1b[34m[CTRL]\x1b[0m Ejecutando controlador: obtenerTodosProfesores");
   try {
-    const profesores = await Profesor.findAll();
+    if (!pidePaginacion(query)) {
+      const profesores = await Profesor.findAll();
+      return profesores;
+    }
 
-    return profesores;
+    const { page, limit, offset, q, sort, order } = parsearPaginacion(query, {
+      columnas: COLUMNAS_PROFESORES,
+    });
+    const where = {};
+    if (query.estado !== undefined && query.estado !== "") {
+      where.estado = String(query.estado);
+    }
+    if (q) {
+      where[Op.or] = [
+        { nombre: { [Op.like]: `%${q}%` } },
+        { apellido: { [Op.like]: `%${q}%` } },
+        { email: { [Op.like]: `%${q}%` } },
+      ];
+    }
+    const { count, rows } = await Profesor.findAndCountAll({
+      where,
+      limit,
+      offset,
+      order: sort ? [[sort, order]] : [["id_profesor", "ASC"]],
+    });
+    return respuestaPaginada({ filas: rows, total: count, page, limit });
   } catch (error) {
     if (error instanceof ErrorHandler) throw error;
     console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en obtenerTodosProfesores:", error);

@@ -45,7 +45,7 @@ usuariosRouter.get(
   comprobarPermiso(PERMISO_VER_USUARIOS),
   async (req, res) => {
     try {
-      const usuarios = await obtenerTodosUsuarios();
+      const usuarios = await obtenerTodosUsuarios(req.query);
       return res.status(200).json(usuarios);
     } catch (error) {
       const statusCode = error.statusCode || error.status || 500;
