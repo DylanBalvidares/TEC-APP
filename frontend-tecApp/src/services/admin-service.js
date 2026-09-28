@@ -36,6 +36,26 @@ export const obtenerAuditoria = async (params = {}) => {
   }
 };
 
+// Resumen de reportes académicos (E1).
+export const obtenerResumenReportes = async () => {
+  try {
+    const { data } = await axios.get(`${API_URL}/reportes/resumen`, getConfig());
+    return { success: true, data };
+  } catch (error) {
+    if (error.response) {
+      return {
+        success: false,
+        status: error.response.status,
+        message:
+          error.response.data?.error ||
+          error.response.data?.message ||
+          "Error al obtener los reportes",
+      };
+    }
+    return { success: false, message: "No se pudo conectar con el servidor." };
+  }
+};
+
 // Una sola request para todo el Overview (C3).
 export const obtenerMetricas = async () => {
   try {
