@@ -93,128 +93,85 @@
                 </div>
 
             <div class="table-responsive">
-                <div v-if="cargando" class="empty-state">
-                    <i
-                        class="ti ti-loader animate-spin"
-                        style="font-size: 24px; color: #cd322c"
-                    ></i>
-                    <p>Cargando legajos de alumnos...</p>
-                </div>
-
-                <div
-                    v-else-if="errorCarga"
-                    class="error-banner"
-                    style="margin: 16px"
+                <DataTable
+                    :columnas="columnasAlumnos"
+                    :filas="paginatedData"
+                    clave-fila="id_alumno"
+                    :total="totalItems"
+                    :pagina="currentPage"
+                    :por-pagina="pageSize"
+                    :orden-key="sortKey"
+                    :orden-dir="sortDir"
+                    :cargando="cargando"
+                    texto-carga="Cargando legajos de alumnos..."
+                    :error="errorCarga"
+                    etiqueta="Listado de alumnos"
+                    :busqueda-activa="!!searchText"
+                    :clase-fila="(alumno) => ({ 'row-baja': alumno.estado === 'baja' })"
+                    @ordenar="toggleSort"
+                    @pagina="goToPage"
+                    @por-pagina="setPageSize"
+                    @reintentar="fetchAlumnos"
                 >
-                    <i class="ti ti-alert-circle"></i> {{ errorCarga }}
-                    <button
-                        class="tb-btn sm outline"
-                        @click="fetchAlumnos"
-                        style="margin-left: auto"
-                    >
-                        Reintentar
-                    </button>
-                </div>
-
-                <template v-else-if="filteredData.length > 0">
-                    <table
-                        class="mini"
-                        aria-label="Listado de alumnos"
-                    >
-                        <thead>
-                            <tr>
-                                <th :aria-sort="ariaSort('apellido')">
-                                    <button class="th-sort" @click="toggleSort('apellido')">Alumno <i class="ti" :class="iconoSort('apellido')" aria-hidden="true"></i></button>
-                                </th>
-                                <th :aria-sort="ariaSort('dni')">
-                                    <button class="th-sort" @click="toggleSort('dni')">DNI <i class="ti" :class="iconoSort('dni')" aria-hidden="true"></i></button>
-                                </th>
-                                <th :aria-sort="ariaSort('curso')">
-                                    <button class="th-sort" @click="toggleSort('curso', (a) => a.curso?.nombre_curso)">Curso asignado <i class="ti" :class="iconoSort('curso')" aria-hidden="true"></i></button>
-                                </th>
-                                <th :aria-sort="ariaSort('estado')">
-                                    <button class="th-sort" @click="toggleSort('estado')">Estado <i class="ti" :class="iconoSort('estado')" aria-hidden="true"></i></button>
-                                </th>
-                                <th class="action-cell">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr
-                                v-for="alumno in paginatedData"
-                                :key="alumno.id_alumno"
-                                class="table-row"
-                                :class="{ 'row-baja': alumno.estado === 'baja' }"
+                    <template #celda-apellido="{ fila: alumno }">
+                        <strong>{{ alumno.apellido }}</strong
+                        >, {{ alumno.nombre }}
+                    </template>
+                    <template #celda-dni="{ fila: alumno }">
+                        <span class="mono">{{ alumno.dni }}</span>
+                    </template>
+                    <template #celda-curso="{ fila: alumno }">
+                        {{ alumno.curso?.nombre_curso || "Sin asignar" }}
+                    </template>
+                    <template #celda-estado="{ fila: alumno }">
+                        <span
+                            :class="['status-pill', claseEstado(alumno.estado || 'activo')]"
+                        >
+                            {{ etiquetaEstado[alumno.estado] || (alumno.estado || 'Activo') }}
+                        </span>
+                    </template>
+                    <template #acciones="{ fila: alumno }">
+                        <div class="action-buttons">
+                            <button
+                                @click="
+                                    cambiarVista('detalles', alumno)
+                                "
+                                class="icon-btn view"
+                                title="Ver legajo completo"
                             >
-                                <td>
-                                    <strong>{{ alumno.apellido }}</strong
-                                    >, {{ alumno.nombre }}
-                                </td>
-                                <td class="mono">{{ alumno.dni }}</td>
-                                <td>
-                                    {{
-                                        alumno.curso?.nombre_curso || "Sin asignar"
-                                    }}
-                                </td>
-                                <td>
-                                    <span
-                                        :class="['status-pill', claseEstado(alumno.estado || 'activo')]"
-                                    >
-                                        {{ etiquetaEstado[alumno.estado] || (alumno.estado || 'Activo') }}
-                                    </span>
-                                </td>
-                                <td class="action-cell">
-                                    <div class="action-buttons">
-                                        <button
-                                            @click="
-                                                cambiarVista('detalles', alumno)
-                                            "
-                                            class="icon-btn view"
-                                            title="Ver legajo completo"
-                                        >
-                                            <i class="ti ti-eye"></i>
-                                        </button>
-                                        <button
-                                            v-if="alumno.estado !== 'baja'"
-                                            @click="cambiarVista('editar', alumno)"
-                                            class="icon-btn edit"
-                                            title="Editar"
-                                        >
-                                            <i class="ti ti-edit"></i>
-                                        </button>
-                                        <button
-                                            v-if="alumno.estado !== 'baja'"
-                                            @click="pedirConfirmacion(alumno)"
-                                            class="icon-btn delete"
-                                            title="Dar de baja"
-                                        >
-                                            <i class="ti ti-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <Pagination
-                        :current-page="currentPage"
-                        :total-items="totalItems"
-                        :page-size="pageSize"
-                        @page-change="goToPage"
-                        @page-size-change="setPageSize"
-                    />
-                </template>
-
-                <div v-else class="empty-state">
-                    <i
-                        class="ti ti-user-x"
-                        style="font-size: 28px; opacity: 0.4"
-                    ></i>
-                    <p v-if="searchText">
-                        No se encontraron alumnos que coincidan con "{{ searchText }}".
-                    </p>
-                    <p v-else>
-                        No se encontraron alumnos registrados en la institución.
-                    </p>
-                </div>
+                                <i class="ti ti-eye"></i>
+                            </button>
+                            <button
+                                v-if="alumno.estado !== 'baja'"
+                                @click="cambiarVista('editar', alumno)"
+                                class="icon-btn edit"
+                                title="Editar"
+                            >
+                                <i class="ti ti-edit"></i>
+                            </button>
+                            <button
+                                v-if="alumno.estado !== 'baja'"
+                                @click="pedirConfirmacion(alumno)"
+                                class="icon-btn delete"
+                                title="Dar de baja"
+                            >
+                                <i class="ti ti-trash"></i>
+                            </button>
+                        </div>
+                    </template>
+                    <template #vacio>
+                        <i
+                            class="ti ti-user-x"
+                            style="font-size: 28px; opacity: 0.4"
+                        ></i>
+                        <p v-if="searchText">
+                            No se encontraron alumnos que coincidan con "{{ searchText }}".
+                        </p>
+                        <p v-else>
+                            No se encontraron alumnos registrados en la institución.
+                        </p>
+                    </template>
+                </DataTable>
             </div>
         </div>
 
@@ -616,7 +573,7 @@ import {
 } from "../../../utils/validators.js";
 import { useTableControls } from "../../../composables/useTableControls.js";
 import { exportarCsv } from "../../../utils/exportCsv.js";
-import Pagination from "../../ui/Pagination.vue";
+import DataTable from "../../ui/DataTable.vue";
 import UserAccessPanel from "../../ui/UserAccessPanel.vue";
 import TelefonoInput from "../../ui/TelefonoInput.vue";
 
@@ -693,19 +650,14 @@ const {
     toggleSort,
 } = useTableControls(alumnos, { pageSize: 10, filterFn });
 
-// ── Ordenamiento asistido para encabezados ────────────────────────────────
-const ariaSort = (key) =>
-    sortKey.value === key
-        ? sortDir.value === "asc"
-            ? "ascending"
-            : "descending"
-        : "none";
-const iconoSort = (key) =>
-    sortKey.value !== key
-        ? "ti-selector"
-        : sortDir.value === "asc"
-          ? "ti-caret-up-filled"
-          : "ti-caret-down-filled";
+// ── Columnas del DataTable ─────────────────────────────────────────────────
+const columnasAlumnos = [
+    { key: "apellido", titulo: "Alumno", ordenable: true },
+    { key: "dni", titulo: "DNI", ordenable: true },
+    { key: "curso", titulo: "Curso asignado", ordenable: true, getter: (a) => a.curso?.nombre_curso },
+    { key: "estado", titulo: "Estado", ordenable: true },
+    { key: "__acciones", titulo: "Acciones" },
+];
 
 // ── Exportación CSV ──────────────────────────────────────────────────────
 const exportarAlumnos = () => {

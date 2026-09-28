@@ -23,125 +23,92 @@
             </div>
 
             <div class="table-responsive">
-                <div v-if="cargando" class="empty-state">
-                    <i
-                        class="ti ti-loader animate-spin"
-                        style="font-size: 24px; color: #cd322c"
-                    ></i>
-                    <p>Cargando personal...</p>
-                </div>
-
-                <div
-                    v-else-if="errorCarga"
-                    class="error-banner"
-                    style="margin: 16px"
+                <DataTable
+                    :columnas="columnasPersonal"
+                    :filas="paginatedData"
+                    clave-fila="id_personal"
+                    :total="totalItems"
+                    :pagina="currentPage"
+                    :por-pagina="pageSize"
+                    :orden-key="sortKey"
+                    :orden-dir="sortDir"
+                    :cargando="cargando"
+                    texto-carga="Cargando personal..."
+                    :error="errorCarga"
+                    etiqueta="Listado de personal"
+                    :busqueda-activa="!!searchText"
+                    @ordenar="toggleSort"
+                    @pagina="goToPage"
+                    @por-pagina="setPageSize"
+                    @reintentar="fetchPersonal"
                 >
-                    <i class="ti ti-alert-circle"></i> {{ errorCarga }}
-                    <button
-                        class="tb-btn sm outline"
-                        @click="fetchPersonal"
-                        style="margin-left: auto"
-                    >
-                        Reintentar
-                    </button>
-                </div>
-
-                <template v-else-if="filteredData.length > 0">
-                    <table
-                        class="mini"
-                        aria-label="Listado de personal"
-                    >
-                        <thead>
-                            <tr>
-                                <th>Personal</th>
-                                <th>Email</th>
-                                <th>Cargo</th>
-                                <th>Estado</th>
-                                <th class="action-cell">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr
-                                v-for="empleado in paginatedData"
-                                :key="empleado.id_personal"
-                            class="table-row"
+                    <template #celda-apellido="{ fila: empleado }">
+                        <strong>{{ empleado.apellido }}</strong
+                        >, {{ empleado.nombre }}
+                    </template>
+                    <template #celda-email="{ fila: empleado }">
+                        <span class="email-cell">{{ empleado.email }}</span>
+                    </template>
+                    <template #celda-cargo="{ fila: empleado }">
+                        <span class="status-pill sp-cargo">
+                            {{
+                                empleado.cargoPersonal?.nombre_cargo ||
+                                "Sin cargo"
+                            }}
+                        </span>
+                    </template>
+                    <template #celda-estado="{ fila: empleado }">
+                        <span
+                            :class="[
+                                'status-pill',
+                                claseEstado(empleado.estado),
+                            ]"
                         >
-                            <td>
-                                <strong>{{ empleado.apellido }}</strong
-                                >, {{ empleado.nombre }}
-                            </td>
-                            <td class="email-cell">{{ empleado.email }}</td>
-                            <td>
-                                <span class="status-pill sp-cargo">
-                                    {{
-                                        empleado.cargoPersonal?.nombre_cargo ||
-                                        "Sin cargo"
-                                    }}
-                                </span>
-                            </td>
-                                <td>
-                                    <span
-                                        :class="[
-                                            'status-pill',
-                                            claseEstado(empleado.estado),
-                                        ]"
-                                    >
-                                        {{ etiquetaEstado[empleado.estado] || empleado.estado }}
-                                    </span>
-                                </td>
-                            <td class="action-cell">
-                                <div class="action-buttons">
-                                    <button
-                                        @click="
-                                            cambiarVista('detalles', empleado)
-                                        "
-                                        class="icon-btn view"
-                                        title="Ver detalles"
-                                        aria-label="Ver detalles"
-                                    >
-                                        <i class="ti ti-eye"></i>
-                                    </button>
-                                    <button
-                                        @click="
-                                            cambiarVista('editar', empleado)
-                                        "
-                                        class="icon-btn edit"
-                                        title="Editar"
-                                        aria-label="Editar"
-                                    >
-                                        <i class="ti ti-edit"></i>
-                                    </button>
-                                    <button
-                                        @click="pedirConfirmacion(empleado)"
-                                        class="icon-btn delete"
-                                        title="Dar de baja"
-                                        aria-label="Dar de baja"
-                                    >
-                                        <i class="ti ti-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                        </template>
-
-                        <div v-else class="empty-state">
-                            <i
-                                class="ti ti-users"
-                                style="font-size: 28px; opacity: 0.4"
-                            ></i>
-                            <p v-if="searchText">No se encontró personal que coincida con "{{ searchText }}".</p>
-                            <p v-else>No hay personal registrado todavía.</p>
+                            {{ etiquetaEstado[empleado.estado] || empleado.estado }}
+                        </span>
+                    </template>
+                    <template #acciones="{ fila: empleado }">
+                        <div class="action-buttons">
+                            <button
+                                @click="
+                                    cambiarVista('detalles', empleado)
+                                "
+                                class="icon-btn view"
+                                title="Ver detalles"
+                                aria-label="Ver detalles"
+                            >
+                                <i class="ti ti-eye"></i>
+                            </button>
+                            <button
+                                @click="
+                                    cambiarVista('editar', empleado)
+                                "
+                                class="icon-btn edit"
+                                title="Editar"
+                                aria-label="Editar"
+                            >
+                                <i class="ti ti-edit"></i>
+                            </button>
+                            <button
+                                @click="pedirConfirmacion(empleado)"
+                                class="icon-btn delete"
+                                title="Dar de baja"
+                                aria-label="Dar de baja"
+                            >
+                                <i class="ti ti-trash"></i>
+                            </button>
                         </div>
-                        </div>
-                        <Pagination
-                            :current-page="currentPage"
-                            :total-items="totalItems"
-                            :page-size="pageSize"
-                            @page-change="goToPage"
-                            @page-size-change="setPageSize"
-                        />
+                    </template>
+                    <template #vacio>
+                        <i
+                            class="ti ti-users"
+                            style="font-size: 28px; opacity: 0.4"
+                        ></i>
+                        <p v-if="searchText">No se encontró personal que coincida con "{{ searchText }}".</p>
+                        <p v-else>No hay personal registrado todavía.</p>
+                    </template>
+                </DataTable>
+            </div>
         </div>
 
         <div
@@ -484,7 +451,7 @@ import {
     validarFormulario,
 } from "../../../utils/validators.js";
 import { useTableControls } from "../../../composables/useTableControls.js";
-import Pagination from "../../ui/Pagination.vue";
+import DataTable from "../../ui/DataTable.vue";
 import UserAccessPanel from "../../ui/UserAccessPanel.vue";
 import TelefonoInput from "../../ui/TelefonoInput.vue";
 
@@ -515,12 +482,24 @@ const {
     searchText,
     currentPage,
     pageSize,
+    sortKey,
+    sortDir,
     filteredData,
     paginatedData,
     totalItems,
     goToPage,
     setPageSize,
+    toggleSort,
 } = useTableControls(personal, { pageSize: 10, filterFn });
+
+// ── Columnas del DataTable ─────────────────────────────────────────────────
+const columnasPersonal = [
+    { key: "apellido", titulo: "Personal", ordenable: true },
+    { key: "email", titulo: "Email", ordenable: true },
+    { key: "cargo", titulo: "Cargo", ordenable: true, getter: (e) => e.cargoPersonal?.nombre_cargo },
+    { key: "estado", titulo: "Estado", ordenable: true },
+    { key: "__acciones", titulo: "Acciones" },
+];
 
 // ── Refs para autofocus ──────────────────────────────────────────────
 const primerInputRef = ref(null);

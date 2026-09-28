@@ -39,120 +39,82 @@
                 </div>
 
             <div class="table-responsive">
-                <div v-if="cargando" class="empty-state">
-                    <i
-                        class="ti ti-loader animate-spin"
-                        style="font-size: 24px; color: #cd322c"
-                    ></i>
-                    <p>Cargando docentes...</p>
-                </div>
-
-                <div
-                    v-else-if="errorCarga"
-                    class="error-banner"
-                    style="margin: 16px"
+                <DataTable
+                    :columnas="columnasProfesores"
+                    :filas="paginatedData"
+                    clave-fila="id_profesor"
+                    :total="totalItems"
+                    :pagina="currentPage"
+                    :por-pagina="pageSize"
+                    :orden-key="sortKey"
+                    :orden-dir="sortDir"
+                    :cargando="cargando"
+                    texto-carga="Cargando docentes..."
+                    :error="errorCarga"
+                    etiqueta="Listado de docentes"
+                    :busqueda-activa="!!searchText"
+                    @ordenar="toggleSort"
+                    @pagina="goToPage"
+                    @por-pagina="setPageSize"
+                    @reintentar="fetchProfesores"
                 >
-                    <i class="ti ti-alert-circle"></i> {{ errorCarga }}
-                    <button
-                        class="tb-btn sm outline"
-                        @click="fetchProfesores"
-                        style="margin-left: auto"
-                    >
-                        Reintentar
-                    </button>
-                </div>
-
-                <template v-else-if="filteredData.length > 0">
-                    <table
-                        class="mini"
-                        aria-label="Listado de docentes"
-                    >
-                        <thead>
-                            <tr>
-                                <th :aria-sort="ariaSort('apellido')">
-                                    <button class="th-sort" @click="toggleSort('apellido')">Docente <i class="ti" :class="iconoSort('apellido')" aria-hidden="true"></i></button>
-                                </th>
-                                <th :aria-sort="ariaSort('email')">
-                                    <button class="th-sort" @click="toggleSort('email')">Email <i class="ti" :class="iconoSort('email')" aria-hidden="true"></i></button>
-                                </th>
-                                <th :aria-sort="ariaSort('estado')">
-                                    <button class="th-sort" @click="toggleSort('estado')">Estado <i class="ti" :class="iconoSort('estado')" aria-hidden="true"></i></button>
-                                </th>
-                                <th class="action-cell">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr
-                                v-for="prof in paginatedData"
-                                :key="prof.id_profesor"
-                                class="table-row"
+                    <template #celda-apellido="{ fila: prof }">
+                        <strong>{{ prof.apellido }}</strong
+                        >, {{ prof.nombre }}
+                    </template>
+                    <template #celda-email="{ fila: prof }">
+                        <span class="email-cell">{{ prof.email }}</span>
+                    </template>
+                    <template #celda-estado="{ fila: prof }">
+                        <span
+                            :class="[
+                                'status-pill',
+                                claseEstado(prof.estado),
+                            ]"
+                        >
+                            {{
+                                etiquetaEstado[prof.estado] ||
+                                prof.estado || "Sin estado"
+                            }}
+                        </span>
+                    </template>
+                    <template #acciones="{ fila: prof }">
+                        <div class="action-buttons">
+                            <button
+                                @click="cambiarVista('detalles', prof)"
+                                class="icon-btn view"
+                                title="Ver detalles"
+                                aria-label="Ver detalles"
                             >
-                                <td>
-                                    <strong>{{ prof.apellido }}</strong
-                                    >, {{ prof.nombre }}
-                                </td>
-                                <td class="email-cell">{{ prof.email }}</td>
-                                <td>
-                                    <span
-                                        :class="[
-                                            'status-pill',
-                                            claseEstado(prof.estado),
-                                        ]"
-                                    >
-                                        {{
-                                            etiquetaEstado[prof.estado] ||
-                                            prof.estado || "Sin estado"
-                                        }}
-                                    </span>
-                                </td>
-                                <td class="action-cell">
-                                    <div class="action-buttons">
-                                        <button
-                                            @click="cambiarVista('detalles', prof)"
-                                            class="icon-btn view"
-                                            title="Ver detalles"
-                                            aria-label="Ver detalles"
-                                        >
-                                            <i class="ti ti-eye"></i>
-                                        </button>
-                                        <button
-                                            @click="cambiarVista('editar', prof)"
-                                            class="icon-btn edit"
-                                            title="Editar"
-                                            aria-label="Editar"
-                                        >
-                                            <i class="ti ti-edit"></i>
-                                        </button>
-                                        <button
-                                            @click="pedirConfirmacion(prof)"
-                                            class="icon-btn delete"
-                                            title="Dar de baja"
-                                            aria-label="Dar de baja"
-                                        >
-                                            <i class="ti ti-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <Pagination
-                        :current-page="currentPage"
-                        :total-items="totalItems"
-                        :page-size="pageSize"
-                        @page-change="goToPage"
-                        @page-size-change="setPageSize"
-                    />
-                </template>
-
-                <div v-else class="empty-state">
-                    <i
-                        class="ti ti-users"
-                        style="font-size: 28px; opacity: 0.4"
-                    ></i>
-                    <p v-if="searchText">No hay docentes que coincidan con "{{ searchText }}".</p>
-                    <p v-else>No hay docentes registrados todavía.</p>
-                </div>
+                                <i class="ti ti-eye"></i>
+                            </button>
+                            <button
+                                @click="cambiarVista('editar', prof)"
+                                class="icon-btn edit"
+                                title="Editar"
+                                aria-label="Editar"
+                            >
+                                <i class="ti ti-edit"></i>
+                            </button>
+                            <button
+                                @click="pedirConfirmacion(prof)"
+                                class="icon-btn delete"
+                                title="Dar de baja"
+                                aria-label="Dar de baja"
+                            >
+                                <i class="ti ti-trash"></i>
+                            </button>
+                        </div>
+                    </template>
+                    <template #vacio>
+                        <i
+                            class="ti ti-users"
+                            style="font-size: 28px; opacity: 0.4"
+                        ></i>
+                        <p v-if="searchText">No hay docentes que coincidan con "{{ searchText }}".</p>
+                        <p v-else>No hay docentes registrados todavía.</p>
+                    </template>
+                </DataTable>
             </div>
         </div>
 
@@ -560,7 +522,7 @@ import {
 import TelefonoInput from "../../ui/TelefonoInput.vue";
 import { useTableControls } from "../../../composables/useTableControls.js";
 import { exportarCsv } from "../../../utils/exportCsv.js";
-import Pagination from "../../ui/Pagination.vue";
+import DataTable from "../../ui/DataTable.vue";
 import UserAccessPanel from "../../ui/UserAccessPanel.vue";
 
 // ── Estado ──────────────────────────────────────────────────────────────────
@@ -589,19 +551,13 @@ const {
     toggleSort,
 } = useTableControls(profesores, { pageSize: 10, filterFn });
 
-// ── Ordenamiento asistido para encabezados ────────────────────────────────
-const ariaSort = (key) =>
-    sortKey.value === key
-        ? sortDir.value === "asc"
-            ? "ascending"
-            : "descending"
-        : "none";
-const iconoSort = (key) =>
-    sortKey.value !== key
-        ? "ti-selector"
-        : sortDir.value === "asc"
-          ? "ti-caret-up-filled"
-          : "ti-caret-down-filled";
+// ── Columnas del DataTable ─────────────────────────────────────────────────
+const columnasProfesores = [
+    { key: "apellido", titulo: "Docente", ordenable: true },
+    { key: "email", titulo: "Email", ordenable: true },
+    { key: "estado", titulo: "Estado", ordenable: true },
+    { key: "__acciones", titulo: "Acciones" },
+];
 
 // ── Exportación CSV ──────────────────────────────────────────────────────
 const exportarProfesores = () => {
