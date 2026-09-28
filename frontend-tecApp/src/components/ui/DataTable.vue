@@ -85,7 +85,7 @@
             />
         </template>
 
-        <div v-else class="empty-state">
+        <div v-else class="empty-state" role="status" aria-live="polite">
             <slot name="vacio">
                 <i class="ti" :class="iconoVacio" style="font-size: 28px; opacity: 0.4"></i>
                 <p v-if="busquedaActiva">{{ textoVacioBusqueda }}</p>

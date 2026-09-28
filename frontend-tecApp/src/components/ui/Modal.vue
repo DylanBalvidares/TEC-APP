@@ -1,10 +1,10 @@
 <template>
   <Teleport to="body">
-    <div v-if="modelValue" class="modal-overlay active" @click.self="close">
-      <div class="modal-content" :class="{ 'modal-wide': wide, 'modal-danger': variante === 'danger' }" role="dialog" :aria-modal="true" :aria-label="title || 'Dialog'" tabindex="-1" ref="container">
+    <div v-if="modelValue" class="modal-overlay active" @click.self="intentarCerrar">
+      <div class="modal-content" :class="{ 'modal-wide': wide, 'modal-danger': variante === 'danger' }" role="dialog" :aria-modal="true" :aria-labelledby="tituloId" tabindex="-1" ref="container" @keydown="encerrarFoco">
         <div class="modal-header" v-if="$slots.header || title">
-          <h3>{{ title }}</h3>
-          <button class="close-modal" @click="close" aria-label="Cerrar">&times;</button>
+          <h3 :id="tituloId">{{ title }}</h3>
+          <button class="close-modal" @click="intentarCerrar" aria-label="Cerrar">&times;</button>
         </div>
         <div class="modal-body">
           <slot />
@@ -19,16 +19,57 @@
 
 <script setup>
 import { onMounted, onUnmounted, watch, ref } from 'vue';
-const props = defineProps({ modelValue: Boolean, title: { type: String, default: '' }, wide: Boolean, variante: { type: String, default: 'default' } });
-const emit = defineEmits(['update:modelValue']);
+const props = defineProps({
+  modelValue: Boolean,
+  title: { type: String, default: '' },
+  wide: Boolean,
+  variante: { type: String, default: 'default' },
+  // Cuando hay cambios sin guardar, el overlay y Escape no cierran.
+  bloquearCierre: { type: Boolean, default: false },
+});
+const emit = defineEmits(['update:modelValue', 'cierre-bloqueado']);
 const container = ref(null);
+let focoPrevio = null;
+let contadorTitulo = 0;
+const tituloId = `modal-titulo-${++contadorTitulo}`;
 
 const close = () => emit('update:modelValue', false);
 
-const handleKey = (e) => { if (e.key === 'Escape') close(); };
+const intentarCerrar = () => {
+  if (props.bloquearCierre) {
+    emit('cierre-bloqueado');
+    return;
+  }
+  close();
+};
+
+const handleKey = (e) => { if (e.key === 'Escape') intentarCerrar(); };
+
+// Focus trap: Tab circular dentro del diálogo.
+const SELECTORES_FOCO = 'button, input, textarea, select, a[href], [tabindex]:not([tabindex="-1"])';
+const encerrarFoco = (e) => {
+  if (e.key !== 'Tab' || !container.value) return;
+  const focos = [...container.value.querySelectorAll(SELECTORES_FOCO)].filter(
+    (el) => !el.disabled,
+  );
+  if (focos.length === 0) {
+    e.preventDefault();
+    return;
+  }
+  const primero = focos[0];
+  const ultimo = focos[focos.length - 1];
+  if (e.shiftKey && document.activeElement === primero) {
+    e.preventDefault();
+    ultimo.focus();
+  } else if (!e.shiftKey && document.activeElement === ultimo) {
+    e.preventDefault();
+    primero.focus();
+  }
+};
 
 watch(() => props.modelValue, (open) => {
   if (open) {
+    focoPrevio = document.activeElement;
     document.body.style.overflow = 'hidden';
     // focus first focusable
     setTimeout(() => {
@@ -37,6 +78,11 @@ watch(() => props.modelValue, (open) => {
     }, 10);
   } else {
     document.body.style.overflow = '';
+    // Restaura el foco al elemento que abrió el modal.
+    if (focoPrevio && typeof focoPrevio.focus === 'function') {
+      focoPrevio.focus();
+    }
+    focoPrevio = null;
   }
 });
 

@@ -248,7 +248,9 @@
         <Modal
             :model-value="modalRol.abierto"
             :title="modalRol.modo === 'crear' ? 'Nuevo rol' : 'Renombrar rol'"
+            :bloquear-cierre="modalRol.nombre.trim() !== ''"
             @update:model-value="modalRol.abierto = $event"
+            @cierre-bloqueado="errorModal = 'Tenés cambios sin guardar: guardá o limpiá el nombre antes de cerrar.'"
         >
             <label class="field-label">Nombre del rol</label>
             <input
