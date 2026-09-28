@@ -70,8 +70,8 @@
                         >
                             <button
                                 class="icon-btn edit"
-                                title="Editar nombre"
-                                aria-label="Editar rol"
+                                :title="rol.es_sistema ? 'Rol del sistema: no se puede editar' : 'Editar nombre'"
+                                :aria-label="rol.es_sistema ? 'Rol del sistema: no se puede editar' : 'Editar rol'"
                                 :disabled="rol.es_sistema"
                                 @click="abrirModalRol('editar', rol)"
                             >
@@ -79,8 +79,8 @@
                             </button>
                             <button
                                 class="icon-btn delete"
-                                title="Eliminar"
-                                aria-label="Eliminar rol"
+                                :title="rol.es_sistema ? 'Rol del sistema: no se puede eliminar' : 'Eliminar'"
+                                :aria-label="rol.es_sistema ? 'Rol del sistema: no se puede eliminar' : 'Eliminar rol'"
                                 :disabled="rol.es_sistema"
                                 @click="pedirConfirmacion(rol)"
                             >
