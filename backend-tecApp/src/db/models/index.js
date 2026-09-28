@@ -29,6 +29,8 @@ import Correo from "./correo-model.js";
 import MensajeWhatsapp from "./mensaje-whatsapp-model.js";
 import Auditoria from "./auditoria-model.js";
 import Horario from "./horario-model.js";
+import Sancion from "./sancion-model.js";
+import Observacion from "./observacion-model.js";
 
 // ==========================================
 // Relaciones: Usuarios & RBAC
@@ -145,4 +147,6 @@ export {
   MensajeWhatsapp,
   Auditoria,
   Horario,
+  Sancion,
+  Observacion,
 };

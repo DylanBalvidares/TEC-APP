@@ -544,6 +544,18 @@ CREATE TABLE `sanciones` (
     CONSTRAINT `sanciones_ibfk_2` FOREIGN KEY (`registrado_por`) REFERENCES `usuarios`(`id_usuario`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE `observaciones` (
+    `id_observacion` int(11)     NOT NULL AUTO_INCREMENT,
+    `id_alumno`      int(11)     NOT NULL,
+    `texto`          text        NOT NULL,
+    `fecha`          date        NOT NULL,
+    `registrado_por` int(11)     DEFAULT NULL,
+    PRIMARY KEY (`id_observacion`),
+    KEY `idx_obs_alumno` (`id_alumno`),
+    KEY `idx_obs_fecha` (`fecha`),
+    CONSTRAINT `observaciones_ibfk_1` FOREIGN KEY (`id_alumno`) REFERENCES `alumnos` (`id_alumno`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 -- ============================================================
 -- TUTORES_ALUMNOS (requerida por tutor_ver_*_hijo)
 -- ============================================================

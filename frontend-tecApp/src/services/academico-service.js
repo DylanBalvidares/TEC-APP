@@ -216,6 +216,61 @@ export const darDeBajaProfesor = async (id) => {
 };
 
 // ==========================================
+//                 CONVIVENCIA (E4)
+// ==========================================
+
+export const obtenerSanciones = async (idAlumno = null) => {
+  try {
+    const response = await axios.get(`${API_URL}/sanciones`, {
+      ...getConfig(),
+      ...(idAlumno ? { params: { id_alumno: idAlumno } } : {}),
+    });
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "No se pudieron obtener las sanciones");
+  }
+};
+
+export const crearSancion = async (datos) => {
+  try {
+    const response = await axios.post(`${API_URL}/sanciones`, datos, getConfig());
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "No se pudo registrar la sanción");
+  }
+};
+
+export const eliminarSancion = async (id) => {
+  try {
+    const response = await axios.delete(`${API_URL}/sanciones/${id}`, getConfig());
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "No se pudo eliminar la sanción");
+  }
+};
+
+export const obtenerObservaciones = async (idAlumno = null) => {
+  try {
+    const response = await axios.get(`${API_URL}/observaciones`, {
+      ...getConfig(),
+      ...(idAlumno ? { params: { id_alumno: idAlumno } } : {}),
+    });
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "No se pudieron obtener las observaciones");
+  }
+};
+
+export const crearObservacion = async (datos) => {
+  try {
+    const response = await axios.post(`${API_URL}/observaciones`, datos, getConfig());
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "No se pudo registrar la observación");
+  }
+};
+
+// ==========================================
 //                 HORARIOS (E3)
 // ==========================================
 
