@@ -60,6 +60,7 @@ import AsistenciasView from "./views/AsistenciasView.vue";
 import MensajesView from "./views/MensajesView.vue";
 import AuditoriaView from "./views/AuditoriaView.vue";
 import ReportesView from "./views/ReportesView.vue";
+import ConfigView from "./views/ConfigView.vue";
 import UsuarioPerfil from "./views/UsuarioPerfil.vue";
 
 const componentesMap = {
@@ -81,6 +82,7 @@ const componentesMap = {
   mensajes: MensajesView,
   auditoria: AuditoriaView,
   reportes: ReportesView,
+  config: ConfigView,
   perfil: UsuarioPerfil,
 };
 const VISTAS_VALIDAS = Object.keys(componentesMap);
@@ -103,6 +105,7 @@ const pageNames = {
   mensajes: "WhatsApp",
   auditoria: "Auditoría",
   reportes: "Reportes",
+  config: "Configuración",
   perfil: "Mi Perfil",
 };
 const nombrePagina = (vista) => pageNames[vista] || "Inicio";

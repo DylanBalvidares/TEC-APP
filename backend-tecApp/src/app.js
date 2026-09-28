@@ -30,6 +30,7 @@ import comunidadRouter from "./modules/comunidad/comunidad-router.js";
 import metricasRouter from "./modules/admin/metricas-router.js";
 import auditoriaRouter from "./modules/admin/auditoria-router.js";
 import reportesRouter from "./modules/admin/reportes-router.js";
+import configRouter from "./modules/admin/config-router.js";
 
 import bibliotecaRouter from "./modules/biblioteca/biblioteca-router.js";
 import prestamosRouter from "./modules/biblioteca/prestamos-router.js";
@@ -182,6 +183,7 @@ app.use("/api/comunidad", comunidadRouter);
 app.use("/api/admin", autenticar, metricasRouter);
 app.use("/api/admin", autenticar, auditoriaRouter);
 app.use("/api/admin", autenticar, reportesRouter);
+app.use("/api/admin", autenticar, configRouter);
 
 app.use("/api/biblioteca", autenticar, bibliotecaRouter);
 app.use("/api/biblioteca", autenticar, prestamosRouter);

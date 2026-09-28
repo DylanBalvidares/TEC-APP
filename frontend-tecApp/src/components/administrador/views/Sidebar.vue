@@ -66,6 +66,7 @@ const grupos = [
             { vista: "monitorcorreos", nombre: "Historial de Emails", icono: "ti-envelope" },
             { vista: "auditoria", nombre: "Auditoría", icono: "ti-history" },
             { vista: "reportes", nombre: "Reportes", icono: "ti-chart-bar" },
+            { vista: "config", nombre: "Configuración", icono: "ti-settings" },
         ],
     },
 ];
