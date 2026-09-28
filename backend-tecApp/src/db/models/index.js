@@ -31,6 +31,8 @@ import Auditoria from "./auditoria-model.js";
 import Horario from "./horario-model.js";
 import Sancion from "./sancion-model.js";
 import Observacion from "./observacion-model.js";
+import Notificacion from "./notificacion-model.js";
+import NotificacionPreferencia from "./notificacion-preferencia-model.js";
 
 // ==========================================
 // Relaciones: Usuarios & RBAC
@@ -149,4 +151,6 @@ export {
   Horario,
   Sancion,
   Observacion,
+  Notificacion,
+  NotificacionPreferencia,
 };

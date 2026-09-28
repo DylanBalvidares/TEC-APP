@@ -556,6 +556,26 @@ CREATE TABLE `observaciones` (
     CONSTRAINT `observaciones_ibfk_1` FOREIGN KEY (`id_alumno`) REFERENCES `alumnos` (`id_alumno`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+CREATE TABLE `notificaciones` (
+    `id_notificacion` int(11)      NOT NULL AUTO_INCREMENT,
+    `id_usuario`      int(11)      NOT NULL,
+    `tipo`            varchar(50)  NOT NULL,
+    `titulo`          varchar(200) NOT NULL,
+    `cuerpo`          text         DEFAULT NULL,
+    `leida`           tinyint(1)   NOT NULL DEFAULT 0,
+    `fecha`           datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id_notificacion`),
+    KEY `idx_not_usuario` (`id_usuario`),
+    KEY `idx_not_leida` (`leida`),
+    KEY `idx_not_fecha` (`fecha`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `notificacion_preferencias` (
+    `id_usuario` int(11) NOT NULL,
+    `canales`    json    NOT NULL,
+    PRIMARY KEY (`id_usuario`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 -- ============================================================
 -- TUTORES_ALUMNOS (requerida por tutor_ver_*_hijo)
 -- ============================================================

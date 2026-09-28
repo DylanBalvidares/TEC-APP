@@ -33,6 +33,7 @@ import reportesRouter from "./modules/admin/reportes-router.js";
 import configRouter from "./modules/admin/config-router.js";
 import horariosRouter from "./modules/academico/horarios-router.js";
 import convivenciaRouter from "./modules/academico/convivencia-router.js";
+import notificacionesRouter from "./modules/comunidad/notificaciones-router.js";
 
 import bibliotecaRouter from "./modules/biblioteca/biblioteca-router.js";
 import prestamosRouter from "./modules/biblioteca/prestamos-router.js";
@@ -183,6 +184,7 @@ app.use("/api/academico", autenticar, horariosRouter);
 app.use("/api/academico", autenticar, convivenciaRouter);
 
 app.use("/api/comunidad", comunidadRouter);
+app.use("/api/comunidad", autenticar, notificacionesRouter);
 
 app.use("/api/admin", autenticar, metricasRouter);
 app.use("/api/admin", autenticar, auditoriaRouter);

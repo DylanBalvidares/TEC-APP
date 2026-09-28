@@ -12,6 +12,7 @@ import "./db/ensureAuditoria.js";
 import "./db/ensureConfiguracion.js";
 import "./db/ensureHorarios.js";
 import "./db/ensureObservaciones.js";
+import "./db/ensureNotificaciones.js";
 
 // La app (middlewares, routers, 404 y error handler) vive en app.js para poder
 // montarla en tests sin abrir un puerto fijo.
