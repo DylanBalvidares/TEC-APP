@@ -567,11 +567,6 @@ onMounted(() => {
 .animate-fade-in {
     animation: fadeIn 0.22s ease-in-out;
 }
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(3px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes spin { to { transform: rotate(360deg); } }
 .animate-spin {
     animation: spin 0.85s linear infinite;
     display: inline-block;
@@ -656,25 +651,9 @@ onMounted(() => {
     border-color: #cd322c;
     box-shadow: 0 0 0 2px rgba(205,50,44,0.08);
 }
-
-/* Botonería */
-.tb-btn {
-    padding: 7px 14px;
-    border-radius: 6px;
-    border: 1px solid transparent;
-    font-size: 12.5px;
-    font-weight: 500;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.12s;
-}
 .tb-btn.primary              { background: #cd322c; color: #fff; border-color: #cd322c; }
 .tb-btn.primary:hover:not(:disabled) { background: #a52420; }
-.tb-btn.outline              { background: white; color: #4b5563; border-color: #d1d5db; }
 .tb-btn.outline:hover:not(:disabled) { background: #f9fafb; color: #111827; }
-.tb-btn:disabled             { opacity: 0.6; cursor: not-allowed; }
 
 /* Tabla */
 .table-responsive { width: 100%; overflow-x: auto; padding: 12px; }
@@ -708,7 +687,6 @@ onMounted(() => {
     display: inline-flex; align-items: center;
     gap: 3px; font-size: 10px; padding: 2px 6px; border-radius: 4px;
 }
-.badge-gray { background: #f3f4f6; color: #4b5563; }
 
 /* Historial badges */
 .hist-badge {

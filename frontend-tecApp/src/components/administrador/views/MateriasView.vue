@@ -607,21 +607,6 @@ onMounted(() => {
 .animate-fade-in {
     animation: fadeIn 0.22s ease-in-out;
 }
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(3px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
 .animate-spin {
     animation: spin 0.85s linear infinite;
     display: inline-block;
@@ -633,58 +618,6 @@ onMounted(() => {
     gap: 14px;
     max-width: 950px;
     width: 100%;
-}
-
-.metrics {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-}
-.metric-card {
-    background: var(--color-background-secondary, #ffffff);
-    border-radius: 8px;
-    padding: 14px 18px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    border: 0.5px solid var(--color-border-tertiary, #e5e7eb);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
-}
-.metric-label {
-    font-size: 11px;
-    color: var(--color-text-tertiary, #6b7280);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-weight: 500;
-}
-.metric-label i {
-    color: #cd322c;
-    font-size: 13px;
-}
-.metric-value {
-    font-size: 24px;
-    font-weight: 600;
-    color: var(--color-text-primary, #111827);
-    line-height: 1.1;
-}
-.metric-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    margin-top: 2px;
-    width: fit-content;
-}
-.badge-green {
-    background: #eaf3de;
-    color: #3b6d11;
-}
-.badge-gray {
-    background: #f3f4f6;
-    color: #4b5563;
 }
 
 .card {
@@ -805,19 +738,6 @@ onMounted(() => {
     border-color: #fca5a5;
     color: #ef4444;
 }
-
-.tb-btn {
-    padding: 7px 14px;
-    border-radius: 6px;
-    border: 1px solid transparent;
-    font-size: 12.5px;
-    font-weight: 500;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.12s;
-}
 .tb-btn.primary {
     background: #cd322c;
     color: #fff;
@@ -826,29 +746,12 @@ onMounted(() => {
 .tb-btn.primary:hover {
     background: #a52420;
 }
-.tb-btn.outline {
-    background: white;
-    color: #4b5563;
-    border-color: #d1d5db;
-}
-.tb-btn.outline:hover {
-    background: #f9fafb;
-    color: #111827;
-}
 .tb-btn.danger {
     background: #cd322c;
     color: white;
 }
 .tb-btn.danger:hover {
     background: #a52420;
-}
-.tb-btn.sm {
-    padding: 5px 10px;
-    font-size: 11.5px;
-}
-.tb-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
 }
 
 .form-body {
@@ -944,19 +847,6 @@ onMounted(() => {
     font-size: 15px;
     color: #3b82f6;
     margin-top: 1px;
-}
-
-.error-banner {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: #fef2f2;
-    border: 1px solid #fee2e2;
-    color: #991b1b;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    margin-right: auto;
 }
 .exito-banner {
     display: inline-flex;

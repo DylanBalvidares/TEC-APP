@@ -428,11 +428,6 @@ onMounted(cargarDatos);
     border-radius: 4px;
     margin-top: 2px;
 }
-
-.badge-green {
-    background: #eaf3de;
-    color: #3b6d11;
-}
 .badge-red {
     background: #fcebeb;
     color: #a32d2d;
@@ -465,15 +460,6 @@ onMounted(cargarDatos);
     align-items: center;
     gap: 6px;
     transition: all 0.15s;
-}
-.tb-btn.outline {
-    background: white;
-    color: #4b5563;
-    border-color: #d1d5db;
-}
-.tb-btn.outline:hover {
-    background: #f9fafb;
-    color: #111827;
 }
 .tb-btn.sm {
     padding: 6px 12px;

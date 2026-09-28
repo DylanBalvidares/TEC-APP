@@ -1159,15 +1159,6 @@ onMounted(async () => {
 .tb-btn.primary:hover {
     background: #a52420;
 }
-.tb-btn.outline {
-    background: white;
-    color: #4b5563;
-    border-color: #d1d5db;
-}
-.tb-btn.outline:hover {
-    background: #f9fafb;
-    color: #111827;
-}
 .tb-btn.danger {
     background: #cd322c;
     color: white;
@@ -1178,10 +1169,6 @@ onMounted(async () => {
 .tb-btn.sm {
     padding: 6px 12px;
     font-size: 12px;
-}
-.tb-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
 }
 
 .icon-btn {
@@ -1294,11 +1281,6 @@ onMounted(async () => {
     to {
         opacity: 1;
         transform: translateY(0);
-    }
-}
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
     }
 }
 .animate-spin {

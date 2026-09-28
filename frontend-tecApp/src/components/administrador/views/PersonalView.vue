@@ -836,11 +836,6 @@ onMounted(() => {
         transform: translateY(0);
     }
 }
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
 .animate-spin {
     animation: spin 0.8s linear infinite;
     display: inline-block;
@@ -935,10 +930,6 @@ onMounted(() => {
     display: inline-block;
     text-transform: capitalize;
 }
-.sp-cargo {
-    background: #e0f2fe;
-    color: #0369a1;
-}
 .sp-activo {
     background: #eaf3de;
     color: #3b6d11;
@@ -946,10 +937,6 @@ onMounted(() => {
 .sp-baja {
     background: #fee2e2;
     color: #991b1b;
-}
-.sp-licencia {
-    background: #fef08a;
-    color: #854d0e;
 }
 
 /* Acciones tabla */
@@ -1028,15 +1015,6 @@ onMounted(() => {
 .tb-btn.primary:hover {
     background: #a52420;
 }
-.tb-btn.outline {
-    background: white;
-    color: #4b5563;
-    border-color: #d1d5db;
-}
-.tb-btn.outline:hover {
-    background: #f9fafb;
-    color: #111827;
-}
 .tb-btn.danger {
     background: #cd322c;
     color: white;
@@ -1047,10 +1025,6 @@ onMounted(() => {
 .tb-btn.sm {
     padding: 6px 12px;
     font-size: 12px;
-}
-.tb-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
 }
 
 /* Formulario */

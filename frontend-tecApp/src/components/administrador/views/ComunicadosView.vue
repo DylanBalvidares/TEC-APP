@@ -560,24 +560,6 @@ onMounted(() => {
     animation: fadeIn 0.22s ease-in-out;
 }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(3px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
 .animate-spin {
     animation: spin 0.85s linear infinite;
     display: inline-block;
@@ -591,13 +573,6 @@ onMounted(() => {
     width: 100%;
 }
 
-/* ── Métricas ── */
-.metrics {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-}
-
 .metric-card {
     background: var(--color-background-secondary, #fff);
     border-radius: 8px;
@@ -606,48 +581,6 @@ onMounted(() => {
     flex-direction: column;
     gap: 4px;
     border: 0.5px solid var(--color-border-tertiary, #e5e7eb);
-}
-
-.metric-label {
-    font-size: 11px;
-    color: var(--color-text-tertiary, #6b7280);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-weight: 500;
-}
-
-.metric-label i {
-    color: #cd322c;
-    font-size: 13px;
-}
-
-.metric-value {
-    font-size: 24px;
-    font-weight: 600;
-    color: var(--color-text-primary, #111827);
-    line-height: 1.1;
-}
-
-.metric-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    margin-top: 2px;
-    width: fit-content;
-}
-
-.badge-green {
-    background: #eaf3de;
-    color: #3b6d11;
-}
-
-.badge-gray {
-    background: #f3f4f6;
-    color: #4b5563;
 }
 
 /* ── Tarjetas Base ── */
@@ -709,11 +642,6 @@ onMounted(() => {
     transition: all 0.2s;
     border: 1px solid transparent;
     font-family: inherit;
-}
-
-.tb-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
 }
 
 .tb-btn.sm {

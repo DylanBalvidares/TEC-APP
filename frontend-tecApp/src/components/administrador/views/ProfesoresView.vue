@@ -926,11 +926,6 @@ onMounted(() => {
         transform: translateY(0);
     }
 }
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
 .animate-spin {
     animation: spin 0.8s linear infinite;
     display: inline-block;
@@ -1030,10 +1025,6 @@ onMounted(() => {
     background: #fef08a;
     color: #a16207;
 }
-.sp-baja {
-    background: #fef2f2;
-    color: #991b1b;
-}
 
 .action-cell {
     text-align: right;
@@ -1099,15 +1090,6 @@ onMounted(() => {
 .tb-btn.primary:hover {
     background: #a52420;
 }
-.tb-btn.outline {
-    background: white;
-    color: #4b5563;
-    border-color: #d1d5db;
-}
-.tb-btn.outline:hover {
-    background: #f9fafb;
-    color: #111827;
-}
 .tb-btn.danger {
     background: #cd322c;
     color: white;
@@ -1118,10 +1100,6 @@ onMounted(() => {
 .tb-btn.sm {
     padding: 6px 12px;
     font-size: 12px;
-}
-.tb-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
 }
 
 .form-body {
