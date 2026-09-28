@@ -71,6 +71,8 @@ async function obtenerTodosAlumnos(query = {}) {
     }
     if (query.estado !== undefined && query.estado !== "") {
       where.estado = String(query.estado);
+    } else if (query.sinBajas === "1" || query.sinBajas === 1) {
+      where.estado = { [Op.ne]: "baja" };
     }
     if (q) {
       where[Op.or] = [

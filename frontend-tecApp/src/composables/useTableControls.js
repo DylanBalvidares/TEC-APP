@@ -19,6 +19,11 @@ const QUERY_RESERVADAS = [QUERY_Q, QUERY_PAG, QUERY_ORDEN, QUERY_DIR];
  *   página y orden con el query string. Acepta `true` (usa useRoute/useRouter del
  *   setup) o `{ route, router, debounce }` explícitos (útil en tests).
  * @param {number} [options.syncDebounce=300] - Espera en ms antes de escribir la URL
+ * @param {string} [options.modo="local"] - "local" filtra/pagina en memoria;
+ *   "servidor" delega en `cargarPagina` y expone `recargar`.
+ * @param {Function} [options.cargarPagina] - En modo servidor:
+ *   `async ({ page, limit, q, sort, order, filtros }) => ({ data, total })`.
+ * @param {number} [options.recargaDebounce=250] - Debounce de recarga ante búsqueda
  */
 export function useTableControls(dataRef, options = {}) {
     const { pageSize: defaultPageSize = 10 } = options;
@@ -93,8 +98,40 @@ export function useTableControls(dataRef, options = {}) {
         currentPage.value = 1;
     }
 
+    // ── Modo servidor (C2): paginación/búsqueda/orden en el backend ─────────
+    const esServidor = options.modo === "servidor";
+    const filasServidor = ref([]);
+    const totalServidor = ref(0);
+    const recargaDebounce = options.recargaDebounce ?? 250;
+    let temporizadorRecarga = null;
+
+    async function recargar() {
+        if (!esServidor || typeof options.cargarPagina !== "function") return;
+        try {
+            const resultado = await options.cargarPagina({
+                page: currentPage.value,
+                limit: pageSize.value,
+                q: searchText.value.trim(),
+                sort: sortKey.value,
+                order: sortDir.value,
+                filtros: { ...filters.value },
+            });
+            filasServidor.value = resultado?.data || [];
+            totalServidor.value = resultado?.total ?? filasServidor.value.length;
+        } catch {
+            filasServidor.value = [];
+            totalServidor.value = 0;
+        }
+    }
+
+    function recargarDebounced() {
+        clearTimeout(temporizadorRecarga);
+        temporizadorRecarga = setTimeout(recargar, recargaDebounce);
+    }
+
     // ── Datos filtrados ───────────────────────────────────────────────────
     const filteredData = computed(() => {
+        if (esServidor) return filasServidor.value;
         let list = dataRef.value || [];
 
         // Búsqueda textual general (+ filtro custom aplicado siempre que exista,
@@ -141,16 +178,30 @@ export function useTableControls(dataRef, options = {}) {
     });
 
     // ── Datos paginados ───────────────────────────────────────────────────
-    const totalItems = computed(() => filteredData.value.length);
+    const totalItems = computed(() =>
+        esServidor ? totalServidor.value : filteredData.value.length,
+    );
 
     const totalPages = computed(() =>
         Math.max(1, Math.ceil(totalItems.value / pageSize.value)),
     );
 
     const paginatedData = computed(() => {
+        if (esServidor) return filasServidor.value;
         const start = (currentPage.value - 1) * pageSize.value;
         return filteredData.value.slice(start, start + pageSize.value);
     });
+
+    if (esServidor) {
+        // Cambios de página/orden/filtros recargan directo; la búsqueda con
+        // debounce. Los setters ya resetean currentPage (una sola recarga por
+        // tick gracias al batching de Vue).
+        watch([currentPage, sortKey, sortDir, pageSize, filters], recargar, {
+            deep: true,
+        });
+        watch(searchText, recargarDebounced);
+        recargar();
+    }
 
     // ── Cambio de página ──────────────────────────────────────────────────
     function goToPage(page) {
@@ -262,5 +313,7 @@ export function useTableControls(dataRef, options = {}) {
         onFilterChange,
         getUniqueOptions,
         toggleSort,
+        recargar,
+        esServidor,
     };
 }

@@ -231,12 +231,27 @@ export const obtenerMiCurso = async (idCurso) => {
   }
 };
 
-export const obtenerAlumnos = async () => {
+export const obtenerAlumnos = async (params = undefined) => {
   try {
-    const response = await axios.get(`${API_URL}/alumnos`, getConfig());
+    // Con params (page/limit/...) el backend responde el contrato
+    // { data, total, page, limit }; sin params, el array completo.
+    const response = await axios.get(`${API_URL}/alumnos`, {
+      ...getConfig(),
+      ...(params ? { params } : {}),
+    });
+    const cuerpo = response.data;
+    if (cuerpo && Array.isArray(cuerpo.data)) {
+      return {
+        success: true,
+        data: cuerpo.data,
+        total: cuerpo.total ?? cuerpo.data.length,
+        page: cuerpo.page ?? 1,
+        limit: cuerpo.limit ?? cuerpo.data.length,
+      };
+    }
     return {
       success: true,
-      data: response.data,
+      data: cuerpo,
     };
   } catch (error) {
     return manejarErrorApi(error, "No se pudieron obtener los alumnos");

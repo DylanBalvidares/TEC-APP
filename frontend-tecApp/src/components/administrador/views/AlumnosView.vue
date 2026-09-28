@@ -549,7 +549,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from "vue";
+import { ref, computed, onMounted, nextTick, watch } from "vue";
 import Modal from "../../ui/Modal.vue";
 import { toast } from "../../../services/toast-service.js";
 import {
@@ -624,12 +624,34 @@ const alumnosActivos = computed(
 const alumnosConCuenta = computed(
     () => alumnos.value.filter((a) => a.id_usuario).length,
 );
-const filterFn = (item, q) => {
-    // Si no se están mostrando bajas, ocultar alumnos con estado 'baja' (independiente de la búsqueda)
-    if (!mostrarBajas.value && item.estado === "baja") return false;
-    if (!q) return true;
-    const texto = `${item.nombre} ${item.apellido} ${item.dni} ${item.curso?.nombre_curso || ""}`.toLowerCase();
-    return texto.includes(q);
+// Carga una página desde el backend (modo servidor de useTableControls).
+// Las bajas se excluyen en el servidor salvo que el toggle las pida.
+const cargarPaginaAlumnos = async ({ page, limit, q, sort, order, filtros }) => {
+    cargando.value = true;
+    errorCarga.value = "";
+    try {
+        const params = { page, limit };
+        if (q) params.q = q;
+        if (sort) {
+            params.sort = sort;
+            params.order = order;
+        }
+        if (filtros.id_curso) params.id_curso = filtros.id_curso;
+        if (filtros.estado) params.estado = filtros.estado;
+        if (!mostrarBajas.value && !filtros.estado) params.sinBajas = 1;
+        const res = await obtenerAlumnos(params);
+        if (!res.success) throw new Error(res.message || "Error al cargar alumnos");
+        return { data: res.data || [], total: res.total ?? 0 };
+    } catch (error) {
+        errorCarga.value =
+            error?.response?.data?.message ||
+            error?.response?.data?.mensaje ||
+            error?.message ||
+            "Error crítico de red al sincronizar el padrón de alumnos.";
+        return { data: [], total: 0 };
+    } finally {
+        cargando.value = false;
+    }
 };
 const {
     searchText,
@@ -648,7 +670,13 @@ const {
     setPageSize,
     getUniqueOptions,
     toggleSort,
-} = useTableControls(alumnos, { pageSize: 10, filterFn });
+    recargar: recargarTabla,
+} = useTableControls(alumnos, {
+    pageSize: 10,
+    modo: "servidor",
+    cargarPagina: cargarPaginaAlumnos,
+});
+watch(mostrarBajas, () => recargarTabla());
 
 // ── Columnas del DataTable ─────────────────────────────────────────────────
 const columnasAlumnos = [
@@ -660,9 +688,12 @@ const columnasAlumnos = [
 ];
 
 // ── Exportación CSV ──────────────────────────────────────────────────────
-const exportarAlumnos = () => {
+// En modo servidor exporta el listado completo (no solo la página).
+const exportarAlumnos = async () => {
     try {
-        exportarCsv(filteredData.value, {
+        const res = await obtenerAlumnos({ limit: 1000 });
+        const filas = res.success ? res.data || [] : filteredData.value;
+        exportarCsv(filas, {
             nombreArchivo: "alumnos",
             columnas: {
                 Nombre: "nombre",
@@ -745,22 +776,16 @@ const cambiarVista = (nuevaVista, alumno = null) => {
 };
 
 // ── Controladores CRUD Async con Manejo de Errores Corregido ─────────────────
+// Lista completa solo para las tarjetas de métricas del encabezado
+// (la tabla pagina en el servidor). C3 la reemplazará por /api/admin/metricas.
 const fetchAlumnos = async () => {
-    cargando.value = true;
-    errorCarga.value = "";
     try {
         const res = await obtenerAlumnos();
         // Soporta tanto si el array viene directo en res o dentro de res.data
         const data = res?.data || res;
         alumnos.value = Array.isArray(data) ? data : [];
     } catch (error) {
-        errorCarga.value =
-            error?.response?.data?.message ||
-            error?.response?.data?.mensaje ||
-            error?.message ||
-            "Error crítico de red al sincronizar el padrón de alumnos.";
-    } finally {
-        cargando.value = false;
+        console.error("No se pudieron actualizar las métricas de alumnos:", error?.message || error);
     }
 };
 
@@ -881,6 +906,7 @@ const guardarAlumno = async () => {
                 : "Ficha del alumno actualizada correctamente.",
         );
         await fetchAlumnos();
+        await recargarTabla();
         cambiarVista("lista");
     } catch (error) {
         errorGuardar.value =
@@ -916,8 +942,9 @@ const confirmarEliminar = async () => {
                 respuesta.mensaje ||
                 "No se pudo completar la baja.";
         } else {
-            // Refrescamos la lista completa desde la API para reflejar el cambio de estado
+            // Refrescamos métricas y página actual desde la API
             await fetchAlumnos();
+            await recargarTabla();
             modalEliminarAbierto.value = false;
             alumnoAEliminar.value = null;
             toast.success("El alumno fue dado de baja correctamente.");
