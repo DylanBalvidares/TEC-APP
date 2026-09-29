@@ -32,6 +32,24 @@ test("crearNotificacion valida y devuelve canales", async (t) => {
   assert.deepEqual(r.canales, ["panel", "whatsapp"]);
 });
 
+test("crearNotificacion emite evento SSE para el destinatario", async (t) => {
+  t.mock.method(Notificacion, "create", async (d) => ({ id_notificacion: 9, ...d }));
+  t.mock.method(NotificacionPreferencia, "findByPk", async () => null);
+  const recibidos = [];
+  const { suscribir, limpiarSuscriptores } = await import("../src/utils/eventos.js");
+  const fuera = suscribir({ write: (e) => recibidos.push(e) });
+  try {
+    await crearNotificacion({ id_usuario: 4, tipo: "nota", titulo: "Nueva nota" });
+  } finally {
+    fuera();
+    limpiarSuscriptores();
+  }
+  assert.equal(recibidos.length, 1);
+  assert.equal(recibidos[0].tipo, "notificacion");
+  assert.equal(recibidos[0].datos.id_usuario, 4);
+  assert.equal(recibidos[0].datos.id_notificacion, 9);
+});
+
 test("marcarNotificacionLeida solo la propia", async (t) => {
   t.mock.method(Notificacion, "findByPk", async () => ({
     id_usuario: 4,

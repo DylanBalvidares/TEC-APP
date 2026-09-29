@@ -2,6 +2,7 @@ import ErrorHandler from "../../utils/ErrorHandler.js";
 import Notificacion from "../../db/models/notificacion-model.js";
 import NotificacionPreferencia from "../../db/models/notificacion-preferencia-model.js";
 import { seleccionarCanal, CANALES } from "../../utils/notificaciones.js";
+import { emitir } from "../../utils/eventos.js";
 
 export async function crearNotificacion({ id_usuario, tipo, titulo, cuerpo = null }) {
   if (!id_usuario) throw new ErrorHandler(400, "El destinatario es obligatorio");
@@ -14,6 +15,15 @@ export async function crearNotificacion({ id_usuario, tipo, titulo, cuerpo = nul
     cuerpo: cuerpo ? String(cuerpo).slice(0, 2000) : null,
   });
   const preferencias = await obtenerPreferencias(id_usuario);
+  // Tiempo real (E13): avisa al canal SSE para que el destinatario la vea
+  // sin recargar. Si no hay suscriptores, no hace nada.
+  const plano = typeof notificacion.toJSON === "function" ? notificacion.toJSON() : notificacion;
+  emitir("notificacion", {
+    id_usuario: Number(id_usuario),
+    id_notificacion: plano.id_notificacion ?? plano.id ?? null,
+    tipo: String(tipo),
+    titulo: plano.titulo ?? String(titulo),
+  });
   return {
     notificacion,
     canales: seleccionarCanal(tipo, preferencias),
