@@ -1,7 +1,10 @@
 import Rol from "../../db/models/roles-model.js";
 import Permiso from "../../db/models/permisos-model.js";
 import ErrorHandler from "../../utils/ErrorHandler.js";
-import { obtenerPermisosDeRol } from "../../middlewares/comprobarPermisos.js";
+import {
+  obtenerPermisosDeRol,
+  invalidarCachePermisos,
+} from "../../middlewares/comprobarPermisos.js";
 
 // Re-export unificado: una sola implementación de obtenerPermisosDeRol.
 export { obtenerPermisosDeRol };
@@ -81,6 +84,7 @@ async function asignarPermisosARol(idRol, idsPermisos) {
     }
 
     await rol.setPermisos(permisosValidos);
+    invalidarCachePermisos(idRol);
 
     return {
       ok: true,

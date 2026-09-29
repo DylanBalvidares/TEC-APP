@@ -2,7 +2,30 @@ import ErrorHandler from "../utils/ErrorHandler.js";
 import { Rol, Permiso } from "../db/models/index.js";
 import { normalizarListaPermisos, SOLO_AUTENTICADO } from "../utils/permisosConfig.js";
 
+// Caché corta de permisos por rol (E10): cada request autenticado consulta
+// los permisos; el TTL evita golpear la DB en ráfagas. Se invalida al
+// cambiar asignaciones (ver invalidarCachePermisos).
+const CACHE_TTL_MS = 30 * 1000;
+const cachePermisos = new Map();
+
+export function invalidarCachePermisos(idRol = null) {
+  if (idRol === null || idRol === undefined) {
+    cachePermisos.clear();
+    return;
+  }
+  cachePermisos.delete(Number(idRol));
+}
+
+export function tamanoCachePermisos() {
+  return cachePermisos.size;
+}
+
 export async function obtenerPermisosDeRol(idRol) {
+  const clave = Number(idRol);
+  const hit = cachePermisos.get(clave);
+  if (hit && Date.now() - hit.fecha < CACHE_TTL_MS) {
+    return hit.permisos;
+  }
   try {
     const rolConPermisos = await Rol.findByPk(idRol, {
       attributes: ["id_rol"],
@@ -19,7 +42,9 @@ export async function obtenerPermisosDeRol(idRol) {
     }
 
     const data = rolConPermisos.toJSON();
-    return (data.permisos || []).map((p) => p.nombre_permiso);
+    const permisos = (data.permisos || []).map((p) => p.nombre_permiso);
+    cachePermisos.set(clave, { fecha: Date.now(), permisos });
+    return permisos;
   } catch (error) {
     console.error("[ERROR] obtenerPermisosDeRol:", error.message);
     // No devolver [] silencioso: eso convertía un 500 de DB en un 403 engañoso.
