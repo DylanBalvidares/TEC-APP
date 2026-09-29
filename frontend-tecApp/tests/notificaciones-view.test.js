@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { mount, flushPromises } from "@vue/test-utils";
+import { createPinia, setActivePinia } from "pinia";
 import NotificacionesView from "../src/components/administrador/views/NotificacionesView.vue";
 import * as notificacionesService from "../src/services/notificaciones-service.js";
 
@@ -23,6 +24,9 @@ const NOTIS = [
 describe("NotificacionesView", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    setActivePinia(createPinia());
+    // Sin EventSource real en jsdom: el composable no debe romper el montaje.
+    vi.stubGlobal("EventSource", undefined);
     notificacionesService.obtenerMisNotificaciones.mockResolvedValue({ success: true, data: NOTIS, total: 1 });
     notificacionesService.obtenerPreferencias.mockResolvedValue({ success: true, data: {} });
     notificacionesService.marcarNotificacionLeida.mockResolvedValue({ success: true, data: {} });

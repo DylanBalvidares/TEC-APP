@@ -100,6 +100,8 @@ import {
     guardarPreferencias,
 } from "../../../services/notificaciones-service.js";
 import { toast } from "../../../services/toast-service.js";
+import { usarEventos } from "../../../composables/useEventos.js";
+import { useAuthStore } from "../../../stores/auth.js";
 
 const TIPOS = ["inasistencia", "reunion", "sancion", "nota", "comunicado", "sistema"];
 const CANALES = ["panel", "email", "whatsapp"];
@@ -187,7 +189,24 @@ async function guardar() {
     }
 }
 
-onMounted(cargar);
+const authStore = useAuthStore();
+// Tiempo real (E13): si llega una notificación para este usuario se recarga
+// la lista y se avisa con toast; las de otros usuarios se ignoran.
+const { conectar } = usarEventos({
+    alEvento: (evento) => {
+        if (evento?.tipo !== "notificacion") return;
+        const mio = Number(evento.datos?.id_usuario);
+        const yo = Number(authStore.usuario?.id_usuario ?? authStore.usuario?.id);
+        if (Number.isFinite(mio) && Number.isFinite(yo) && mio !== yo) return;
+        toast.info(evento.datos?.titulo || "Nueva notificación.");
+        cargar();
+    },
+});
+
+onMounted(() => {
+    cargar();
+    conectar();
+});
 </script>
 
 <style scoped>
