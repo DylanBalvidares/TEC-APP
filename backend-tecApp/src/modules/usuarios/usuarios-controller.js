@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import crypto from "node:crypto";
 import { Op } from "sequelize";
 import ErrorHandler from "../../utils/ErrorHandler.js";
 import { Usuario, Rol } from "../../db/models/index.js";
@@ -308,6 +309,27 @@ async function modificarUsuario(usuario) {
   }
 }
 
+// E11: el administrador genera una contraseña temporal que se muestra una
+// sola vez en la respuesta; el usuario debe cambiarla al iniciar sesión.
+async function restablecerContrasena(idUsuario) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: restablecerContrasena");
+  try {
+    if (!idUsuario || Number(idUsuario) < 0) {
+      throw new ErrorHandler(400, "ID de usuario inválida");
+    }
+    const usuario = await Usuario.findByPk(Number(idUsuario));
+    if (!usuario) throw new ErrorHandler(404, "Usuario no encontrado");
+
+    const temporal = crypto.randomBytes(9).toString("base64url");
+    await actualizarContrasena(Number(idUsuario), temporal);
+    return { ok: true, contrasena_temporal: temporal };
+  } catch (error) {
+    if (error instanceof ErrorHandler) throw error;
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en restablecerContrasena:", error);
+    throw new ErrorHandler(500, "Error interno al restablecer contraseña");
+  }
+}
+
 export {
   buscarUsuarioPorEmail,
   buscarUsuarioPorDni,
@@ -317,4 +339,5 @@ export {
   crearUsuario,
   eliminarUsuario,
   modificarUsuario,
+  restablecerContrasena,
 };

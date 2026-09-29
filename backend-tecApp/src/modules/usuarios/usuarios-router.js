@@ -12,6 +12,7 @@ import {
   eliminarUsuario,
   modificarUsuario,
   comprobarContrasenaUsuario,
+  restablecerContrasena,
 } from "./usuarios-controller.js";
 import { auditarEscritura } from "../../utils/auditoria.js";
 
@@ -224,6 +225,29 @@ usuariosRouter.patch(
       return res
         .status(statusCode)
         .json({ error: error.message || "Error al modificar usuario" });
+    }
+  },
+);
+
+//// ============== RESTABLECER CONTRASEÑA ==============
+usuariosRouter.post(
+  "/usuarios/:id/restablecer-contrasena",
+  comprobarPermiso("administrativo_editar_usuario"),
+  async (req, res) => {
+    try {
+      const resultado = await restablecerContrasena(req.params.id);
+      await auditarEscritura(req, {
+        accion: "restablecer_contrasena",
+        entidad: "usuario",
+        id_entidad: req.params.id ?? null,
+        despues: null,
+      });
+      return res.status(200).json(resultado);
+    } catch (error) {
+      const statusCode = error.statusCode || error.status || 500;
+      return res
+        .status(statusCode)
+        .json({ error: error.message || "Error al restablecer contraseña" });
     }
   },
 );
