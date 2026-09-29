@@ -28,7 +28,6 @@ function montarEnCrear() {
       stubs: {
         Pagination: true,
         UserAccessPanel: true,
-        TelefonoInput: true,
       },
     },
   });
@@ -76,10 +75,11 @@ describe("PersonalView cargos", () => {
     await porEtiqueta("DNI").setValue("30123456");
     await porEtiqueta("Email").setValue("ana@tecnica2.edu.ar");
     await porEtiqueta("Domicilio").setValue("Calle 1");
+    // TelefonoInput real: propaga el valor por v-model (el teléfono es
+    // requerido por validarTodo, sin él el submit no llama al servicio).
     const telefono = wrapper.findComponent({ name: "TelefonoInput" });
-    if (telefono.exists()) {
-      await telefono.find("input").setValue("2364 71-5375");
-    }
+    expect(telefono.exists()).toBe(true);
+    await telefono.find("input").setValue("2364715375");
     await porEtiqueta("Fecha de Nacimiento").setValue("1990-01-01");
     await porEtiqueta("Fecha de Ingreso").setValue("2020-01-01");
     await wrapper.find("form").trigger("submit.prevent");
