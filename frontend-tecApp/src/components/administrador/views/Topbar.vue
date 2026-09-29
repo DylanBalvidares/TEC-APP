@@ -23,6 +23,15 @@
 
         <div class="user-section" ref="profileMenuRef">
             <button
+                class="tema-btn"
+                type="button"
+                :aria-label="etiquetaTema"
+                :title="etiquetaTema"
+                @click="alternarTema"
+            >
+                <i :class="iconoTema" aria-hidden="true"></i>
+            </button>
+            <button
                 class="avatar-btn"
                 @click="toggleMenu"
                 :class="{ 'is-active': menuAbierto }"
@@ -119,6 +128,15 @@ import { useRouter } from "vue-router";
 import { useAuthStore } from "../../../stores/auth";
 import Modal from "../../ui/Modal.vue";
 import { etiquetaRol } from "../../../utils/roles.js";
+import { usarTema } from "../../../composables/useTema.js";
+
+const { temaEfectivo, alternarTema } = usarTema();
+const iconoTema = computed(() =>
+  temaEfectivo.value === "oscuro" ? "ti ti-sun" : "ti ti-moon",
+);
+const etiquetaTema = computed(() =>
+  temaEfectivo.value === "oscuro" ? "Cambiar a modo claro" : "Cambiar a modo oscuro",
+);
 
 defineProps({
     currentPage: { type: String, default: "Inicio" },
@@ -303,6 +321,29 @@ const ejecutarLogout = () => {
 /* --- Sección de Usuario --- */
 .user-section {
     position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tema-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: inherit;
+    font-size: 18px;
+}
+.tema-btn:hover,
+.tema-btn:focus-visible {
+    border-color: #cd322c;
+    box-shadow: 0 0 0 2px rgba(205, 50, 44, 0.1);
+    outline: none;
 }
 
 .avatar-btn {

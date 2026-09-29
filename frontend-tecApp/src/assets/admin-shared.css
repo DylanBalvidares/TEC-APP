@@ -601,3 +601,43 @@
         overflow: visible;
     }
 }
+
+/* ── Modo oscuro (E14): conmuta por [data-tema="oscuro"] en <html> ──────── */
+[data-tema="oscuro"] {
+    --color-background-primary: #111827;
+    --color-background-secondary: #1f2937;
+    --color-border-tertiary: #374151;
+    --color-text-primary: #f3f4f6;
+    --color-text-secondary: #d1d5db;
+    color-scheme: dark;
+}
+[data-tema="oscuro"] body,
+[data-tema="oscuro"] .admin-layout,
+[data-tema="oscuro"] .main-content {
+    background: #0b1220;
+    color: #f3f4f6;
+}
+[data-tema="oscuro"] .card,
+[data-tema="oscuro"] .dropdown-menu,
+[data-tema="oscuro"] .modal-contenido {
+    background: #111827;
+    border-color: #374151;
+    color: #f3f4f6;
+}
+[data-tema="oscuro"] .card-header,
+[data-tema="oscuro"] .card-footer {
+    background: #1f2937;
+    border-color: #374151;
+}
+[data-tema="oscuro"] .tabla,
+[data-tema="oscuro"] table {
+    background: #111827;
+    color: #f3f4f6;
+}
+[data-tema="oscuro"] input,
+[data-tema="oscuro"] select,
+[data-tema="oscuro"] textarea {
+    background: #1f2937;
+    border-color: #374151;
+    color: #f3f4f6;
+}
