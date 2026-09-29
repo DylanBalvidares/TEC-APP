@@ -135,8 +135,8 @@ const onTeclaNav = (e) => {
 }
 
 .nav-item.active {
-    background: #fbf0f0;
-    color: #a52420;
+    background: var(--nav-active-bg, #fbf0f0);
+    color: var(--nav-active-fg, #a52420);
 }
 
 .nav-item:focus-visible {

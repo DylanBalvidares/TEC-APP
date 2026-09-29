@@ -78,7 +78,7 @@
                     role="img"
                     aria-label="Distribución de asistencia de hoy"
                 >
-                    <circle cx="21" cy="21" r="15.9" fill="none" stroke="#f3f4f6" stroke-width="6" />
+                    <circle cx="21" cy="21" r="15.9" fill="none" stroke="#f3f4f6" stroke-width="6" class="donut-pista" />
                     <circle
                         cx="21"
                         cy="21"
@@ -316,7 +316,7 @@ onMounted(cargarDatos);
 }
 
 .metric-card {
-    background: var(--color-background-secondary, #ffffff);
+    background: var(--color-background-primary, #ffffff);
     border-radius: 8px;
     padding: 14px;
     display: flex;

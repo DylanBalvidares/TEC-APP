@@ -1,3 +1,17 @@
+/* ── Tokens de paleta admin (única fuente; el modo oscuro los redefine) ── */
+:root {
+    --color-background-primary: #ffffff;
+    --color-background-secondary: #f3f4f6;
+    --color-background-tertiary: #f8f9fa;
+    --color-border-tertiary: #e5e7eb;
+    --color-text-primary: #111827;
+    --color-text-secondary: #4b5563;
+    --color-text-tertiary: #6b7280;
+    --card-bg: #ffffff;
+    --nav-active-bg: #fbf0f0;
+    --nav-active-fg: #a52420;
+}
+
 /* ── Transiciones y Microanimaciones ────────────────────────────────────── */
 .animate-fade-in {
     animation: fadeIn 0.22s ease-in-out;
@@ -81,7 +95,7 @@
     vertical-align: middle;
 }
 .table-row:hover {
-    background: var(--color-background-secondary, #f9fafb);
+    background: var(--color-background-secondary, #f3f4f6);
 }
 .mono {
     font-family: monospace;
@@ -540,7 +554,7 @@
     gap: 12px;
 }
 .metric-card {
-    background: var(--color-background-secondary, #ffffff);
+    background: var(--color-background-primary, #ffffff);
     border-radius: 8px;
     padding: 14px 18px;
     display: flex;
@@ -602,42 +616,171 @@
     }
 }
 
-/* ── Modo oscuro (E14): conmuta por [data-tema="oscuro"] en <html> ──────── */
-[data-tema="oscuro"] {
+/* ── Modo oscuro: conmuta por data-tema="oscuro" en <html> ────────────────
+   Prefijo html[...] para superar la especificidad de los estilos scoped. ── */
+html[data-tema="oscuro"] {
     --color-background-primary: #111827;
     --color-background-secondary: #1f2937;
+    --color-background-tertiary: #0b1220;
     --color-border-tertiary: #374151;
     --color-text-primary: #f3f4f6;
     --color-text-secondary: #d1d5db;
+    --color-text-tertiary: #9ca3af;
+    --card-bg: #111827;
+    --nav-active-bg: rgba(205, 50, 44, 0.22);
+    --nav-active-fg: #fca5a5;
     color-scheme: dark;
 }
-[data-tema="oscuro"] body,
-[data-tema="oscuro"] .admin-layout,
-[data-tema="oscuro"] .main-content {
+html[data-tema="oscuro"] body,
+html[data-tema="oscuro"] .admin-layout,
+html[data-tema="oscuro"] .main-content,
+html[data-tema="oscuro"] .dash-wrapper,
+html[data-tema="oscuro"] .content {
     background: #0b1220;
     color: #f3f4f6;
 }
-[data-tema="oscuro"] .card,
-[data-tema="oscuro"] .dropdown-menu,
-[data-tema="oscuro"] .modal-contenido {
+/* Superficies */
+html[data-tema="oscuro"] .card,
+html[data-tema="oscuro"] .dropdown-menu,
+html[data-tema="oscuro"] .modal-content,
+html[data-tema="oscuro"] .metric-card {
     background: #111827;
     border-color: #374151;
     color: #f3f4f6;
 }
-[data-tema="oscuro"] .card-header,
-[data-tema="oscuro"] .card-footer {
+html[data-tema="oscuro"] .card-header,
+html[data-tema="oscuro"] .card-footer,
+html[data-tema="oscuro"] .user-badge {
     background: #1f2937;
     border-color: #374151;
 }
-[data-tema="oscuro"] .tabla,
-[data-tema="oscuro"] table {
+/* Chrome del layout */
+html[data-tema="oscuro"] .menu-toggle {
+    color: #e5e7eb;
+}
+html[data-tema="oscuro"] .menu-toggle:hover {
+    background: #1f2937;
+}
+html[data-tema="oscuro"] .user-name {
+    color: #f3f4f6;
+}
+html[data-tema="oscuro"] .user-email,
+html[data-tema="oscuro"] .badge-label {
+    color: #9ca3af;
+}
+html[data-tema="oscuro"] .dropdown-divider {
+    background-color: #374151;
+}
+html[data-tema="oscuro"] .dropdown-item {
+    color: #d1d5db;
+}
+html[data-tema="oscuro"] .dropdown-item:hover {
+    background: #1f2937;
+    color: #ffffff;
+}
+html[data-tema="oscuro"] .dropdown-item.text-danger {
+    color: #fca5a5;
+}
+html[data-tema="oscuro"] .dropdown-item.text-danger:hover {
+    background: rgba(205, 50, 44, 0.22);
+    color: #fecaca;
+}
+/* Tablas */
+html[data-tema="oscuro"] .tabla,
+html[data-tema="oscuro"] table {
     background: #111827;
     color: #f3f4f6;
 }
-[data-tema="oscuro"] input,
-[data-tema="oscuro"] select,
-[data-tema="oscuro"] textarea {
+html[data-tema="oscuro"] .mini th,
+html[data-tema="oscuro"] .mini td {
+    border-color: #374151;
+}
+html[data-tema="oscuro"] .mono,
+html[data-tema="oscuro"] .email-cell {
+    color: #9ca3af;
+}
+html[data-tema="oscuro"] .icon-btn {
+    border-color: #374151;
+    color: #d1d5db;
+    background: transparent;
+}
+/* Formularios */
+html[data-tema="oscuro"] input,
+html[data-tema="oscuro"] select,
+html[data-tema="oscuro"] textarea {
     background: #1f2937;
     border-color: #374151;
     color: #f3f4f6;
+}
+html[data-tema="oscuro"] .filtro-inline select {
+    background: #1f2937;
+    border-color: #374151;
+    color: #f3f4f6;
+}
+/* Botones secundarios */
+html[data-tema="oscuro"] .tb-btn.outline {
+    background: transparent;
+    color: #e5e7eb;
+    border-color: #4b5563;
+}
+html[data-tema="oscuro"] .tb-btn.outline:hover {
+    background: #1f2937;
+    color: #ffffff;
+}
+/* Badges y pills de estado */
+html[data-tema="oscuro"] .badge-green,
+html[data-tema="oscuro"] .sp-active {
+    background: #14532d;
+    color: #bbf7d0;
+}
+html[data-tema="oscuro"] .badge-gray {
+    background: #374151;
+    color: #e5e7eb;
+}
+html[data-tema="oscuro"] .sp-inactive,
+html[data-tema="oscuro"] .sp-baja {
+    background: #7f1d1d;
+    color: #fecaca;
+}
+html[data-tema="oscuro"] .sp-pending,
+html[data-tema="oscuro"] .sp-licencia {
+    background: #713f12;
+    color: #fde68a;
+}
+html[data-tema="oscuro"] .sp-cargo {
+    background: #0c4a6e;
+    color: #bae6fd;
+}
+/* Banners */
+html[data-tema="oscuro"] .error-banner {
+    background: #7f1d1d;
+    border-color: #991b1b;
+    color: #fecaca;
+}
+html[data-tema="oscuro"] .exito-banner {
+    background: #14532d;
+    border-color: #166534;
+    color: #bbf7d0;
+}
+html[data-tema="oscuro"] .empty-state {
+    color: #9ca3af;
+}
+html[data-tema="oscuro"] .field-error {
+    color: #fca5a5;
+}
+/* Donut de asistencia: pista visible sobre fondo oscuro */
+html[data-tema="oscuro"] .donut-pista {
+    stroke: #374151;
+}
+/* Barra de búsqueda repetida en las vistas (fondo fijo en cada scoped) */
+html[data-tema="oscuro"] .search-box {
+    background: #1f2937;
+    border-color: #374151;
+}
+html[data-tema="oscuro"] .search-box input {
+    color: #f3f4f6;
+}
+html[data-tema="oscuro"] .search-clear:hover {
+    color: #e5e7eb;
+    background: #374151;
 }

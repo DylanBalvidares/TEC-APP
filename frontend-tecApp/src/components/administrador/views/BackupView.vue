@@ -172,7 +172,7 @@ async function verificar() {
     gap: 16px;
 }
 .muted {
-    color: var(--color-text-secondary, #6b7280);
+    color: var(--color-text-tertiary, #6b7280);
     font-size: 13px;
 }
 .mono {

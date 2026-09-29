@@ -231,8 +231,8 @@ const ejecutarLogout = () => {
     align-items: center;
     height: 64px;
     padding: 0 24px;
-    background-color: #ffffff;
-    border-bottom: 1px solid #e5e7eb; /* Gris más acorde a tu auth */
+    background-color: var(--color-background-primary, #ffffff);
+    border-bottom: 1px solid var(--color-border-tertiary, #e5e7eb);
     position: sticky;
     top: 0;
     z-index: 1000;
@@ -398,8 +398,8 @@ const ejecutarLogout = () => {
     top: calc(100% + 12px);
     right: 0;
     width: 260px;
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
+    background: var(--color-background-primary, #ffffff);
+    border: 1px solid var(--color-border-tertiary, #e5e7eb);
     border-radius: 12px;
     box-shadow:
         0 10px 25px -5px rgba(0, 0, 0, 0.1),
