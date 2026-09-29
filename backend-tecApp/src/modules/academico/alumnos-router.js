@@ -140,8 +140,10 @@ alumnosRouter.post(
   async (req, res) => {
     console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m ALUMNOS LOTE REQUEST:", req.body);
     try {
-      const resultado = await crearAlumnosEnLote(req.body);
-      return res.status(201).json(resultado);
+      // ?validar=true: validación previa con reporte, sin insertar (E12).
+      const soloValidar = req.query?.validar === "true";
+      const resultado = await crearAlumnosEnLote(req.body, { soloValidar });
+      return res.status(soloValidar ? 200 : 201).json(resultado);
     } catch (error) {
       return res.status(error.status || 500).json({ message: error.message });
     }

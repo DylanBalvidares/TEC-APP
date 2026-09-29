@@ -427,9 +427,9 @@ async function darDeBajaAlumno(id) {
   }
 }
 
-async function crearAlumnosEnLote(payload) {
-  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: crearAlumnosEnLote");
-
+// E12: validación previa estructurada del lote. Devuelve un reporte por fila
+// sin insertar nada; `crearAlumnosEnLote` la reutiliza antes de guardar.
+async function validarLoteAlumnos(payload) {
   const listaAlumnos = Array.isArray(payload)
     ? payload
     : Array.isArray(payload?.alumnos)
@@ -441,7 +441,7 @@ async function crearAlumnosEnLote(payload) {
   }
 
   // 1. Validar campos obligatorios por alumno
-  const erroresFormato = [];
+  const filas = [];
   const dnisVistos = new Set();
   const dnisDuplicadosEnLote = new Set();
   const dnisValidos = [];
@@ -449,6 +449,7 @@ async function crearAlumnosEnLote(payload) {
   listaAlumnos.forEach((alumno, index) => {
     const pos = index + 1;
     const { nombre, apellido, dni, fecha_nacimiento, nombre_tutor, domicilio } = alumno;
+    const errores = [];
 
     const camposFaltantes = [];
     if (!nombre || typeof nombre !== "string" || !nombre.trim()) camposFaltantes.push("nombre");
@@ -459,7 +460,7 @@ async function crearAlumnosEnLote(payload) {
     if (!domicilio || typeof domicilio !== "string" || !domicilio.trim()) camposFaltantes.push("domicilio");
 
     if (camposFaltantes.length > 0) {
-      erroresFormato.push(`Alumno #${pos}: Faltan campos obligatorios: ${camposFaltantes.join(", ")}`);
+      errores.push(`Faltan campos obligatorios: ${camposFaltantes.join(", ")}`);
     }
 
     if (dni) {
@@ -474,34 +475,18 @@ async function crearAlumnosEnLote(payload) {
 
     const errorTel = validarTelefonoAR(alumno.telefono_tutor, false);
     if (errorTel) {
-      erroresFormato.push(`Alumno #${pos}: Teléfono del tutor: ${errorTel}`);
+      errores.push(`Teléfono del tutor: ${errorTel}`);
     }
+
+    filas.push({ fila: pos, dni: dni ?? null, ok: errores.length === 0, errores });
   });
-
-  if (erroresFormato.length > 0) {
-    throw new ErrorHandler(400, `Errores de validación en el lote:\n${erroresFormato.join("\n")}`);
-  }
-
-  if (dnisDuplicadosEnLote.size > 0) {
-    throw new ErrorHandler(
-      400,
-      `Existen DNIs duplicados dentro de la misma lista enviada: ${Array.from(dnisDuplicadosEnLote).join(", ")}`
-    );
-  }
 
   // 2. Verificar si existen los DNIs en la base de datos
   const alumnosExistentesBD = await Alumno.findAll({
     where: { dni: dnisValidos },
     attributes: ["dni"],
   });
-
-  if (alumnosExistentesBD.length > 0) {
-    const dnisExistentesBD = alumnosExistentesBD.map((a) => a.dni);
-    throw new ErrorHandler(
-      400,
-      `Los siguientes DNIs ya están registrados en el sistema: ${dnisExistentesBD.join(", ")}`
-    );
-  }
+  const dnisExistentes = alumnosExistentesBD.map((a) => a.dni);
 
   // 3. Verificar si existen los cursos especificados en la base de datos
   const idsCursos = [
@@ -512,20 +497,84 @@ async function crearAlumnosEnLote(payload) {
     ),
   ];
 
+  let cursosInexistentes = [];
   if (idsCursos.length > 0) {
     const cursosExistentes = await Curso.findAll({
       where: { id_curso: idsCursos },
       attributes: ["id_curso"],
     });
     const idsCursosExistentes = new Set(cursosExistentes.map((c) => c.id_curso));
-    const cursosInexistentes = idsCursos.filter((id) => !idsCursosExistentes.has(Number(id)));
+    cursosInexistentes = idsCursos.filter((id) => !idsCursosExistentes.has(Number(id)));
+  }
 
-    if (cursosInexistentes.length > 0) {
-      throw new ErrorHandler(
-        400,
-        `Los siguientes IDs de curso no existen en la base de datos: ${cursosInexistentes.join(", ")}`
-      );
+  const setExistentes = new Set(dnisExistentes.map((d) => String(d).trim()));
+  for (const fila of filas) {
+    if (fila.dni !== null && dnisDuplicadosEnLote.has(String(fila.dni).trim())) {
+      fila.errores.push("DNI duplicado dentro del lote");
+      fila.ok = false;
     }
+    if (fila.dni !== null && setExistentes.has(String(fila.dni).trim())) {
+      fila.errores.push("DNI ya registrado en el sistema");
+      fila.ok = false;
+    }
+  }
+
+  const validas = filas.filter((f) => f.ok).length;
+  return {
+    total: filas.length,
+    validas,
+    invalidas: filas.length - validas,
+    dnisDuplicados: [...dnisDuplicadosEnLote],
+    dnisExistentes,
+    cursosInexistentes,
+    filas,
+    hayErrores:
+      filas.some((f) => !f.ok) ||
+      dnisDuplicadosEnLote.size > 0 ||
+      dnisExistentes.length > 0 ||
+      cursosInexistentes.length > 0,
+  };
+}
+
+async function crearAlumnosEnLote(payload, opciones = {}) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: crearAlumnosEnLote");
+
+  const reporte = await validarLoteAlumnos(payload);
+
+  // Modo validación previa: reporte sin insertar (E12).
+  if (opciones.soloValidar) {
+    return { ok: true, mensaje: "Validación previa del lote", reporte };
+  }
+
+  const listaAlumnos = Array.isArray(payload) ? payload : payload.alumnos;
+
+  const erroresFormato = reporte.filas
+    .filter((f) => f.errores.length > 0 && !f.errores.every((e) => e.startsWith("DNI")))
+    .flatMap((f) => f.errores.map((e) => `Alumno #${f.fila}: ${e}`));
+
+  if (erroresFormato.length > 0) {
+    throw new ErrorHandler(400, `Errores de validación en el lote:\n${erroresFormato.join("\n")}`);
+  }
+
+  if (reporte.dnisDuplicados.length > 0) {
+    throw new ErrorHandler(
+      400,
+      `Existen DNIs duplicados dentro de la misma lista enviada: ${reporte.dnisDuplicados.join(", ")}`
+    );
+  }
+
+  if (reporte.dnisExistentes.length > 0) {
+    throw new ErrorHandler(
+      400,
+      `Los siguientes DNIs ya están registrados en el sistema: ${reporte.dnisExistentes.join(", ")}`
+    );
+  }
+
+  if (reporte.cursosInexistentes.length > 0) {
+    throw new ErrorHandler(
+      400,
+      `Los siguientes IDs de curso no existen en la base de datos: ${reporte.cursosInexistentes.join(", ")}`
+    );
   }
 
   // 4. Formatear y realizar inserción masiva dentro de una transacción de Sequelize
@@ -585,6 +634,7 @@ export {
   obtenerAlumno,
   crearAlumno,
   crearAlumnosEnLote,
+  validarLoteAlumnos,
   sincronizarUsuarioAlumno,
   eliminarAlumno,
   modificarAlumno,
