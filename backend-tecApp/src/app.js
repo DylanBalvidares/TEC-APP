@@ -32,6 +32,7 @@ import auditoriaRouter from "./modules/admin/auditoria-router.js";
 import reportesRouter from "./modules/admin/reportes-router.js";
 import configRouter from "./modules/admin/config-router.js";
 import backupRouter from "./modules/admin/backup-router.js";
+import eventosRouter from "./modules/admin/eventos-router.js";
 import horariosRouter from "./modules/academico/horarios-router.js";
 import convivenciaRouter from "./modules/academico/convivencia-router.js";
 import notificacionesRouter from "./modules/comunidad/notificaciones-router.js";
@@ -192,6 +193,7 @@ app.use("/api/admin", autenticar, auditoriaRouter);
 app.use("/api/admin", autenticar, reportesRouter);
 app.use("/api/admin", autenticar, configRouter);
 app.use("/api/admin", autenticar, backupRouter);
+app.use("/api/admin", autenticar, eventosRouter);
 
 app.use("/api/biblioteca", autenticar, bibliotecaRouter);
 app.use("/api/biblioteca", autenticar, prestamosRouter);
