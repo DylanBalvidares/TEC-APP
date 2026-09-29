@@ -108,3 +108,30 @@ export const obtenerMetricas = async () => {
     return { success: false, message: "No se pudo conectar con el servidor." };
   }
 };
+
+// Backup y verificación de restauración (E9).
+export const exportarBackup = async () => {
+  try {
+    const { data } = await axios.get(`${API_URL}/backup/export`, getConfig());
+    return { success: true, backup: data.backup };
+  } catch (error) {
+    return {
+      success: false,
+      status: error.response?.status,
+      message: error.response?.data?.error || "No se pudo generar el backup.",
+    };
+  }
+};
+
+export const verificarBackup = async (backup) => {
+  try {
+    const { data } = await axios.post(`${API_URL}/backup/verificar`, { backup }, getConfig());
+    return { success: true, ...data };
+  } catch (error) {
+    return {
+      success: false,
+      status: error.response?.status,
+      message: error.response?.data?.error || "El backup no es válido.",
+    };
+  }
+};

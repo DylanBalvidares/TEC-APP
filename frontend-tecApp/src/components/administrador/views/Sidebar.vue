@@ -73,6 +73,7 @@ const grupos = [
             { vista: "objetos", nombre: "Objetos perdidos", icono: "ti-package" },
             { vista: "reportes", nombre: "Reportes", icono: "ti-chart-bar" },
             { vista: "config", nombre: "Configuración", icono: "ti-settings" },
+            { vista: "backup", nombre: "Backup", icono: "ti-database-export" },
         ],
     },
 ];

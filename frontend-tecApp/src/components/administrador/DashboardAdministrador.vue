@@ -67,6 +67,7 @@ import BibliotecaView from "./views/BibliotecaView.vue";
 import ObjetosView from "./views/ObjetosView.vue";
 import NotificacionesView from "./views/NotificacionesView.vue";
 import CertificadosView from "./views/CertificadosView.vue";
+import BackupView from "./views/BackupView.vue";
 import UsuarioPerfil from "./views/UsuarioPerfil.vue";
 
 const componentesMap = {
@@ -95,6 +96,7 @@ const componentesMap = {
   objetos: ObjetosView,
   notificaciones: NotificacionesView,
   certificados: CertificadosView,
+  backup: BackupView,
   perfil: UsuarioPerfil,
 };
 const VISTAS_VALIDAS = Object.keys(componentesMap);
@@ -124,6 +126,7 @@ const pageNames = {
   objetos: "Objetos perdidos",
   notificaciones: "Notificaciones",
   certificados: "Certificados",
+  backup: "Backup",
   perfil: "Mi Perfil",
 };
 const nombrePagina = (vista) => pageNames[vista] || "Inicio";
