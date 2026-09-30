@@ -9,6 +9,16 @@ dotenv.config({ path: path.resolve(__dirname, "../../db/.env") });
 
 let transporter = null;
 
+// Gancho de testabilidad: permite inyectar un transporter falso sin red.
+// No altera el flujo productivo (obtenerTransporter lo crea una sola vez).
+export function fijarTransporter(transportadorFalso) {
+  transporter = transportadorFalso;
+}
+
+export function reiniciarTransporter() {
+  transporter = null;
+}
+
 function obtenerTransporter() {
   if (transporter) return transporter;
 
