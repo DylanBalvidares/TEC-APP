@@ -33,10 +33,8 @@ function dataset() {
       { id_curso: 1, estado: "ausente", cantidad: 10 },
     ],
     promedios: [
-      {
-        promedio: "7.50",
-        Asignacion: { materiaAsignacion: { id_materia: 2, nombre_materia: "Matemática" } },
-      },
+      // `raw: true` + col() por alias: la fila llega plana.
+      { id_materia: 2, nombre_materia: "Matemática", promedio: "7.50" },
     ],
     estados: [
       { estado: "activo", cantidad: 90 },
@@ -65,6 +63,37 @@ test("obtenerResumenReportes agrega retencion, asistencia, promedios y altas/baj
     { id_materia: 2, nombre: "Matemática", promedio: 7.5 },
   ]);
   assert.deepEqual(r.altasBajas, { activo: 90, baja: 10 });
+});
+
+test("el GROUP BY de promedios usa el alias real del include anidado", async () => {
+  // MySQL no resuelve rutas de asociación: agrupar por
+  // "Asignacion.materiaAsignacion.id_materia" rompía la vista con 500.
+  // Sequelize no exporta la clase Col: se distingue por su campo `col`.
+  const esCol = (v) => v && typeof v === "object" && typeof v.col === "string";
+  let opciones;
+  const real = Nota.findAll;
+  Nota.findAll = async (o) => {
+    opciones = o;
+    return [];
+  };
+  try {
+    await obtenerResumenReportes();
+  } finally {
+    Nota.findAll = real;
+  }
+
+  const esperado = "asignacione->materiaAsignacion";
+  assert.ok(opciones.group.every(esCol));
+  assert.ok(
+    opciones.group.every((g) => g.col.startsWith(`${esperado}.`)),
+    `GROUP BY debe agrupar por ${esperado}.*, llegó: ${opciones.group.map((g) => g.col)}`,
+  );
+  const aliasados = opciones.attributes
+    .map((a) => (Array.isArray(a) ? a[0] : a))
+    .filter(esCol)
+    .map((a) => a.col);
+  assert.ok(aliasados.includes(`${esperado}.id_materia`));
+  assert.ok(opciones.attributes.some((a) => Array.isArray(a) && a[1] === "promedio"));
 });
 
 test("GET /api/admin/reportes/resumen exige administrativo_ver_reportes", async (t) => {

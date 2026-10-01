@@ -9,6 +9,11 @@ import {
   Materia,
 } from "../../db/models/index.js";
 
+// Alias SQL que Sequelize genera para un include anidado
+// Nota -> Asignacion -> Materia. MySQL no resuelve rutas de asociación en el
+// GROUP BY, así que el promedio por materia se agrupa por ese alias real.
+const ALIAS_MATERIA_DE_ASIGNACION = "asignacione->materiaAsignacion";
+
 function hace30Dias() {
   const d = new Date();
   d.setDate(d.getDate() - 30);
@@ -35,23 +40,30 @@ export async function obtenerResumenReportes() {
         raw: true,
       }),
       Nota.findAll({
-        attributes: [[fn("AVG", col("calificacion")), "promedio"]],
+        attributes: [
+          [col(`${ALIAS_MATERIA_DE_ASIGNACION}.id_materia`), "id_materia"],
+          [col(`${ALIAS_MATERIA_DE_ASIGNACION}.nombre_materia`), "nombre_materia"],
+          [fn("AVG", col("notas.calificacion")), "promedio"],
+        ],
         include: [
           {
             model: Asignacion,
+            as: "asignacione",
             attributes: [],
             include: [
               {
                 model: Materia,
                 as: "materiaAsignacion",
-                attributes: ["id_materia", "nombre_materia"],
+                attributes: [],
               },
             ],
           },
         ],
-        group: ["Asignacion.materiaAsignacion.id_materia"],
+        group: [
+          col(`${ALIAS_MATERIA_DE_ASIGNACION}.id_materia`),
+          col(`${ALIAS_MATERIA_DE_ASIGNACION}.nombre_materia`),
+        ],
         raw: true,
-        nest: true,
       }),
       Alumno.findAll({
         attributes: ["estado", [fn("COUNT", col("id_alumno")), "cantidad"]],
@@ -78,9 +90,9 @@ export async function obtenerResumenReportes() {
     for (const n of promedios) {
       const plano = typeof n.toJSON === "function" ? n.toJSON() : n;
       const mat =
-        plano.Asignacion?.materiaAsignacion ||
-        plano.Asignacion?.Materia ||
-        plano.asignacion?.materia;
+        plano.id_materia !== undefined && plano.id_materia !== null
+          ? plano
+          : plano.Asignacion?.materiaAsignacion || plano.asignacion?.materia;
       if (!mat) continue;
       promediosPorMateria.push({
         id_materia: mat.id_materia,
