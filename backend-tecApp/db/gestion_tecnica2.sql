@@ -195,6 +195,7 @@ SELECT 3, id_permiso FROM `permisos` WHERE `nombre_permiso` IN (
     'profesor_ver_todos_notas','profesor_crear_nota','profesor_editar_nota',
     'profesor_eliminar_nota','profesor_gestionar_asistencias','profesor_ver_horario',
     'profesor_ver_planes',
+    'comunicado_crear','comunicado_editar','comunicado_eliminar','comunicado_ver',
     'whatsapp_enviar','whatsapp_ver_propio',
     'horario_ver'
 );
