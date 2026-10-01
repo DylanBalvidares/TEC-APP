@@ -1,7 +1,16 @@
 import ErrorHandler from "../../utils/ErrorHandler.js";
 import Comunicado from "../../db/models/comunicados-model.js";
+import Usuario from "../../db/models/user-model.js";
 
 import { Op } from "sequelize";
+
+// El comunicado guarda sólo `autor_id`; sin este include el frontend no tiene
+// forma de mostrar quién publicó (y antes caía en textos hardcodeados).
+const CON_AUTOR = {
+  model: Usuario,
+  as: "autor",
+  attributes: ["id_usuario", "nombre", "apellido", "id_rol"],
+};
 
 export async function obtenerTodosComunicados(filtros = {}) {
   try {
@@ -25,21 +34,27 @@ export async function obtenerTodosComunicados(filtros = {}) {
         ? filtros.cursos.split(",").map((c) => c.trim()).filter(Boolean)
         : [];
 
-      whereClause = {
-        [Op.or]: [
-          { destino: "todos" },
-          { destino: "profesores" },
-          ...(cursosProfesor.length > 0
-            ? [
-                {
-                  destino: "curso",
-                  curso_destino: {
-                    [Op.in]: cursosProfesor,
-                  },
+      const condiciones = [
+        { destino: "todos" },
+        { destino: "profesores" },
+        ...(cursosProfesor.length > 0
+          ? [
+              {
+                destino: "curso",
+                curso_destino: {
+                  [Op.in]: cursosProfesor,
                 },
-              ]
-            : [{ destino: "curso" }]),
-        ],
+              },
+            ]
+          : [{ destino: "curso" }]),
+      ];
+
+      if (filtros.autor_id) {
+        condiciones.push({ autor_id: filtros.autor_id });
+      }
+
+      whereClause = {
+        [Op.or]: condiciones,
       };
     } else if (rol === "autoridades") {
       whereClause = {
@@ -59,6 +74,7 @@ export async function obtenerTodosComunicados(filtros = {}) {
 
     const comunicados = await Comunicado.findAll({
       where: tieneFiltros ? whereClause : undefined,
+      include: [CON_AUTOR],
       order: [["fecha_publicacion", "DESC"]],
     });
 
@@ -78,7 +94,7 @@ export async function obtenerComunicado(id) {
       throw new ErrorHandler(400, "ID de comunicado inválido");
     }
 
-    const comunicado = await Comunicado.findByPk(id);
+    const comunicado = await Comunicado.findByPk(id, { include: [CON_AUTOR] });
 
     if (!comunicado) {
       throw new ErrorHandler(404, "Comunicado no encontrado");

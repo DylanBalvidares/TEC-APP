@@ -111,6 +111,9 @@ router.get("/comunicados", LECTURA_COMUNIDAD, async (req, res) => {
     const comunicados = await comunicadosCtrl.obtenerTodosComunicados({
       ...req.query,
       rol: rolParaComunicados(req),
+      // Identidad desde el token, nunca desde el query: un profesor no puede
+      // pedir los comunicados de otro autor con ?autor_id=.
+      autor_id: Number(req.headers["id_usuario"]),
     });
     return res.status(200).json(comunicados);
   } catch (error) {

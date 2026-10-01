@@ -98,6 +98,9 @@ Personal.belongsTo(Cargo, { foreignKey: "id_cargo", as: "cargoPersonal" });
 Asignacion.hasMany(Horario, { foreignKey: "id_asignacion" });
 Horario.belongsTo(Asignacion, { foreignKey: "id_asignacion" });
 
+Usuario.hasMany(Comunicado, { foreignKey: "autor_id" });
+Comunicado.belongsTo(Usuario, { foreignKey: "autor_id", as: "autor" });
+
 // ==========================================
 // Relaciones: Planes de estudio
 // ==========================================
