@@ -1,5 +1,5 @@
 <template>
-    <div v-if="totalPages > 1" class="pagination-wrapper">
+    <nav v-if="totalPages > 1" class="pagination-wrapper" aria-label="Paginación de resultados">
         <div class="pagination-info">
             Mostrando
             <strong>{{ startItem }}-{{ endItem }}</strong> de
@@ -8,6 +8,7 @@
 
         <div class="pagination-controls">
             <button
+                type="button"
                 class="page-btn"
                 :disabled="currentPage <= 1"
                 @click="goToPage(currentPage - 1)"
@@ -17,9 +18,10 @@
                 <i class="ti ti-chevron-left"></i>
             </button>
 
+            <template v-for="(page, index) in visiblePages" :key="`${page}-${index}`">
             <button
-                v-for="page in visiblePages"
-                :key="page"
+                v-if="page !== '...'"
+                type="button"
                 class="page-btn"
                 :class="{ active: page === currentPage }"
                 @click="goToPage(page)"
@@ -28,8 +30,11 @@
             >
                 {{ page }}
             </button>
+            <span v-else class="page-ellipsis" aria-hidden="true">…</span>
+            </template>
 
             <button
+                type="button"
                 class="page-btn"
                 :disabled="currentPage >= totalPages"
                 @click="goToPage(currentPage + 1)"
@@ -47,7 +52,7 @@
                 </option>
             </select>
         </div>
-    </div>
+    </nav>
 </template>
 
 <script setup>
@@ -128,7 +133,7 @@ watch(
 
 .pagination-info {
     font-size: 12px;
-    color: #6b7280;
+    color: var(--color-text-tertiary, #6b7280);
 }
 
 .pagination-controls {
@@ -141,9 +146,9 @@ watch(
     min-width: 32px;
     height: 32px;
     border-radius: 6px;
-    border: 1px solid #e5e7eb;
-    background: white;
-    color: #4b5563;
+    border: 1px solid var(--color-border-tertiary, #e5e7eb);
+    background: var(--color-background-primary, #fff);
+    color: var(--color-text-secondary, #4b5563);
     font-size: 12.5px;
     cursor: pointer;
     display: flex;
@@ -153,9 +158,17 @@ watch(
     padding: 0 6px;
 }
 
+.page-ellipsis {
+    display: inline-grid;
+    place-items: center;
+    min-width: 24px;
+    color: var(--color-text-tertiary, #6b7280);
+    font-size: 12px;
+}
+
 .page-btn:hover:not(:disabled):not(.active) {
-    background: #f3f4f6;
-    border-color: #d1d5db;
+    background: var(--color-background-secondary, #f3f4f6);
+    border-color: var(--color-border-tertiary, #e5e7eb);
 }
 
 .page-btn.active {
@@ -171,11 +184,11 @@ watch(
 
 .pagination-size select {
     padding: 4px 8px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--color-border-tertiary, #e5e7eb);
     border-radius: 6px;
     font-size: 12px;
-    color: #4b5563;
-    background: white;
+    color: var(--color-text-secondary, #4b5563);
+    background: var(--color-background-primary, #fff);
     cursor: pointer;
     outline: none;
 }

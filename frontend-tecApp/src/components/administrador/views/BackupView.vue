@@ -11,8 +11,8 @@
                     :disabled="cargando"
                     @click="generar"
                 >
-                    <i class="ti ti-download" aria-hidden="true"></i>
-                    Generar backup
+                    <i :class="cargando ? 'ti ti-loader animate-spin' : 'ti ti-download'" aria-hidden="true"></i>
+                    {{ cargando ? "Generando…" : "Generar backup" }}
                 </button>
             </div>
             <div class="form-body">
@@ -65,11 +65,16 @@
                             :disabled="!textoArchivo || verificando"
                             @click="verificar"
                         >
-                            Verificar integridad
+                            <i v-if="verificando" class="ti ti-loader animate-spin" aria-hidden="true"></i>
+                            {{ verificando ? "Verificando…" : "Verificar integridad" }}
                         </button>
                     </div>
                 </div>
-                <div v-if="veredicto" class="veredicto" :class="veredicto.ok ? 'ok' : 'falla'" role="alert" aria-live="assertive">
+                <p v-if="nombreArchivo" class="archivo-seleccionado">
+                    <i class="ti ti-file-check" aria-hidden="true"></i>
+                    Archivo seleccionado: <strong>{{ nombreArchivo }}</strong>
+                </p>
+                <div v-if="veredicto" class="veredicto" :class="veredicto.ok ? 'ok' : 'falla'" :role="veredicto.ok ? 'status' : 'alert'" aria-live="polite">
                     <i :class="veredicto.ok ? 'ti ti-check' : 'ti ti-x'" aria-hidden="true"></i>
                     {{ veredicto.mensaje }}
                 </div>
@@ -88,6 +93,7 @@ const error = ref("");
 const backup = ref(null);
 const resumen = ref(null);
 const textoArchivo = ref("");
+const nombreArchivo = ref("");
 const veredicto = ref(null);
 
 async function generar() {
@@ -110,6 +116,8 @@ async function generar() {
                 0,
             ),
         };
+    } catch (e) {
+        error.value = e?.message || "No se pudo generar el backup. Intentá de nuevo.";
     } finally {
         cargando.value = false;
     }
@@ -132,11 +140,17 @@ function elegirArchivo(evento) {
     const archivo = evento.target.files?.[0];
     if (!archivo) {
         textoArchivo.value = "";
+        nombreArchivo.value = "";
         return;
     }
+    nombreArchivo.value = archivo.name;
     const lector = new FileReader();
     lector.onload = () => {
         textoArchivo.value = String(lector.result || "");
+    };
+    lector.onerror = () => {
+        textoArchivo.value = "";
+        error.value = "No se pudo leer el archivo seleccionado.";
     };
     lector.readAsText(archivo);
 }
@@ -159,6 +173,11 @@ async function verificar() {
                 mensaje: `Backup íntegro: ${res.totalFilas} filas en ${res.tablas.join(", ")}.`,
             }
             : { ok: false, mensaje: res.message };
+    } catch (e) {
+        veredicto.value = {
+            ok: false,
+            mensaje: e?.message || "No se pudo verificar el archivo. Intentá de nuevo.",
+        };
     } finally {
         verificando.value = false;
     }
@@ -186,6 +205,15 @@ async function verificar() {
     gap: 6px;
     margin-top: 12px;
     font-size: 13px;
+}
+.archivo-seleccionado {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    color: var(--color-text-secondary, #4b5563);
+    font-size: 12px;
+    overflow-wrap: anywhere;
 }
 .form-acciones {
     display: flex;

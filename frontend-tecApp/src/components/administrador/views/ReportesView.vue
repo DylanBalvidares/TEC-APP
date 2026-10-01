@@ -19,12 +19,12 @@
                         <i class="ti ti-chart-bar" aria-hidden="true"></i>
                         Retención por curso
                     </div>
-                    <button class="tb-btn outline sm exportar-btn" @click="exportarRetencion">
+                    <button class="tb-btn outline sm exportar-btn" :disabled="retencion.length === 0" @click="exportarRetencion">
                         <i class="ti ti-download" aria-hidden="true"></i> Exportar
                     </button>
                 </div>
                 <div class="table-responsive">
-                    <table class="mini" aria-label="Retención por curso">
+                    <table v-if="retencion.length > 0" class="mini" aria-label="Retención por curso">
                         <thead>
                             <tr>
                                 <th>Curso</th>
@@ -49,6 +49,10 @@
                             </tr>
                         </tbody>
                     </table>
+                    <div v-else class="empty-state" role="status">
+                        <i class="ti ti-chart-bar" aria-hidden="true"></i>
+                        <p>No hay datos de retención para mostrar todavía.</p>
+                    </div>
                 </div>
             </div>
 
@@ -58,12 +62,12 @@
                         <i class="ti ti-star" aria-hidden="true"></i>
                         Promedios por materia
                     </div>
-                    <button class="tb-btn outline sm exportar-btn" @click="exportarPromedios">
+                    <button class="tb-btn outline sm exportar-btn" :disabled="promedios.length === 0" @click="exportarPromedios">
                         <i class="ti ti-download" aria-hidden="true"></i> Exportar
                     </button>
                 </div>
                 <div class="table-responsive">
-                    <table class="mini" aria-label="Promedios por materia">
+                    <table v-if="promedios.length > 0" class="mini" aria-label="Promedios por materia">
                         <thead>
                             <tr>
                                 <th>Materia</th>
@@ -77,7 +81,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    <div v-if="promedios.length === 0" class="empty-state">
+                    <div v-else class="empty-state" role="status">
                         <p>Todavía no hay calificaciones cargadas.</p>
                     </div>
                 </div>
@@ -91,7 +95,7 @@
                     </div>
                 </div>
                 <div class="table-responsive">
-                    <table class="mini" aria-label="Altas y bajas de alumnos">
+                    <table v-if="Object.keys(altasBajas).length > 0" class="mini" aria-label="Altas y bajas de alumnos">
                         <thead>
                             <tr>
                                 <th>Estado</th>
@@ -105,6 +109,10 @@
                             </tr>
                         </tbody>
                     </table>
+                    <div v-else class="empty-state" role="status">
+                        <i class="ti ti-users" aria-hidden="true"></i>
+                        <p>No hay movimientos de alumnos para mostrar.</p>
+                    </div>
                 </div>
             </div>
         </template>

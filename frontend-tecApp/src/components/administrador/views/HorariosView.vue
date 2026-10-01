@@ -60,7 +60,7 @@
                                         class="icon-btn delete"
                                         title="Eliminar bloque"
                                         aria-label="Eliminar bloque"
-                                        @click="eliminar(b.id_horario)"
+                                        @click="pedirEliminar(b)"
                                     >
                                         <i class="ti ti-trash"></i>
                                     </button>
@@ -120,6 +120,21 @@
                 </button>
             </template>
         </Modal>
+
+        <Modal v-model="confirmacionEliminarAbierta" title="Eliminar bloque horario" variante="danger">
+            <p class="modal-texto">
+                ¿Querés eliminar el bloque de {{ DIAS[bloquePendiente?.dia] || "horario" }}
+                {{ bloquePendiente?.hora_inicio }}–{{ bloquePendiente?.hora_fin }}
+                para {{ nombreCurso(bloquePendiente || {}) }}?
+            </p>
+            <template #footer>
+                <button class="tb-btn outline" :disabled="eliminando" @click="confirmacionEliminarAbierta = false">Cancelar</button>
+                <button class="tb-btn danger" :disabled="eliminando" @click="confirmarEliminar">
+                    <i v-if="eliminando" class="ti ti-loader animate-spin" aria-hidden="true"></i>
+                    {{ eliminando ? "Eliminando…" : "Eliminar bloque" }}
+                </button>
+            </template>
+        </Modal>
     </div>
 </template>
 
@@ -146,6 +161,9 @@ const guardando = ref(false);
 const error = ref("");
 const errorForm = ref("");
 const modalAbierto = ref(false);
+const confirmacionEliminarAbierta = ref(false);
+const bloquePendiente = ref(null);
+const eliminando = ref(false);
 const form = ref({ id_asignacion: "", dia: 1, hora_inicio: "", hora_fin: "", aula: "" });
 
 const lista = (res) => {
@@ -208,14 +226,29 @@ async function guardar() {
     }
 }
 
-async function eliminar(id) {
-    const res = await eliminarHorario(id);
-    if (!res.success) {
-        toast.error(res.message || "No se pudo eliminar.");
-        return;
+function pedirEliminar(bloque) {
+    bloquePendiente.value = bloque;
+    confirmacionEliminarAbierta.value = true;
+}
+
+async function confirmarEliminar() {
+    if (!bloquePendiente.value || eliminando.value) return;
+    eliminando.value = true;
+    try {
+        const res = await eliminarHorario(bloquePendiente.value.id_horario);
+        if (!res.success) {
+            toast.error(res.message || "No se pudo eliminar el bloque horario.");
+            return;
+        }
+        confirmacionEliminarAbierta.value = false;
+        bloquePendiente.value = null;
+        toast.success("Bloque eliminado.");
+        await cargar();
+    } catch (e) {
+        toast.error(e?.message || "No se pudo eliminar el bloque horario.");
+    } finally {
+        eliminando.value = false;
     }
-    toast.success("Bloque eliminado.");
-    await cargar();
 }
 
 onMounted(cargar);

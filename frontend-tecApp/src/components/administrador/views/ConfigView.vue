@@ -72,8 +72,14 @@
                 </div>
             </div>
 
-            <div class="search-bar-wrapper">
-                <button class="tb-btn primary" :disabled="guardando" @click="guardar">
+            <div class="config-actions">
+                <span v-if="tieneCambios" class="cambios-pendientes" role="status">
+                    <i class="ti ti-pencil" aria-hidden="true"></i> Hay cambios sin guardar
+                </span>
+                <span v-else-if="configuracionCargada" class="config-guardada" role="status">
+                    <i class="ti ti-check" aria-hidden="true"></i> Todo está guardado
+                </span>
+                <button class="tb-btn primary" :disabled="guardando || !tieneCambios" @click="guardar">
                     <i class="ti ti-loader animate-spin" v-if="guardando"></i>
                     {{ guardando ? "Guardando..." : "Guardar cambios" }}
                 </button>
@@ -83,7 +89,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, computed, onMounted } from "vue";
 import { obtenerConfiguracion, guardarConfiguracion } from "../../../services/admin-service.js";
 
 const CLAVES = [
@@ -101,6 +107,11 @@ const cargando = ref(false);
 const guardando = ref(false);
 const error = ref("");
 const exito = ref("");
+const valoresGuardados = ref(null);
+const configuracionCargada = ref(false);
+const tieneCambios = computed(() =>
+    configuracionCargada.value && CLAVES.some((clave) => form[clave] !== valoresGuardados.value?.[clave]),
+);
 
 async function cargar() {
     cargando.value = true;
@@ -109,6 +120,8 @@ async function cargar() {
         const res = await obtenerConfiguracion();
         if (!res.success) throw new Error(res.message);
         for (const c of CLAVES) form[c] = res.data[c] ?? "";
+        valoresGuardados.value = { ...form };
+        configuracionCargada.value = true;
     } catch (e) {
         error.value = e?.message || "No se pudo cargar la configuración.";
     } finally {
@@ -123,6 +136,7 @@ async function guardar() {
     try {
         const res = await guardarConfiguracion({ ...form });
         if (!res.success) throw new Error(res.message);
+        valoresGuardados.value = { ...form };
         exito.value = "Configuración guardada correctamente.";
     } catch (e) {
         error.value = e?.message || "No se pudo guardar la configuración.";
@@ -133,3 +147,26 @@ async function guardar() {
 
 onMounted(cargar);
 </script>
+
+<style scoped>
+.config-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.cambios-pendientes,
+.config-guardada {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+}
+.cambios-pendientes { color: #a16207; }
+.config-guardada { color: #3b6d11; }
+@media (max-width: 640px) {
+    .config-actions { justify-content: stretch; }
+    .config-actions .tb-btn { width: 100%; }
+}
+</style>

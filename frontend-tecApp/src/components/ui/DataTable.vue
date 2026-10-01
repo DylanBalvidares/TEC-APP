@@ -1,5 +1,5 @@
 <template>
-    <div class="datatable" :class="`datatable-${densidad}`">
+    <div class="datatable" :class="`datatable-${densidad}`" :aria-busy="cargando">
         <div v-if="cargando" class="empty-state" role="status">
             <i class="ti ti-loader animate-spin" style="font-size: 24px; color: #cd322c"></i>
             <p>{{ textoCarga }}</p>
@@ -33,6 +33,7 @@
                         >
                             <button
                                 v-if="col.ordenable"
+                                type="button"
                                 class="th-sort"
                                 @click="$emit('ordenar', col.key, col.getter || null)"
                             >
@@ -175,6 +176,13 @@ function alternarPagina(marcadas) {
 </script>
 
 <style scoped>
+.datatable {
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+}
+
 .datatable-compacta .mini td {
     padding: 5px 10px;
 }
@@ -184,5 +192,9 @@ function alternarPagina(marcadas) {
 }
 .check-cell input {
     cursor: pointer;
+}
+
+@media (max-width: 640px) {
+    .datatable .mini { min-width: 520px; }
 }
 </style>

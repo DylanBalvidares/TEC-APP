@@ -18,7 +18,7 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, watch, ref } from 'vue';
+import { onMounted, onUnmounted, watch, ref, useId } from 'vue';
 const props = defineProps({
   modelValue: Boolean,
   title: { type: String, default: '' },
@@ -30,8 +30,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'cierre-bloqueado']);
 const container = ref(null);
 let focoPrevio = null;
-let contadorTitulo = 0;
-const tituloId = `modal-titulo-${++contadorTitulo}`;
+const tituloId = `modal-titulo-${useId()}`;
 
 const close = () => emit('update:modelValue', false);
 
@@ -43,7 +42,9 @@ const intentarCerrar = () => {
   close();
 };
 
-const handleKey = (e) => { if (e.key === 'Escape') intentarCerrar(); };
+const handleKey = (e) => {
+  if (props.modelValue && e.key === 'Escape') intentarCerrar();
+};
 
 // Focus trap: Tab circular dentro del diálogo.
 const SELECTORES_FOCO = 'button, input, textarea, select, a[href], [tabindex]:not([tabindex="-1"])';
@@ -73,7 +74,7 @@ watch(() => props.modelValue, (open) => {
     document.body.style.overflow = 'hidden';
     // focus first focusable
     setTimeout(() => {
-      const el = container.value?.querySelector('input,button,textarea,a,[tabindex]');
+      const el = container.value?.querySelector('[autofocus], input:not([type="hidden"]), select, textarea, button:not(.close-modal), a[href], [tabindex]:not([tabindex="-1"])');
       if (el) el.focus();
     }, 10);
   } else {
@@ -86,20 +87,31 @@ watch(() => props.modelValue, (open) => {
   }
 });
 
-onUnmounted(() => { document.body.style.overflow = ''; });
+onUnmounted(() => {
+  document.body.style.overflow = '';
+  if (focoPrevio && typeof focoPrevio.focus === 'function') focoPrevio.focus();
+});
 
 onMounted(() => window.addEventListener('keydown', handleKey));
 onUnmounted(() => window.removeEventListener('keydown', handleKey));
 </script>
 
 <style scoped>
-.modal-overlay.active { background: rgba(0,0,0,0.45); position: fixed; inset: 0; display:flex; align-items:center; justify-content:center; z-index:1200; }
-.modal-content { background: var(--card-bg, #fff); border-radius:8px; width:720px; max-width:95%; max-height:80vh; overflow:auto; box-shadow:0 10px 30px rgba(0,0,0,0.15); }
+.modal-overlay.active { background: rgba(0,0,0,0.45); position: fixed; inset: 0; display:flex; align-items:center; justify-content:center; z-index:1200; padding:16px; }
+.modal-content { background: var(--card-bg, #fff); border:1px solid var(--color-border-tertiary, #e5e7eb); border-radius:12px; width:min(720px, 100%); max-height:min(84vh, 900px); overflow:auto; overscroll-behavior:contain; box-shadow:0 20px 50px rgba(0,0,0,0.22); }
 .modal-wide { width:900px; }
 .modal-danger .modal-header h3 { color:#b91c1c; }
 .modal-danger .close-modal { color:#b91c1c; }
-.modal-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid #eee; }
+.modal-header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 20px; border-bottom:1px solid var(--color-border-tertiary, #e5e7eb); }
 .modal-body { padding:18px 20px; }
-.modal-footer { padding:12px 20px; border-top:1px solid #eee; display:flex; gap:8px; justify-content:flex-end; }
+.modal-footer { padding:12px 20px; border-top:1px solid var(--color-border-tertiary, #e5e7eb); display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; }
 .close-modal { background:transparent;border:0;font-size:20px;cursor:pointer; }
+.close-modal:focus-visible { outline:3px solid rgba(205,50,44,.3); outline-offset:2px; border-radius:5px; }
+@media (max-width: 640px) {
+  .modal-overlay.active { align-items:flex-end; padding:8px; }
+  .modal-content { width:100%; max-width:none; max-height:90vh; border-radius:14px 14px 10px 10px; }
+  .modal-header, .modal-body { padding:15px 16px; }
+  .modal-footer { padding:12px 16px; }
+  .modal-footer > .tb-btn { flex:1 1 auto; }
+}
 </style>

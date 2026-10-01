@@ -2,37 +2,52 @@
     <aside
         class="sidebar"
         :class="{ colapsado: colapsado, 'drawer-abierto': movilAbierto }"
-        aria-label="Navegación"
-        @keydown="onTeclaNav"
+        id="admin-sidebar"
+        aria-label="Navegación del administrador"
+        :inert="navInerte"
+        @keydown.esc="$emit('cerrar-movil')"
     >
-        <template v-for="grupo in grupos" :key="grupo.titulo">
-            <div class="sidebar-section">{{ grupo.titulo }}</div>
-
-            <div
-                v-for="item in grupo.items"
-                :key="item.vista"
-                class="nav-item"
-                role="button"
-                tabindex="0"
-                :class="{ active: vistaActual === item.vista }"
-                :title="colapsado ? item.nombre : null"
-                @click="$emit('cambiar-vista', item.vista)"
-            >
-                <i class="ti" :class="item.icono" aria-hidden="true"></i>
-                <span class="nav-texto">{{ item.nombre }}</span>
-            </div>
-        </template>
+        <nav aria-label="Secciones">
+            <label v-if="!colapsado" class="sidebar-search">
+                <i class="ti ti-search" aria-hidden="true"></i>
+                <input v-model="busqueda" type="search" placeholder="Buscar sección" aria-label="Buscar sección del administrador" />
+            </label>
+            <p v-if="busqueda && gruposFiltrados.length === 0" class="sidebar-no-results" role="status">
+                No se encontraron secciones.
+            </p>
+            <section v-for="grupo in gruposFiltrados" :key="grupo.titulo" class="sidebar-group">
+                <h2 class="sidebar-section">{{ grupo.titulo }}</h2>
+                <button
+                    v-for="item in grupo.items"
+                    :key="item.vista"
+                    type="button"
+                    class="nav-item"
+                    :class="{ active: vistaActual === item.vista }"
+                    :title="colapsado ? item.nombre : null"
+                    :aria-label="item.nombre"
+                    :aria-current="vistaActual === item.vista ? 'page' : undefined"
+                    @click="seleccionarVista(item.vista)"
+                >
+                    <i class="ti" :class="item.icono" aria-hidden="true"></i>
+                    <span class="nav-texto">{{ item.nombre }}</span>
+                </button>
+            </section>
+        </nav>
     </aside>
 </template>
 
 <script setup>
+import { computed, ref } from "vue";
+
 defineProps({
     vistaActual: { type: String, required: true },
     colapsado: { type: Boolean, default: false },
     movilAbierto: { type: Boolean, default: false },
+    navInerte: { type: Boolean, default: false },
 });
 
-defineEmits(["cambiar-vista"]);
+const emit = defineEmits(["cambiar-vista", "cerrar-movil"]);
+const busqueda = ref("");
 
 const grupos = [
     {
@@ -78,13 +93,22 @@ const grupos = [
     },
 ];
 
-const onTeclaNav = (e) => {
-    if (e.key !== "Enter" && e.key !== " ") return;
-    const item = e.target?.closest?.(".nav-item");
-    if (item) {
-        e.preventDefault();
-        item.click();
-    }
+const gruposFiltrados = computed(() => {
+    const termino = busqueda.value.trim().toLocaleLowerCase("es");
+    if (!termino) return grupos;
+    return grupos
+        .map((grupo) => ({
+            ...grupo,
+            items: grupo.items.filter((item) =>
+                item.nombre.toLocaleLowerCase("es").includes(termino),
+            ),
+        }))
+        .filter((grupo) => grupo.items.length > 0);
+});
+
+const seleccionarVista = (vista) => {
+    busqueda.value = "";
+    emit("cambiar-vista", vista);
 };
 </script>
 
@@ -103,6 +127,53 @@ const onTeclaNav = (e) => {
     z-index: 20;
     overflow-y: auto;
     overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border-tertiary, #e5e7eb) transparent;
+}
+
+.sidebar nav {
+    padding: 4px 0 16px;
+}
+
+.sidebar-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 10px 10px;
+    padding: 8px 10px;
+    border: 1px solid var(--color-border-tertiary, #e5e7eb);
+    border-radius: 8px;
+    color: var(--color-text-tertiary, #6b7280);
+}
+
+.sidebar-search:focus-within {
+    border-color: #cd322c;
+    box-shadow: 0 0 0 3px rgba(205, 50, 44, 0.12);
+}
+
+.sidebar-search input {
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--color-text-primary, #111827);
+    font: inherit;
+    font-size: 12px;
+}
+
+.sidebar-search input::placeholder { color: var(--color-text-tertiary, #6b7280); }
+
+.sidebar-no-results {
+    margin: 12px;
+    color: var(--color-text-tertiary, #6b7280);
+    font-size: 12px;
+}
+
+.sidebar-group + .sidebar-group {
+    margin-top: 5px;
+    padding-top: 5px;
+    border-top: 1px solid var(--color-background-secondary, #f3f4f6);
 }
 
 .sidebar-section {
@@ -127,6 +198,12 @@ const onTeclaNav = (e) => {
     transition: background 0.15s;
     font-size: 12.5px;
     white-space: nowrap;
+    width: calc(100% - 12px);
+    box-sizing: border-box;
+    border: 0;
+    background: transparent;
+    font-family: inherit;
+    text-align: left;
 }
 
 .nav-item:hover {
@@ -143,6 +220,8 @@ const onTeclaNav = (e) => {
     outline: 2px solid #cd322c;
     outline-offset: -2px;
 }
+
+.nav-item.active { font-weight: 650; }
 
 .nav-item i {
     font-size: 16px;
@@ -172,6 +251,7 @@ const onTeclaNav = (e) => {
     justify-content: center;
     padding: 9px 0;
     margin: 2px 10px;
+    width: calc(100% - 20px);
 }
 
 .sidebar.colapsado .nav-texto {
@@ -209,6 +289,8 @@ const onTeclaNav = (e) => {
     .sidebar.colapsado .nav-item {
         justify-content: flex-start;
         padding: 7px 12px;
+        width: calc(100% - 12px);
+        margin: 1px 6px;
     }
 
     .sidebar.colapsado .sidebar-section {

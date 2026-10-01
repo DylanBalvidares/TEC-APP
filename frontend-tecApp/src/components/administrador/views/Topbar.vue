@@ -3,7 +3,9 @@
         <div class="brand-section">
             <button
                 class="menu-toggle"
-                aria-label="Abrir o cerrar menú de navegación"
+                :aria-label="sidebarAbierto ? 'Contraer navegación' : 'Expandir navegación'"
+                aria-controls="admin-sidebar"
+                :aria-expanded="sidebarAbierto"
                 @click="$emit('toggle-sidebar')"
             >
                 <i class="ti ti-menu-2" aria-hidden="true"></i>
@@ -33,9 +35,12 @@
             </button>
             <button
                 class="avatar-btn"
+                ref="profileButtonRef"
                 @click="toggleMenu"
                 :class="{ 'is-active': menuAbierto }"
                 aria-label="Menú de usuario"
+                :aria-expanded="menuAbierto"
+                aria-controls="profile-menu"
             >
                 <img
                     v-if="!avatarError"
@@ -49,7 +54,7 @@
             </button>
 
             <transition name="fade-slide">
-                <div v-if="menuAbierto" class="dropdown-menu">
+                <div v-if="menuAbierto" id="profile-menu" class="dropdown-menu" @keydown.esc.stop="cerrarMenuUsuario">
                     <div class="dropdown-header">
                         <img
                             v-if="!avatarError"
@@ -140,6 +145,7 @@ const etiquetaTema = computed(() =>
 
 defineProps({
     currentPage: { type: String, default: "Inicio" },
+    sidebarAbierto: { type: Boolean, default: true },
 });
 
 const emit = defineEmits(["toggle-sidebar", "ir-inicio", "ir-perfil"]);
@@ -150,6 +156,7 @@ const authStore = useAuthStore();
 // Referencias del DOM y estado
 const menuAbierto = ref(false);
 const profileMenuRef = ref(null);
+const profileButtonRef = ref(null);
 
 // Datos del usuario con fallbacks seguros (reactivos a la sesión)
 const nombreRolCrudo = computed(
@@ -186,6 +193,11 @@ const avatarUrl = computed(() => {
 // Manejo del menú
 const toggleMenu = () => {
     menuAbierto.value = !menuAbierto.value;
+};
+
+const cerrarMenuUsuario = () => {
+    menuAbierto.value = false;
+    profileButtonRef.value?.focus();
 };
 
 // Acceso al perfil dentro del mismo dashboard (mantiene sidebar/topbar)
@@ -249,13 +261,22 @@ const ejecutarLogout = () => {
     cursor: pointer;
     color: #374151;
     font-size: 22px;
-    padding: 6px;
+    width: 40px;
+    height: 40px;
+    padding: 0;
     border-radius: 6px;
     transition: background 0.15s;
 }
 
 .menu-toggle:hover {
     background: #f3f4f6;
+}
+
+.menu-toggle:focus-visible,
+.breadcrumb-raiz:focus-visible,
+.avatar-btn:focus-visible {
+    outline: 3px solid rgba(205, 50, 44, 0.3);
+    outline-offset: 2px;
 }
 
 /* --- Marca y Logo --- */
@@ -397,7 +418,7 @@ const ejecutarLogout = () => {
     position: absolute;
     top: calc(100% + 12px);
     right: 0;
-    width: 260px;
+    width: min(260px, calc(100vw - 24px));
     background: var(--color-background-primary, #ffffff);
     border: 1px solid var(--color-border-tertiary, #e5e7eb);
     border-radius: 12px;

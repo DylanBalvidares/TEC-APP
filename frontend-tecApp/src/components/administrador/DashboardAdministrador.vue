@@ -1,7 +1,8 @@
 <template>
-    <div class="dash-wrapper" role="main" aria-label="Panel de administración del sistema de gestión escolar">
+    <div class="dash-wrapper" @keydown.esc="cerrarSidebarMovil">
         <Topbar
             :current-page="nombrePagina(currentView)"
+            :sidebar-abierto="menuAbierto"
             @toggle-sidebar="alternarSidebar"
             @ir-inicio="setView('overview')"
             @ir-perfil="setView('perfil')"
@@ -9,21 +10,24 @@
 
         <div class="dash" :class="{ 'sidebar-colapsado': sidebarColapsado }">
             <Sidebar
+                ref="sidebarRef"
                 :vista-actual="currentView"
-                :colapsado="sidebarColapsado"
+                :colapsado="sidebarColapsado && !esMovil"
                 :movil-abierto="sidebarMovilAbierto"
+                :nav-inerte="esMovil && !sidebarMovilAbierto"
                 @cambiar-vista="setView"
+                @cerrar-movil="cerrarSidebarMovil"
             />
 
             <div
                 v-if="sidebarMovilAbierto"
                 class="drawer-overlay"
                 aria-hidden="true"
-                @click="sidebarMovilAbierto = false"
+                @click="cerrarSidebarMovil"
             ></div>
 
-            <div class="main">
-                <div class="content">
+            <main class="main" aria-label="Panel de administración">
+                <div class="content" ref="contentRef" tabindex="-1">
                     <keep-alive>
                       <component
                         :is="componentesMap[currentView]"
@@ -31,13 +35,13 @@
                       />
                     </keep-alive>
                 </div>
-            </div>
+            </main>
         </div>
     </div>
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUnmounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import Sidebar from "./views/Sidebar.vue";
@@ -139,10 +143,13 @@ const vistaInicial = VISTAS_VALIDAS.includes(route.query.vista)
     ? route.query.vista
     : "overview";
 const currentView = ref(vistaInicial);
+const contentRef = ref(null);
+const sidebarRef = ref(null);
 
 const setView = (vista) => {
     currentView.value = VISTAS_VALIDAS.includes(vista) ? vista : "overview";
     sidebarMovilAbierto.value = false; // al navegar se cierra el drawer móvil
+    nextTick(() => contentRef.value?.focus({ preventScroll: true }));
 };
 
 // Estado → URL (reemplaza el query sin recargar)
@@ -169,6 +176,10 @@ watch(
 const CLAVE_STORAGE = "admin-sidebar-colapsado";
 const sidebarColapsado = ref(false);
 const sidebarMovilAbierto = ref(false);
+const esMovil = ref(false);
+const menuAbierto = computed(() =>
+    esMovil.value ? sidebarMovilAbierto.value : !sidebarColapsado.value,
+);
 
 const esPantallaMovil = () =>
     window.matchMedia("(max-width: 768px)").matches;
@@ -176,12 +187,22 @@ const esPantallaMovil = () =>
 const alternarSidebar = () => {
     if (esPantallaMovil()) {
         sidebarMovilAbierto.value = !sidebarMovilAbierto.value;
+        if (sidebarMovilAbierto.value) {
+            nextTick(() => sidebarRef.value?.$el?.querySelector(".sidebar-search input")?.focus());
+        }
     } else {
         sidebarColapsado.value = !sidebarColapsado.value;
     }
 };
 
+const cerrarSidebarMovil = () => {
+    if (!sidebarMovilAbierto.value) return;
+    sidebarMovilAbierto.value = false;
+    nextTick(() => contentRef.value?.focus({ preventScroll: true }));
+};
+
 onMounted(() => {
+    esMovil.value = esPantallaMovil();
     const guardado = localStorage.getItem(CLAVE_STORAGE);
     if (guardado !== null) sidebarColapsado.value = guardado === "true";
 });
@@ -192,6 +213,7 @@ watch(sidebarColapsado, (v) => {
 
 // Si se pasa a desktop con el drawer abierto, cerrarlo
 const onCambioMedia = () => {
+    esMovil.value = esPantallaMovil();
     if (!esPantallaMovil()) sidebarMovilAbierto.value = false;
 };
 onMounted(() =>
