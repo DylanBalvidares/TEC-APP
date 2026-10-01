@@ -56,6 +56,9 @@
                 {{ asig.cursoAsignacion?.nombre_curso || 'Sin curso' }} — {{ asig.materiaAsignacion?.nombre_materia || 'Sin materia' }}
               </option>
             </select>
+            <span v-if="!asignaciones.length" class="field-error">
+              No tenés asignaciones cargadas, así que no podés publicar a un curso específico.
+            </span>
           </div>
           <div class="form-group" v-else>
             <label>&nbsp;</label>
@@ -75,17 +78,30 @@
         </div>
 
         <div v-if="errorGuardar" class="form-error">{{ errorGuardar }}</div>
-        <div v-if="exitoGuardar" class="form-success">{{ exitoGuardar }}</div>
       </form>
+    </div>
+
+    <!--
+      El feedback va FUERA del formulario a propósito: antes se mostraba dentro
+      y el guardado cerraba el form, así que ni el éxito ni el error llegaban a
+      verse y la creación parecía no funcionar.
+    -->
+    <div v-if="exitoGuardar" class="card form-success-card">
+      <div class="form-success"><i class="ti ti-check"></i> {{ exitoGuardar }}</div>
     </div>
 
     <div class="card list-card">
       <div class="card-header">
         <div>
           <h3>Comunicados disponibles</h3>
-          <p class="subtext">Se muestran los comunicados dirigidos a profesores, a todos y a cursos.</p>
+          <p class="subtext">Incluye los comunicados dirigidos a profesores, a toda la comunidad y a tus cursos, más los que vos mismo publicaste.</p>
         </div>
+        <button class="tb-btn outline sm" @click="cargarComunicados" :disabled="cargando">
+          <i class="fas fa-rotate" :class="{ 'fa-spin': cargando }"></i> Actualizar
+        </button>
       </div>
+
+      <div v-if="errorCarga" class="form-error">{{ errorCarga }}</div>
 
       <div v-if="cargando" class="empty-state centered">
         <i class="fas fa-spinner fa-spin"></i>
@@ -102,14 +118,18 @@
           <div class="comunicado-header">
             <div>
               <h4>{{ comunicado.titulo }}</h4>
-              <span class="comunicado-meta">{{ formatoFecha(comunicado.fecha_publicacion) }}</span>
+              <span class="comunicado-meta">{{ formatearFecha(comunicado.fecha_publicacion) }}</span>
             </div>
-            <span :class="['badge', badgeImportancia(comunicado.importancia)]">{{ comunicado.importancia }}</span>
+            <span :class="['badge', claseImportancia(comunicado.importancia)]">{{ textoImportancia(comunicado.importancia) }}</span>
           </div>
           <p class="comunicado-body">{{ comunicado.mensaje }}</p>
           <div class="comunicado-footer">
             <small>
-              Dirigido a: <strong>{{ destinoComunicado(comunicado) }}</strong>
+              Dirigido a: <strong>{{ textoDestino(comunicado) }}</strong>
+            </small>
+            <small class="comunicado-autor">
+              <i class="fas fa-user"></i> {{ nombreAutor(comunicado) }}
+              <span v-if="esPropio(comunicado)" class="propio-tag">Publicaste vos</span>
             </small>
           </div>
         </div>
@@ -125,6 +145,14 @@ import { resolverIdProfesor } from "@/composables/useProfesor.js";
 import { obtenerAsignacionesProfesor } from "@/services/academico-service.js";
 import { obtenerTodosComunicados, crearComunicado } from "@/services/comunidad-service.js";
 import { validarRequerido, validarLongitudMinima } from "@/utils/validators.js";
+import {
+  claseImportancia,
+  extraerComunicados,
+  formatearFechaComunicado,
+  nombreAutor,
+  textoDestino,
+  textoImportancia,
+} from "@/utils/comunicados.js";
 
 const authStore = useAuthStore();
 const comunicados = ref([]);
@@ -134,6 +162,7 @@ const cargando = ref(true);
 const guardando = ref(false);
 const errorGuardar = ref("");
 const exitoGuardar = ref("");
+const errorCarga = ref("");
 
 const erroresForm = reactive({});
 
@@ -170,7 +199,6 @@ const form = reactive({
   importancia: "media",
   destino: "todos",
   id_asignacion: null,
-  id_curso: null,
   curso_destino: null,
 });
 
@@ -188,7 +216,7 @@ const cargarAsignaciones = async () => {
   const idProfesor = await resolverIdProfesor();
   if (!idProfesor) return;
   const res = await obtenerAsignacionesProfesor(idProfesor);
-  if (res.success && Array.isArray(res.data)) {
+  if (res?.success && Array.isArray(res.data)) {
     asignaciones.value = res.data;
   }
 };
@@ -196,67 +224,43 @@ const cargarAsignaciones = async () => {
 const cargarComunicados = async () => {
   cargando.value = true;
   try {
-    // Obtener los nombres de los cursos del profesor para filtrar comunicados
+    // Nombres de los cursos del profesor: el backend los usa para incluir los
+    // comunicados dirigidos a curso.
     const nombresCursos = [...new Set(
       asignaciones.value
         .map((a) => a.cursoAsignacion?.nombre_curso)
         .filter(Boolean)
     )].join(",");
 
-    // Filtrar comunicados: solo los de sus cursos, los generales y los de profesores
     const params = { rol: "profesor" };
     if (nombresCursos) {
       params.cursos = nombresCursos;
     }
 
-    const data = await obtenerTodosComunicados(params);
-    if (data?.data) {
-      comunicados.value = Array.isArray(data.data) ? data.data : [];
-    } else if (Array.isArray(data)) {
-      comunicados.value = data;
-    } else {
+    const respuesta = await obtenerTodosComunicados(params);
+    if (!respuesta?.success) {
+      errorCarga.value = respuesta?.message || "No se pudieron cargar los comunicados.";
       comunicados.value = [];
+      return;
     }
+    errorCarga.value = "";
+    comunicados.value = extraerComunicados(respuesta);
   } catch (error) {
     console.error("Error al cargar comunicados:", error);
+    errorCarga.value = "No se pudieron cargar los comunicados.";
     comunicados.value = [];
   } finally {
     cargando.value = false;
   }
 };
 
-const formatoFecha = (fecha) => {
-  if (!fecha) return "Sin fecha";
-  return new Date(fecha).toLocaleDateString("es-AR", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-};
+const formatearFecha = formatearFechaComunicado;
 
-const badgeImportancia = (importancia) => {
-  if (importancia === "alta") return "badge-alta";
-  if (importancia === "media") return "badge-media";
-  return "badge-baja";
-};
-
-const destinoComunicado = (comunicado) => {
-  if (comunicado.destino === "curso" && comunicado.cursoAsignacion?.nombre_curso) {
-    return `${comunicado.cursoAsignacion?.nombre_curso} — ${comunicado.materiaAsignacion?.nombre_materia || "Curso"}`;
-  }
-  if (comunicado.destino === "curso" && comunicado.curso_destino) {
-    return `Curso: ${comunicado.curso_destino}`;
-  }
-  if (comunicado.destino) {
-    const nombres = { todos: "Todos", profesores: "Profesores", alumnos: "Alumnos", autoridades: "Autoridades" };
-    return nombres[comunicado.destino] || comunicado.destino;
-  }
-  return "General";
-};
+const esPropio = (comunicado) =>
+  comunicado?.autor_id != null && comunicado.autor_id === authStore.usuario?.id;
 
 const onAsignacionChange = () => {
   const seleccionada = asignaciones.value.find((a) => a.id_asignacion === form.id_asignacion);
-  form.id_curso = seleccionada?.cursoAsignacion?.id_curso || null;
   form.curso_destino = seleccionada?.cursoAsignacion?.nombre_curso || null;
 };
 
@@ -266,49 +270,49 @@ const limpiarForm = () => {
   form.importancia = "media";
   form.destino = "todos";
   form.id_asignacion = null;
-  form.id_curso = null;
   form.curso_destino = null;
   limpiarErrores();
 };
 
 const guardarComunicado = async () => {
+  errorGuardar.value = "";
+  exitoGuardar.value = "";
+
   if (!validarTodo()) return;
 
-  // Si eligió "curso", debe seleccionar una asignación
   if (form.destino === "curso" && !form.id_asignacion) {
     errorGuardar.value = "Seleccioná un curso/asignación de destino.";
     return;
   }
 
   guardando.value = true;
-  errorGuardar.value = "";
-  exitoGuardar.value = "";
 
   try {
+    // Sólo los campos de la tabla `comunicados`: antes se mandaban
+    // `id_asignacion` e `id_curso`, que no existen y el backend descartaba.
     const payload = {
       titulo: form.titulo.trim(),
       mensaje: form.mensaje.trim(),
       importancia: form.importancia,
       destino: form.destino,
       curso_destino: form.destino === "curso" ? form.curso_destino : null,
-      autor_id: authStore.usuario?.id || null,
+      autor_id: authStore.usuario?.id ?? null,
     };
 
-    // Solo incluir id_asignacion e id_curso si es destino "curso"
-    if (form.destino === "curso") {
-      payload.id_asignacion = form.id_asignacion;
-      payload.id_curso = form.id_curso;
+    // `crearComunicado` no lanza: devuelve { success: false, message } ante un
+    // 4xx/5xx. Sin revisar ese flag la vista reportaba éxito siempre.
+    const resultado = await crearComunicado(payload);
+    if (!resultado?.success) {
+      throw new Error(resultado?.message || "No se pudo publicar el comunicado.");
     }
 
-    await crearComunicado(payload);
     exitoGuardar.value = "Comunicado publicado correctamente.";
-    setTimeout(() => { exitoGuardar.value = ""; }, 4000);
     await cargarComunicados();
     limpiarForm();
     mostrarForm.value = false;
   } catch (error) {
+    // El formulario queda abierto para que el profesor corrija y reintente.
     errorGuardar.value = error?.message || "No se pudo publicar el comunicado.";
-    setTimeout(() => { errorGuardar.value = ""; }, 5000);
   } finally {
     guardando.value = false;
   }
@@ -472,6 +476,26 @@ onMounted(async () => {
   border: 1px solid #bbf7d0;
   font-size: 0.95rem;
 }
+.form-success-card {
+  background: transparent;
+  border: none;
+  padding: 0;
+  box-shadow: none;
+}
+.form-success-card:hover {
+  box-shadow: none;
+}
+.form-success {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--success, #16a34a);
+  background: #f0fdf4;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #bbf7d0;
+  font-size: 0.95rem;
+}
 .comunicados-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -543,6 +567,29 @@ onMounted(async () => {
   font-size: 0.9rem;
   padding-top: 14px;
   border-top: 1px dashed var(--line, #e2e8f0);
+}
+.comunicado-footer small {
+  display: block;
+}
+.comunicado-autor {
+  margin-top: 6px;
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.comunicado-autor i {
+  opacity: 0.7;
+}
+.propio-tag {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--primary, #c0152a);
+  background: var(--primary-soft, rgba(192, 21, 42, 0.1));
+  border-radius: 999px;
+  padding: 2px 9px;
 }
 .empty-state.centered {
   display: flex;
