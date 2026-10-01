@@ -57,13 +57,29 @@
             {{ noticia.categoria }}
           </span>
           <h3 class="news-card-title">{{ noticia.titulo }}</h3>
-          <p class="news-card-description">{{ noticia.descripcion }}</p>
+          <p class="news-card-description" :class="{ 'clamped': !expandidas[noticia.clave] }">
+            {{ noticia.descripcion }}
+          </p>
+          <button
+            v-if="esLargo(noticia.descripcion) && !expandidas[noticia.clave]"
+            class="ver-mas-btn"
+            @click="toggleExpandida(noticia.clave)"
+          >
+            Ver más
+          </button>
+          <div class="news-card-tags" v-if="noticia.esComunicado">
+            <span class="badge-importancia" :class="'imp-' + noticia.importancia">
+              {{ textoImportancia(noticia.importancia) }}
+            </span>
+            <span class="destino-tag">{{ textoDestino(noticia) }}</span>
+          </div>
           <div class="news-card-meta">
             <span><i class="far fa-calendar"></i> {{ formatearFecha(noticia.fecha) }}</span>
             <span>•</span>
             <span><i class="fas fa-user"></i> {{ noticia.autor }}</span>
           </div>
-          <div class="card-actions" v-if="puedeCrear">
+          <!-- Los comunicados se editan desde su propia vista; acá sólo se leen. -->
+          <div class="card-actions" v-if="puedeCrear && !noticia.esComunicado">
             <button class="loan-btn" @click="abrirEditar(noticia)"><i class="fas fa-pencil-alt"></i> Editar</button>
             <button class="loan-btn btn-delete" @click="pedirEliminar(noticia)"><i class="fas fa-trash"></i> Eliminar</button>
           </div>
@@ -136,6 +152,7 @@
 import { ref, computed, onMounted } from "vue";
 import { useAuthStore } from "@/stores/auth.js";
 import { obtenerNoticias, crearNoticia as crearNoticiaApi, actualizarNoticia, eliminarNoticia as eliminarNoticiaApi, obtenerTodosComunicados } from "@/services/comunidad-service.js";
+import { extraerComunicados, nombreAutor, textoDestino, textoImportancia } from "@/utils/comunicados.js";
 import Modal from "@/components/ui/Modal.vue";
 
 const authStore = useAuthStore();
@@ -157,6 +174,13 @@ const nuevaNoticia = ref({
 
 const noticias = ref([]);
 
+// Mensajes largos: se muestran recortados hasta que el alumno pide ver más.
+const expandidas = ref({});
+const toggleExpandida = (clave) => {
+  expandidas.value = { ...expandidas.value, [clave]: !expandidas.value[clave] };
+};
+const esLargo = (texto) => typeof texto === "string" && texto.length > 220;
+
 // ── Estado de modales y feedback ──────────────────────────────────────────────
 const editarModalAbierto = ref(false);
 const eliminarModalAbierto = ref(false);
@@ -174,8 +198,9 @@ const cargarNoticias = async () => {
   try {
     const dataNoticias = await obtenerNoticias();
     let combinadas = [];
-    if (dataNoticias && dataNoticias.length > 0) {
+    if (Array.isArray(dataNoticias) && dataNoticias.length > 0) {
       combinadas = dataNoticias.map((n) => ({
+        clave: `noticia-${n.id_noticia}`,
         id: n.id_noticia,
         titulo: n.titulo,
         descripcion: n.contenido,
@@ -196,18 +221,24 @@ const cargarNoticias = async () => {
         }
       } catch (e) {}
 
-      const comunicadosRes = await obtenerTodosComunicados({ rol: "alumno", curso: cursoAlumno || "" });
-      if (comunicadosRes.success && comunicadosRes.data && comunicadosRes.data.length > 0) {
-        const comunicadosMapped = comunicadosRes.data.map(c => ({
-          id: c.id_comunicado,
-          titulo: c.titulo,
-          descripcion: c.mensaje,
-          categoria: "Comunicados",
-          autor: c.autor_id ? "Profesor/Autoridad" : "Sistema",
-          fecha: new Date(c.fecha_publicacion),
-          esComunicado: true,
-        }));
-        combinadas = combinadas.concat(comunicadosMapped);
+      const respuesta = await obtenerTodosComunicados({ rol: "alumno", curso: cursoAlumno || "" });
+      const comunicados = extraerComunicados(respuesta);
+      if (comunicados.length > 0) {
+        combinadas = combinadas.concat(
+          comunicados.map((c) => ({
+            clave: `comunicado-${c.id_comunicado}`,
+            id: c.id_comunicado,
+            titulo: c.titulo,
+            descripcion: c.mensaje,
+            categoria: "Comunicados",
+            autor: nombreAutor(c),
+            fecha: new Date(c.fecha_publicacion),
+            esComunicado: true,
+            importancia: c.importancia,
+            destino: c.destino,
+            curso_destino: c.curso_destino,
+          })),
+        );
       }
     } catch (e) {
       console.error("Error al cargar comunicados:", e);
@@ -562,15 +593,61 @@ const formatearFecha = (fecha) =>
   color: #475569;
   font-size: 0.88rem;
   line-height: 1.6;
-  margin: 0 0 12px 0;
-  /* Contener el texto dentro del card */
+  margin: 0 0 10px 0;
   overflow-wrap: break-word;
   word-break: break-word;
-  /* Limitar a 3 líneas */
+  white-space: pre-wrap;
+}
+
+/* Sólo se recorta mientras el mensaje esté plegado (botón "Ver más"). */
+.news-card-description.clamped {
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.ver-mas-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: -4px 0 12px 0;
+  color: #c0152a;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+.ver-mas-btn:hover { text-decoration: underline; }
+
+.news-card-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.badge-importancia {
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.imp-alta  { background: #fee2e2; color: #dc2626; }
+.imp-media { background: #fef3c7; color: #b45309; }
+.imp-baja  { background: #dcfce7; color: #16a34a; }
+
+.destino-tag {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748b;
+  background: #f1f5f9;
+  border-radius: 999px;
+  padding: 3px 10px;
 }
 
 .news-card-meta {

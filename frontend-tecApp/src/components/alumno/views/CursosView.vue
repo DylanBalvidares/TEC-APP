@@ -59,21 +59,32 @@
     </section>
 
     <section v-show="tabActivo === 'comunicados'" class="tab-content">
-      <div v-for="(c, index) in comunicados" :key="c.id || index" class="comunicado-card" :class="{ abierto: c.abierto }">
-        <div class="comunicado-header" @click="c.abierto = !c.abierto">
+      <div v-if="comunicados.length === 0" class="comunicados-vacio">
+        <i class="fas fa-bullhorn"></i>
+        <p>Todavía no hay comunicados para tu curso.</p>
+      </div>
+
+      <div v-for="(c, index) in comunicados" :key="c.id_comunicado || index" class="comunicado-card" :class="{ abierto: c.abierto }">
+        <button type="button" class="comunicado-header" @click="c.abierto = !c.abierto" :aria-expanded="!!c.abierto">
           <div class="comunicado-header-left">
             <div class="comunicado-icono">
               <i class="fas fa-bullhorn"></i>
             </div>
-            <div>
+            <div class="comunicado-header-texto">
               <div class="comunicado-titulo">{{ c.titulo }}</div>
-              <div class="comunicado-meta">{{ formatDate(c.fecha) }} · {{ c.profesor }}</div>
+              <div class="comunicado-meta">
+                {{ formatearFecha(c.fecha_publicacion) }} · {{ nombreAutor(c) }}
+              </div>
+              <div class="comunicado-tags">
+                <span class="badge" :class="claseImportancia(c.importancia)">{{ textoImportancia(c.importancia) }}</span>
+                <span class="destino-tag">{{ textoDestino(c) }}</span>
+              </div>
             </div>
           </div>
           <i class="fas fa-chevron-down comunicado-toggle"></i>
-        </div>
+        </button>
         <div class="comunicado-cuerpo">
-          <p>{{ c.contenido }}</p>
+          <p>{{ c.mensaje }}</p>
         </div>
       </div>
     </section>
@@ -82,18 +93,29 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import { obtenerMisMaterias, obtenerComunicados } from "@/services/academico-service.js";
-import { formatDate } from "@/utils/formatters.js";
+import { obtenerMisMaterias } from "@/services/academico-service.js";
+import { obtenerTodosComunicados } from "@/services/comunidad-service.js";
+import {
+  claseImportancia,
+  extraerComunicados,
+  formatearFechaComunicado,
+  nombreAutor,
+  textoDestino,
+  textoImportancia,
+} from "@/utils/comunicados.js";
 
 const tabActivo = ref("materias");
 const materias = ref([]);
 const comunicados = ref([]);
 
+const formatearFecha = formatearFechaComunicado;
+
 const cargarDatos = async () => {
   try {
     const dataMaterias = await obtenerMisMaterias();
+    materias.value = Array.isArray(dataMaterias) ? dataMaterias : [];
 
-    // Obtener el nombre del curso del alumno para filtrar comunicados
+    // El nombre del curso del alumno refina el filtro `curso` del backend.
     let cursoAlumno = null;
     try {
       const alumnoRaw = localStorage.getItem("alumno");
@@ -103,19 +125,8 @@ const cargarDatos = async () => {
       }
     } catch (e) {}
 
-    // Filtrar comunicados: solo los dirigidos a alumnos, a todos, o a su curso específico
-    const dataComunicados = await obtenerComunicados({ rol: "alumno", curso: cursoAlumno || "" });
-
-    materias.value = Array.isArray(dataMaterias) ? dataMaterias : [];
-
-    // obtenerComunicados devuelve { success, data }, extraemos el arreglo
-    const comunicadosArray =
-      dataComunicados?.success && Array.isArray(dataComunicados.data)
-        ? dataComunicados.data
-        : Array.isArray(dataComunicados)
-          ? dataComunicados
-          : [];
-    comunicados.value = comunicadosArray.map((c) => ({ ...c, abierto: false }));
+    const respuesta = await obtenerTodosComunicados({ rol: "alumno", curso: cursoAlumno || "" });
+    comunicados.value = extraerComunicados(respuesta).map((c) => ({ ...c, abierto: false }));
   } catch (error) {
     console.error("Error al cargar datos del servicio:", error);
     materias.value = [];
@@ -301,6 +312,21 @@ tbody tr:hover td { background: #f8fafc; }
 tbody tr:last-child td { border-bottom: none; }
 
 /* ── Comunicados Acordeón ─────────────────── */
+.comunicados-vacio {
+  background: #fff;
+  border: 1px dashed #e2e8f0;
+  border-radius: 16px;
+  padding: 40px 20px;
+  text-align: center;
+  color: #94a3b8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.comunicados-vacio i { font-size: 2.2rem; opacity: 0.5; }
+.comunicados-vacio p { margin: 0; font-size: 0.95rem; }
+
 .comunicado-card {
   background: #fff;
   border-radius: 16px;
@@ -320,18 +346,33 @@ tbody tr:last-child td { border-bottom: none; }
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
+  width: 100%;
   padding: 16px 20px;
   cursor: pointer;
   transition: background 0.15s;
+  background: transparent;
+  border: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  box-sizing: border-box;
 }
 
 .comunicado-header:hover { background: #fafafa; }
+.comunicado-header:focus-visible {
+  outline: 2px solid #c0152a;
+  outline-offset: -2px;
+}
 
 .comunicado-header-left {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 14px;
+  min-width: 0;
 }
+
+.comunicado-header-texto { min-width: 0; }
 
 .comunicado-icono {
   width: 42px;
@@ -350,6 +391,7 @@ tbody tr:last-child td { border-bottom: none; }
   font-size: 0.95rem;
   font-weight: 700;
   color: #0f172a;
+  overflow-wrap: break-word;
 }
 
 .comunicado-meta {
@@ -358,10 +400,41 @@ tbody tr:last-child td { border-bottom: none; }
   margin-top: 3px;
 }
 
+.comunicado-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.badge {
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.badge-alta  { background: #fee2e2; color: #dc2626; }
+.badge-media { background: #fef3c7; color: #b45309; }
+.badge-baja  { background: #dcfce7; color: #16a34a; }
+
+.destino-tag {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748b;
+  background: #f1f5f9;
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
 .comunicado-toggle {
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   color: #c0d0e0;
   font-size: 12px;
+  flex-shrink: 0;
 }
 
 .comunicado-card.abierto .comunicado-toggle { transform: rotate(180deg); }
@@ -383,6 +456,9 @@ tbody tr:last-child td { border-bottom: none; }
   color: #475569;
   font-size: 0.92rem;
   line-height: 1.6;
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
 }
 
 /* ── Responsive ───────────────────────────── */

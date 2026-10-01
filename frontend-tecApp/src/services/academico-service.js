@@ -953,32 +953,10 @@ export const obtenerMisMaterias = async () => {
   }
 };
 
-export const obtenerComunicados = async (params = {}) => {
-  try {
-    const queryString = Object.keys(params).length > 0 ? `?${new URLSearchParams(params).toString()}` : "";
-    const response = await axios.get(`${BASE_URL}/comunidad/comunicados${queryString}`, getConfig());
-
-    return {
-      success: true,
-      data: response.data,
-    }
-
-  } catch (error) {
-    return manejarErrorApi(error, "No se pudo obtener los comunicados");
-  }
-};
-
-export const obtenerComunicado = async (id) => {
-  try {
-    const response = await axios.get(`${BASE_URL}/comunidad/comunicados/${id}`, getConfig());
-    return {
-      success: true,
-      data: response.data,
-    }
-  } catch (error) {
-    return manejarErrorApi(error, "No se pudo obtener el comunicado");
-  }
-};
+// Los comunicados se sirven desde comunidad-service.js
+// (`obtenerTodosComunicados` / `obtenerComunicado`) porque el módulo vive en
+// `comunidad`, no en `academico`. Ver utils/comunicados.js para los helpers de
+// presentación que comparten las vistas de alumno y profesor.
 
 // ==========================================
 //           CALIFICACIONES / LIBRETA
