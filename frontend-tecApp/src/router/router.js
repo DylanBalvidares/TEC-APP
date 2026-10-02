@@ -1,113 +1,70 @@
+
 import { createRouter, createWebHistory } from "vue-router";
 import { useAuthStore } from "../stores/auth.js";
 
-// Layouts Principales
-import DashboardAdministrador from "../components/administrador/DashboardAdministrador.vue";
-import DashboardAlumno from "../components/alumno/DashboardAlumno.vue";
+// ==============================
+// AUTH
+// ==============================
 
-// Vistas del Alumno (Las nuevas versiones refactorizadas)
-import InicioView from "../components/alumno/views/InicioView.vue";
-import NoticiasView from "../components/alumno/views/NoticiaView.vue";
-import CursosView from "../components/alumno/views/CursosView.vue";
-import ObjetosPerdidosView from "../components/alumno/views/ObjetosPerdidosView.vue";
-
-// Auth y otros componentes
 import Inicio from "../components/auth/Inicio.vue";
 import Login from "../components/auth/Login.vue";
 import Registro from "../components/auth/Registro.vue";
 import Unauthorized from "../components/auth/Unauthorized.vue";
-import UsuarioPerfil from "../components/administrador/views/UsuarioPerfil.vue";
 
-// Biblioteca y otros
-import Biblioteca from "../components/bibliotecario/Biblioteca.vue";
-import Libros from "../components/bibliotecario/Libros.vue";
-import BibliotecaRecursos from "../components/bibliotecario/BiblotecaRecursos.vue";
-import PrestamosBiblotecario from "../components/bibliotecario/PrestamosBiblotecario.vue";
-import BibliotecaDashboard from "../components/bibliotecario/BibliotecaDashboard.vue";
+// ==============================
+// PRECEPTOR
+// ==============================
 
-// Profesores
-import DashboardProfesor from "../components/profesores/DashboardProfesor.vue";
-import MateriasView from "../components/profesores/views/MateriasView.vue";
-import AsistenciasView from "../components/profesores/views/AsistenciasView.vue";
-import InicioViewProfesor from "../components/profesores/views/InicioView.vue";
-import NoticiasViewProfesor from "../components/profesores/views/NoticiasView.vue";
-import CursosViewProfesor from "../components/profesores/views/CursosView.vue";
-import ComunicadosViewProfesor from "../components/profesores/views/ComunicadosView.vue";
-
-// Preceptores
 import DashboardPreceptor from "../components/preceptores/DashboardPreceptor.vue";
 import CursosPreceptorView from "../components/preceptores/views/CursosPreceptorView.vue";
 import AlumnosView from "../components/preceptores/views/AlumnosView.vue";
+import ComunicadosView from "../components/preceptores/views/ComunicadosView.vue";
+
+// ==============================
+// RUTAS
+// ==============================
 
 const routes = [
-  { path: "/", component: Inicio },
-  { path: "/login", component: Login },
-  { path: "/registro", component: Registro },
-  { path: "/unauthorized", component: Unauthorized },
 
-  // --- RUTA MODULAR DEL ALUMNO ---
-  {
-    path: "/alumno",
-    component: DashboardAlumno, // El layout que contiene Sidebar y Topbar
-    meta: { requiresAuth: true, role: "alumno" },
-
-    children: [
-      { path: "inicio", component: InicioView },
-      { path: "noticias", component: NoticiasView },
-      { path: "cursos", component: CursosView },
-      { path: "objetos-perdidos", component: ObjetosPerdidosView },
-      { path: "", redirect: "/alumno/inicio" }, // Si entran a /alumno, van a inicio
-    ],
-  },
-
-  // --- OTRAS RUTAS ---
-  {
-    path: "/dashboard-administrador",
-    component: DashboardAdministrador,
-    meta: { requiresAuth: true, role: "root" },
-  },
-  { path: "/biblioteca", component: Biblioteca, meta: { requiresAuth: true } },
-  {
-    path: "/biblioteca/libros",
-    component: Libros,
-    meta: { requiresAuth: true },
-  },
-  {
-    path: "/biblioteca/recursos",
-    component: BibliotecaRecursos,
-    meta: { requiresAuth: true },
-  },
-  {
-    path: "/biblioteca/prestamos",
-    component: PrestamosBiblotecario,
-    meta: { requiresAuth: true, role: "bibliotecario" },
-  },
-  {
-    path: "/biblioteca/dashboard",
-    component: BibliotecaDashboard,
-    meta: { requiresAuth: true, role: "bibliotecario" },
-  },
-  { path: "/perfil/administrador", component: UsuarioPerfil },
+  // ------------------------------
+  // Páginas de autenticación
+  // ------------------------------
 
   {
-    path: "/profesor",
-    component: DashboardProfesor,
-    meta: { requiresAuth: true, role: "profesor" },
-    children: [
-      { path: "inicio", component: InicioViewProfesor },
-      { path: "noticias", component: NoticiasViewProfesor },
-      { path: "comunicados", component: ComunicadosViewProfesor },
-      { path: "cursos", component: CursosViewProfesor },
-      { path: "materias", component: MateriasView },
-      { path: "asistencias", component: AsistenciasView },
-      { path: "", redirect: "/profesor/inicio" }, // Si entran a /alumno, van a inicio
-    ],
+    path: "/",
+    component: Inicio,
   },
 
-  // --- PRECEPTOR ---
-{
+  {
+    path: "/login",
+    component: Login,
+  },
+
+  {
+    path: "/registro",
+    component: Registro,
+  },
+
+  {
+    path: "/unauthorized",
+    component: Unauthorized,
+  },
+
+  // ------------------------------
+  // PRECEPTOR
+  // ------------------------------
+
+  {
     path: "/preceptor",
     component: DashboardPreceptor,
+
+    // IMPORTANTE:
+    // Por ahora NO ponemos:
+    // requiresAuth: true
+    // role: "preceptor"
+    //
+    // Así podemos entrar directamente
+    // mientras desarrollamos el panel.
 
     children: [
 
@@ -121,26 +78,64 @@ const routes = [
         component: AlumnosView,
       },
 
+      {
+        path: "comunicados",
+        component: ComunicadosView,
+      },
     ],
   },
-  
 
-  { path: "/:pathMatch(.*)*", redirect: "/" },
+  // ------------------------------
+  // RUTA NO ENCONTRADA
+  // ------------------------------
+
+  {
+    path: "/:pathMatch(.*)*",
+    redirect: "/",
+  },
+
 ];
 
+// ==============================
+// CREAR ROUTER
+// ==============================
+
 const router = createRouter({
-  history: createWebHistory('/frontend-tecApp/'),
+  history: createWebHistory("/frontend-tecApp/"),
   routes,
 });
 
+// ==============================
+// GUARD DE AUTENTICACIÓN
+// ==============================
+//
+// Lo dejamos funcionando para las demás
+// rutas, pero Preceptor no tiene meta de
+// autenticación por ahora.
+//
+// Cuando hagamos el login del Preceptor,
+// volvemos a agregar:
+// requiresAuth: true
+// role: "preceptor"
+// ==============================
+
 router.beforeEach((to, from, next) => {
+
   const authStore = useAuthStore();
 
+  // Verificar autenticación solamente
+  // si la ruta la requiere.
   if (to.meta.requiresAuth && !authStore.estaAutenticado) {
     return next("/");
   }
 
-  if (to.meta.role && authStore.rol !== to.meta.role && authStore.rol !== "root") {
+  // Verificar rol solamente si la ruta
+  // tiene un rol definido.
+  if (
+    to.meta.role &&
+    authStore.rol !== to.meta.role &&
+    authStore.rol !== "root"
+  ) {
     return next("/unauthorized");
   }
 
