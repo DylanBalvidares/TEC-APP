@@ -53,6 +53,8 @@ const DashboardPreceptor = () =>
 const CursosPreceptorView = () =>
   import("../components/preceptor/views/CursosPreceptorView.vue");
 const AlumnosView = () => import("../components/preceptor/views/AlumnosView.vue");
+const ComunicadosViewPreceptor = () =>
+  import("../components/preceptor/views/ComunicadosView.vue");
 
 // Libreta Digital
 const LibretaAlumnoView = () =>
@@ -184,6 +186,11 @@ const routes = [
       {
         path: "mensajes",
         component: MensajesPreceptorView,
+      },
+
+      {
+        path: "comunicados",
+        component: ComunicadosViewPreceptor,
       },
 
       {
