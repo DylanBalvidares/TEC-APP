@@ -151,6 +151,55 @@ export const eliminarComunicado = async (id) => {
 };
 
 // ==========================================
+//      SERVICIOS DE EMAILS
+// ==========================================
+
+export const obtenerCorreosEnviados = async () => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/academico/correos/enviados`,
+      getConfig()
+    );
+
+    return {
+      success: true,
+      data: response.data,
+    };
+
+  } catch (error) {
+
+    return manejarErrorApi(
+      error,
+      "Error al obtener los emails enviados"
+    );
+
+  }
+};
+
+
+export const obtenerCorreosAlumno = async (idAlumno) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/academico/alumnos/${idAlumno}/correos`,
+      getConfig()
+    );
+
+    return {
+      success: true,
+      data: response.data,
+    };
+
+  } catch (error) {
+
+    return manejarErrorApi(
+      error,
+      "Error al obtener el historial de emails del alumno"
+    );
+
+  }
+};
+
+// ==========================================
 //        SERVICIOS DE OBJETOS PERDIDOS
 // ==========================================
 
