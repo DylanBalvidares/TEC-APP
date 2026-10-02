@@ -1030,3 +1030,338 @@ export const eliminarNotaService = async (idNota) => {
     return manejarErrorApi(error, "Error al eliminar la calificación");
   }
 };
+
+/* =========================================================
+   HISTORIAL DE EMAILS
+========================================================= */
+
+
+/**
+ * Obtener historial de correos enviados por el preceptor
+ *
+ * GET /api/academico/correos/enviados
+ */
+export const obtenerCorreosEnviados = async () => {
+
+  try {
+
+    const response = await axios.get(
+      `${API_URL}/correos/enviados`,
+      getConfig()
+    );
+
+    return {
+      success: true,
+      data: response.data
+    };
+
+  } catch (error) {
+
+    return manejarErrorApi(error);
+
+  }
+
+};
+
+
+/**
+ * Obtener historial de correos de un alumno
+ *
+ * GET /api/academico/alumnos/:id/correos
+ */
+export const obtenerCorreosAlumno = async (
+  idAlumno
+) => {
+
+  try {
+
+    const response = await axios.get(
+      `${API_URL}/alumnos/${idAlumno}/correos`,
+      getConfig()
+    );
+
+    return {
+      success: true,
+      data: response.data
+    };
+
+  } catch (error) {
+
+    return manejarErrorApi(error);
+
+  }
+
+};
+
+
+/**
+ * Marcar correo como leído
+ *
+ * PATCH /api/academico/correos/:id/leido
+ */
+export const marcarCorreoLeido = async (
+  idCorreo
+) => {
+
+  try {
+
+    const response = await axios.patch(
+      `${API_URL}/correos/${idCorreo}/leido`,
+      {},
+      getConfig()
+    );
+
+    return {
+      success: true,
+      data: response.data
+    };
+
+  } catch (error) {
+
+    return manejarErrorApi(error);
+
+  }
+
+};
+
+
+/* =========================================================
+   COMUNICADOS
+========================================================= */
+
+
+/**
+ * Obtener comunicados
+ *
+ * GET /api/comunidad/comunicados
+ *
+ * Parámetros opcionales:
+ * rol
+ * curso
+ * cursos
+ */
+export const obtenerComunicados = async (
+  parametros = {}
+) => {
+
+  try {
+
+    const config = getConfig();
+
+    const params = {};
+
+    if (parametros.rol) {
+      params.rol = parametros.rol;
+    }
+
+    if (parametros.curso) {
+      params.curso = parametros.curso;
+    }
+
+    if (parametros.cursos) {
+      params.cursos = parametros.cursos;
+    }
+
+    if (Object.keys(params).length > 0) {
+      config.params = params;
+    }
+
+    const response = await axios.get(
+      `${BASE_URL}/comunidad/comunicados`,
+      config
+    );
+
+    return {
+      success: true,
+      data: response.data
+    };
+
+  } catch (error) {
+
+    return manejarErrorApi(error);
+
+  }
+
+};
+
+
+/**
+ * Obtener un comunicado específico
+ *
+ * GET /api/comunidad/comunicados/:id
+ */
+export const obtenerComunicado = async (
+  id
+) => {
+
+  try {
+
+    const response = await axios.get(
+      `${BASE_URL}/comunidad/comunicados/${id}`,
+      getConfig()
+    );
+
+    return {
+      success: true,
+      data: response.data
+    };
+
+  } catch (error) {
+
+    return manejarErrorApi(error);
+
+  }
+
+};
+
+
+/**
+ * Crear comunicado
+ *
+ * POST /api/comunidad/comunicados
+ */
+export const crearComunicado = async (
+  comunicadoData
+) => {
+
+  try {
+
+    const payload = {
+
+      titulo:
+        comunicadoData.titulo,
+
+      mensaje:
+        comunicadoData.mensaje,
+
+      importancia:
+        comunicadoData.importancia,
+
+      destino:
+        comunicadoData.destino,
+
+      curso_destino:
+        comunicadoData.curso_destino ?? null,
+
+      autor_id:
+        comunicadoData.autor_id
+
+    };
+
+    const response = await axios.post(
+      `${BASE_URL}/comunidad/comunicados`,
+      payload,
+      getConfig()
+    );
+
+    return {
+      success: true,
+      data: response.data
+    };
+
+  } catch (error) {
+
+    return manejarErrorApi(error);
+
+  }
+
+};
+
+
+/**
+ * Modificar comunicado
+ *
+ * PUT /api/comunidad/comunicados/:id
+ */
+export const modificarComunicado = async (
+  id,
+  comunicadoData
+) => {
+
+  try {
+
+    const payload = {};
+
+    if (
+      comunicadoData.titulo !== undefined
+    ) {
+      payload.titulo =
+        comunicadoData.titulo;
+    }
+
+    if (
+      comunicadoData.mensaje !== undefined
+    ) {
+      payload.mensaje =
+        comunicadoData.mensaje;
+    }
+
+    if (
+      comunicadoData.importancia !== undefined
+    ) {
+      payload.importancia =
+        comunicadoData.importancia;
+    }
+
+    if (
+      comunicadoData.destino !== undefined
+    ) {
+      payload.destino =
+        comunicadoData.destino;
+    }
+
+    if (
+      comunicadoData.curso_destino !== undefined
+    ) {
+      payload.curso_destino =
+        comunicadoData.curso_destino;
+    }
+
+    const response = await axios.put(
+      `${BASE_URL}/comunidad/comunicados/${id}`,
+      payload,
+      getConfig()
+    );
+
+    return {
+      success: true,
+      data: response.data
+    };
+
+  } catch (error) {
+
+    return manejarErrorApi(error);
+
+  }
+
+};
+
+
+/**
+ * Eliminar comunicado
+ *
+ * DELETE /api/comunidad/comunicados/:id
+ */
+export const eliminarComunicado = async (
+  id
+) => {
+
+  try {
+
+    const response = await axios.delete(
+      `${BASE_URL}/comunidad/comunicados/${id}`,
+      getConfig()
+    );
+
+    return {
+      success: true,
+      data: response.data
+    };
+
+  } catch (error) {
+
+    return manejarErrorApi(error);
+
+  }
+
+};
