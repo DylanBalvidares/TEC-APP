@@ -392,6 +392,11 @@ export const obtenerAlumnosCurso = async (idOCurso, fecha) => {
     const response = await axios.get(url, getConfig());
     return { success: true, data: response.data };
   } catch (error) {
+    // Un curso sin alumnos responde 404: es una lista vacía válida, no un
+    // error (evita ruido en consola en vistas que consultan varios cursos).
+    if (error?.response?.status === 404) {
+      return { success: true, data: [] };
+    }
     return manejarErrorApi(error, "No se encontraron alumnos para este curso");
   }
 };
@@ -1057,7 +1062,7 @@ export const obtenerCorreosEnviados = async () => {
 
   } catch (error) {
 
-    return manejarErrorApi(error);
+    return manejarErrorApi(error, "No se pudieron obtener los correos enviados");
 
   }
 
@@ -1087,7 +1092,7 @@ export const obtenerCorreosAlumno = async (
 
   } catch (error) {
 
-    return manejarErrorApi(error);
+    return manejarErrorApi(error, "No se pudo obtener el historial de correos del alumno");
 
   }
 
@@ -1118,7 +1123,7 @@ export const marcarCorreoLeido = async (
 
   } catch (error) {
 
-    return manejarErrorApi(error);
+    return manejarErrorApi(error, "No se pudo marcar el correo como leído");
 
   }
 
@@ -1178,7 +1183,7 @@ export const obtenerComunicados = async (
 
   } catch (error) {
 
-    return manejarErrorApi(error);
+    return manejarErrorApi(error, "No se pudieron obtener los comunicados");
 
   }
 
@@ -1208,7 +1213,7 @@ export const obtenerComunicado = async (
 
   } catch (error) {
 
-    return manejarErrorApi(error);
+    return manejarErrorApi(error, "No se pudo obtener el comunicado");
 
   }
 
@@ -1261,7 +1266,7 @@ export const crearComunicado = async (
 
   } catch (error) {
 
-    return manejarErrorApi(error);
+    return manejarErrorApi(error, "No se pudo crear el comunicado");
 
   }
 
@@ -1330,7 +1335,7 @@ export const modificarComunicado = async (
 
   } catch (error) {
 
-    return manejarErrorApi(error);
+    return manejarErrorApi(error, "No se pudo modificar el comunicado");
 
   }
 
@@ -1360,7 +1365,7 @@ export const eliminarComunicado = async (
 
   } catch (error) {
 
-    return manejarErrorApi(error);
+    return manejarErrorApi(error, "No se pudo eliminar el comunicado");
 
   }
 

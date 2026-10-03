@@ -9,7 +9,7 @@
             <div class="page-header-info">
 
                 <img
-                    src="/frontend-tecApp/megafono.webp"
+                    src="/frontend-tecApp/noticias-header.png"
                     alt="Comunicados"
                     class="page-header-icon"
                 />
@@ -74,11 +74,11 @@
                     type="button"
                     class="course-filter"
                     :class="{
-                        active: cursoSeleccionado === String(curso.id_curso)
+                        active: cursoSeleccionado === nombreDelCurso(curso)
                     }"
-                    @click="cursoSeleccionado = String(curso.id_curso)"
+                    @click="cursoSeleccionado = nombreDelCurso(curso)"
                 >
-                    {{ curso.nombre }}
+                    {{ nombreDelCurso(curso) }}
                 </button>
 
             </div>
@@ -577,9 +577,9 @@
                             <option
                                 v-for="curso in cursos"
                                 :key="curso.id_curso"
-                                :value="String(curso.id_curso)"
+                                :value="nombreDelCurso(curso)"
                             >
-                                {{ curso.nombre }}
+                                {{ nombreDelCurso(curso) }}
                             </option>
 
                         </select>
@@ -658,7 +658,7 @@ import "../Comunicados.css";
 
 import {
     obtenerCursos,
-    obtenerAlumnos,
+    obtenerAlumnosCurso,
     obtenerComunicados,
     obtenerCorreosEnviados,
     crearComunicado,
@@ -773,27 +773,30 @@ const cargarDatos = async () => {
 
     try {
 
-        const resultados = await Promise.allSettled([
-            obtenerCursos(),
-            obtenerAlumnos(),
-            obtenerComunicados(),
-            obtenerCorreosEnviados()
-        ]);
-
-
         /* =====================================================
-           CURSOS
+           CURSOS + CORREOS (paralelo)
         ===================================================== */
 
-        const resultadoCursos = resultados[0];
+        const [resultadoCursos, resultadoEmails] =
+            await Promise.allSettled([
+                obtenerCursos(),
+                obtenerCorreosEnviados()
+            ]);
+
 
         if (
             resultadoCursos.status === "fulfilled" &&
             resultadoCursos.value?.success
         ) {
 
+            const datosCursos =
+                resultadoCursos.value.data;
+
+
             cursos.value =
-                resultadoCursos.value.data || [];
+                Array.isArray(datosCursos)
+                    ? datosCursos
+                    : datosCursos?.data || [];
 
         } else {
 
@@ -802,40 +805,60 @@ const cargarDatos = async () => {
         }
 
 
-        /* =====================================================
-           ALUMNOS
-        ===================================================== */
-
-        const resultadoAlumnos = resultados[1];
-
         if (
-            resultadoAlumnos.status === "fulfilled" &&
-            resultadoAlumnos.value?.success
+            resultadoEmails.status === "fulfilled" &&
+            resultadoEmails.value?.success
         ) {
 
-            alumnos.value =
-                resultadoAlumnos.value.data || [];
+            const datosEmails =
+                resultadoEmails.value.data;
+
+
+            emails.value =
+                Array.isArray(datosEmails)
+                    ? datosEmails
+                    : datosEmails?.data || [];
 
         } else {
 
-            alumnos.value = [];
+            emails.value = [];
 
         }
 
 
         /* =====================================================
-           COMUNICADOS
+           COMUNICADOS (con los cursos a cargo para el filtro
+           por `curso_destino` del backend)
         ===================================================== */
 
-        const resultadoComunicados = resultados[2];
+        const nombresCursos =
+            cursos.value
+                .map(nombreDelCurso)
+                .filter(
+                    (nombre) =>
+                        nombre &&
+                        nombre !== "Curso"
+                );
 
-        if (
-            resultadoComunicados.status === "fulfilled" &&
-            resultadoComunicados.value?.success
-        ) {
+
+        const resultadoComunicados =
+            await obtenerComunicados(
+                nombresCursos.length
+                    ? { cursos: nombresCursos.join(",") }
+                    : {}
+            );
+
+
+        if (resultadoComunicados?.success) {
+
+            const datosComunicados =
+                resultadoComunicados.data;
+
 
             comunicados.value =
-                resultadoComunicados.value.data || [];
+                Array.isArray(datosComunicados)
+                    ? datosComunicados
+                    : datosComunicados?.data || [];
 
         } else {
 
@@ -845,24 +868,65 @@ const cargarDatos = async () => {
 
 
         /* =====================================================
-           CORREOS
+           ALUMNOS (por curso: el preceptor no tiene permiso
+           para el listado global `/alumnos`, pero sí para
+           `/alumnos/curso/:id` de sus cursos a cargo)
         ===================================================== */
 
-        const resultadoEmails = resultados[3];
+        const resultadosAlumnos =
+            await Promise.allSettled(
+                cursos.value.map((curso) =>
+                    obtenerAlumnosCurso(curso.id_curso)
+                )
+            );
 
-        if (
-            resultadoEmails.status === "fulfilled" &&
-            resultadoEmails.value?.success
-        ) {
 
-            emails.value =
-                resultadoEmails.value.data || [];
+        const porId = new Map();
 
-        } else {
 
-            emails.value = [];
+        for (const resultado of resultadosAlumnos) {
+
+            if (
+                resultado.status !== "fulfilled" ||
+                !resultado.value?.success
+            ) {
+
+                continue;
+
+            }
+
+
+            const datos =
+                resultado.value.data;
+
+
+            const lista =
+                Array.isArray(datos)
+                    ? datos
+                    : datos?.data || [];
+
+
+            for (const alumno of lista) {
+
+                const clave =
+                    String(
+                        alumno.id_alumno ??
+                        alumno.id
+                    );
+
+
+                if (!porId.has(clave)) {
+
+                    porId.set(clave, alumno);
+
+                }
+
+            }
 
         }
+
+
+        alumnos.value = [...porId.values()];
 
     } catch (e) {
 
@@ -949,11 +1013,7 @@ const obtenerCurso = (idCurso) => {
 };
 
 
-const nombreCurso = (idCurso) => {
-
-    const curso =
-        obtenerCurso(idCurso);
-
+const nombreDelCurso = (curso) => {
 
     if (!curso) {
 
@@ -963,10 +1023,41 @@ const nombreCurso = (idCurso) => {
 
 
     return (
-        curso.nombre ||
         curso.nombre_curso ||
+        curso.nombre ||
         "Curso"
     );
+
+};
+
+
+const nombreCurso = (idOCursoNombre) => {
+
+    if (
+        idOCursoNombre === null ||
+        idOCursoNombre === undefined ||
+        idOCursoNombre === ""
+    ) {
+
+        return "Curso";
+
+    }
+
+
+    const curso =
+        obtenerCurso(idOCursoNombre);
+
+
+    if (curso) {
+
+        return nombreDelCurso(curso);
+
+    }
+
+
+    // `curso_destino` guarda el NOMBRE del curso (varchar),
+    // no el id: si no matchea por id, ya es el nombre.
+    return String(idOCursoNombre);
 
 };
 
@@ -1207,8 +1298,16 @@ const elementosFiltrados = computed(() => {
                 );
 
 
+            const nombreCursoAlumno =
+                cursoAlumno === null ||
+                cursoAlumno === undefined
+                    ? null
+                    : nombreCurso(cursoAlumno);
+
+
             return (
-                String(cursoAlumno) ===
+                nombreCursoAlumno !== null &&
+                String(nombreCursoAlumno) ===
                 String(
                     cursoSeleccionado.value
                 )
