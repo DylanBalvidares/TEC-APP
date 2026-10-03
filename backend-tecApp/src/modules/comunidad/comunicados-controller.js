@@ -56,6 +56,36 @@ export async function obtenerTodosComunicados(filtros = {}) {
       whereClause = {
         [Op.or]: condiciones,
       };
+    } else if (rol === "preceptor") {
+      // El preceptor gestiona alumnos y cursos: ve los generales, los de
+      // alumnos y los dirigidos a sus cursos (por nombre en `curso_destino`),
+      // además de los que publicó él mismo.
+      const cursosPreceptor = filtros.cursos
+        ? filtros.cursos.split(",").map((c) => c.trim()).filter(Boolean)
+        : [];
+
+      const condiciones = [
+        { destino: "todos" },
+        { destino: "alumnos" },
+        ...(cursosPreceptor.length > 0
+          ? [
+              {
+                destino: "curso",
+                curso_destino: {
+                  [Op.in]: cursosPreceptor,
+                },
+              },
+            ]
+          : [{ destino: "curso" }]),
+      ];
+
+      if (filtros.autor_id) {
+        condiciones.push({ autor_id: filtros.autor_id });
+      }
+
+      whereClause = {
+        [Op.or]: condiciones,
+      };
     } else if (rol === "autoridades") {
       whereClause = {
         [Op.or]: [

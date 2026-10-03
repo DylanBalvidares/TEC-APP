@@ -25,7 +25,7 @@ const DESTINOS_POR_ROL = {
   1: "alumno",
   2: "alumno",
   3: "profesor",
-  4: "autoridades",
+  4: "preceptor",
   5: "autoridades",
   6: "alumno",
   7: "administrador",

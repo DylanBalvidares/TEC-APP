@@ -208,6 +208,7 @@ SELECT 4, id_permiso FROM `permisos` WHERE `nombre_permiso` IN (
     'preceptor_gestionar_sanciones','preceptor_ver_sanciones',
     'preceptor_crear_alumno','preceptor_editar_alumno','preceptor_eliminar_alumno',
     'preceptor_enviar_email_alumno','preceptor_ver_notas','preceptor_ver_planes',
+    'comunicado_crear','comunicado_editar','comunicado_eliminar','comunicado_ver',
     'whatsapp_enviar','whatsapp_ver_propio',
     'horario_ver'
 );
