@@ -180,4 +180,25 @@ async function marcarCorreoLeido(idCorreo) {
   }
 }
 
-export { enviarEmailAAlumno, obtenerCorreosDeAlumno, marcarCorreoLeido };
+async function obtenerCorreosEnviadosPor(idRemitente) {
+  if (!idRemitente) {
+    throw new ErrorHandler(400, "No se identificó al remitente");
+  }
+
+  try {
+    const correos = await Correo.findAll({
+      where: { id_remitente: Number(idRemitente) },
+      order: [["fecha_envio", "DESC"]],
+    });
+
+    return correos;
+  } catch (error) {
+    if (error instanceof ErrorHandler) {
+      throw error;
+    }
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en obtenerCorreosEnviadosPor:", error);
+    throw new ErrorHandler(500, "Error interno al obtener los correos enviados");
+  }
+}
+
+export { enviarEmailAAlumno, obtenerCorreosDeAlumno, marcarCorreoLeido, obtenerCorreosEnviadosPor };

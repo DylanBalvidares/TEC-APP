@@ -2,10 +2,31 @@ import { Router } from "express";
 import comprobarPermiso from "../../middlewares/comprobarPermisos.js";
 import {
   obtenerCorreosDeAlumno,
+  obtenerCorreosEnviadosPor,
   marcarCorreoLeido,
 } from "./email-controller.js";
 
 const correosRouter = Router();
+
+// Historial de correos enviados por el usuario autenticado (bandeja del
+// preceptor en Comunicados). El remitente sale del token, nunca del query.
+correosRouter.get(
+  "/correos/enviados",
+  comprobarPermiso([
+    "preceptor_enviar_email_alumno",
+    "administrativo_ver_todos_alumnos",
+  ]),
+  async (req, res) => {
+    try {
+      const data = await obtenerCorreosEnviadosPor(req.headers["id_usuario"]);
+      res.status(200).json(data);
+    } catch (error) {
+      res
+        .status(error.statusCode || error.status || 500)
+        .json({ message: error.message });
+    }
+  },
+);
 
 // Historial de correos enviados a un alumno
 correosRouter.get(
