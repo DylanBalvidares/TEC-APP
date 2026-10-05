@@ -312,10 +312,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from "vue";
+import { ref, computed, onMounted, nextTick } from "vue";
 import Modal from "../../ui/Modal.vue";
 import { toast } from "../../../services/toast-service.js";
 import { exportarCsv } from "../../../utils/exportCsv.js";
+import { useComunicacionStore } from "../../../stores/comunicacion.js";
 // IMPORTANTE: Ajustá esta ruta al archivo de servicios que estés utilizando para los comunicados.
 import {
     obtenerTodosComunicados,
@@ -324,11 +325,11 @@ import {
     eliminarComunicado,
 } from "../../../services/comunidad-service.js";
 import { obtenerCursos } from "../../../services/academico-service.js";
-import { obtenerUsuarios } from "../../../services/usuarios-services.js";
 import { useTableControls } from "../../../composables/useTableControls.js";
 import DataTable from "../../ui/DataTable.vue";
 
 // ── Estado ──────────────────────────────────────────────────────────────────
+const comunicacion = useComunicacionStore();
 const comunicados = ref([]);
 const cursosDisponibles = ref([]);
 const mapaAutores = ref({});
@@ -526,25 +527,20 @@ const fetchCursos = async () => {
 };
 
 const fetchAutores = async () => {
-    try {
-        const res = await obtenerUsuarios();
-        const lista = res?.data?.data ?? res?.data ?? [];
-        const mapa = {};
-        if (Array.isArray(lista)) {
-            for (const u of lista) {
-                const id = u.id_usuario ?? u.id;
-                if (id != null) {
-                    mapa[id] =
-                        `${u.nombre || ""} ${u.apellido || ""}`.trim() ||
-                        u.email ||
-                        `ID ${id}`;
-                }
+    const ok = await comunicacion.asegurar();
+    const mapa = {};
+    if (ok && Array.isArray(comunicacion.usuarios)) {
+        for (const u of comunicacion.usuarios) {
+            const id = u.id_usuario ?? u.id;
+            if (id != null) {
+                mapa[id] =
+                    `${u.nombre || ""} ${u.apellido || ""}`.trim() ||
+                    u.email ||
+                    `ID ${id}`;
             }
         }
-        mapaAutores.value = mapa;
-    } catch {
-        mapaAutores.value = {};
     }
+    mapaAutores.value = mapa;
 };
 
 const confirmarEliminar = async () => {

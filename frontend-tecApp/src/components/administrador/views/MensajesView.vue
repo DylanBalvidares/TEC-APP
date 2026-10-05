@@ -169,15 +169,16 @@ import Pagination from "@/components/ui/Pagination.vue";
 import HistorialMensajes from "@/components/whatsapp/HistorialMensajes.vue";
 import DetalleMensajeModal from "@/components/whatsapp/DetalleMensajeModal.vue";
 import { toast } from "@/services/toast-service.js";
+import { useComunicacionStore } from "@/stores/comunicacion.js";
 import {
   obtenerTodosMensajes,
   reenviarMensaje,
   marcarMensajeLeido,
   eliminarMensaje,
 } from "@/services/mensajes-service.js";
-import { obtenerUsuarios } from "@/services/usuarios-services.js";
 
 const lista = ref([]);
+const comunicacion = useComunicacionStore();
 const total = ref(0);
 const page = ref(1);
 const pageSize = ref(20);
@@ -223,21 +224,16 @@ const cargar = async () => {
 };
 
 const cargarRoles = async () => {
-  try {
-    const res = await obtenerUsuarios();
-    const usuarios = res?.data?.data ?? res?.data ?? [];
-    const mapa = {};
-    if (Array.isArray(usuarios)) {
-      for (const u of usuarios) {
-        const id = u.id_usuario ?? u.id;
-        if (id != null) mapa[id] = u.rol?.nombre_rol || u.nombre_rol || "";
-      }
+  // Mapa de roles desde el caché compartido (antes: obtenerUsuarios por vista).
+  const ok = await comunicacion.asegurar();
+  const mapa = {};
+  if (ok && Array.isArray(comunicacion.usuarios)) {
+    for (const u of comunicacion.usuarios) {
+      const id = u.id_usuario ?? u.id;
+      if (id != null) mapa[id] = u.rol?.nombre_rol || u.nombre_rol || "";
     }
-    mapaRoles.value = mapa;
-  } catch {
-    // Si falla, la columna muestra solo el ID crudo.
-    mapaRoles.value = {};
   }
+  mapaRoles.value = mapa;
 };
 
 const aplicarFiltros = async () => {

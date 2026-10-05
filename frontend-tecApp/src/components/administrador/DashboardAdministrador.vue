@@ -46,22 +46,21 @@ import { useRoute, useRouter } from "vue-router";
 
 import Sidebar from "./views/Sidebar.vue";
 import Topbar from "./views/Topbar.vue";
+import { useComunicacionStore } from "../../stores/comunicacion.js";
 import Overview from "./views/Overview.vue";
 import RolesView from "./views/RolesView.vue";
-import MonitorCorreos from "./views/MonitorCorreos.vue";
 import AlumnosView from "./views/AlumnosView.vue";
 import ProfesoresView from "./views/ProfesoresView.vue";
 import CursosView from "./views/CursosView.vue";
-import NoticiasView from "./views/NoticiasView.vue";
-import ComunicadosView from "./views/ComunicadosView.vue";
+import ComunicacionView from "./views/ComunicacionView.vue";
 import AsignacionesView from "./views/AsignacionesView.vue";
 import MateriasView from "./views/MateriasView.vue";
 import PlanesEstudioView from "./views/PlanesEstudioView.vue";
 import LibretaAdminView from "./views/LibretaAdminView.vue";
+import BoletinesAdminView from "./views/BoletinesAdminView.vue";
 import PersonalView from "./views/PersonalView.vue";
 import UsuariosView from "./views/UsuariosView.vue";
 import AsistenciasView from "./views/AsistenciasView.vue";
-import MensajesView from "./views/MensajesView.vue";
 import AuditoriaView from "./views/AuditoriaView.vue";
 import ReportesView from "./views/ReportesView.vue";
 import ConfigView from "./views/ConfigView.vue";
@@ -76,21 +75,19 @@ import UsuarioPerfil from "./views/UsuarioPerfil.vue";
 
 const componentesMap = {
   overview: Overview,
-  monitorcorreos: MonitorCorreos,
   roles: RolesView,
   alumnos: AlumnosView,
   profesores: ProfesoresView,
   cursos: CursosView,
-  noticias: NoticiasView,
-  comunicados: ComunicadosView,
+  comunicacion: ComunicacionView,
   asignaciones: AsignacionesView,
   materias: MateriasView,
   planes: PlanesEstudioView,
   libreta: LibretaAdminView,
+  boletines: BoletinesAdminView,
   personal: PersonalView,
   usuarios: UsuariosView,
   asistencias: AsistenciasView,
-  mensajes: MensajesView,
   auditoria: AuditoriaView,
   reportes: ReportesView,
   config: ConfigView,
@@ -106,21 +103,19 @@ const componentesMap = {
 const VISTAS_VALIDAS = Object.keys(componentesMap);
 const pageNames = {
   overview: "Inicio",
-  monitorcorreos: "Historial de Emails",
   roles: "Roles y permisos",
   alumnos: "Alumnos",
   profesores: "Profesores",
   cursos: "Cursos",
-  noticias: "Noticias",
-  comunicados: "Comunicados",
+  comunicacion: "Comunicación",
   asignaciones: "Asignaciones de Materias",
   materias: "Materias",
   planes: "Planes de Estudio",
   libreta: "Libreta Digital",
+  boletines: "Boletines",
   personal: "Personal",
   usuarios: "Usuarios",
   asistencias: "Asistencias",
-  mensajes: "WhatsApp",
   auditoria: "Auditoría",
   reportes: "Reportes",
   config: "Configuración",
@@ -145,9 +140,28 @@ const vistaInicial = VISTAS_VALIDAS.includes(route.query.vista)
 const currentView = ref(vistaInicial);
 const contentRef = ref(null);
 const sidebarRef = ref(null);
+const comunicacion = useComunicacionStore();
+
+// Alias legacy hacia las tabs de Comunicación (ver ComunicacionView).
+const ALIAS_COMUNICACION = {
+    noticias: "noticias",
+    comunicados: "comunicados",
+    mensajes: "mensajes",
+    monitorcorreos: "emails",
+};
 
 const setView = (vista) => {
-    currentView.value = VISTAS_VALIDAS.includes(vista) ? vista : "overview";
+    // Las vistas sueltas de comunicación (noticias/comunicados/mensajes/emails)
+    // ahora viven como tabs de Comunicación (ver ComunicacionView).
+    if (typeof vista === "string" && vista in ALIAS_COMUNICACION) {
+        comunicacion.solicitarTab(ALIAS_COMUNICACION[vista]);
+        currentView.value = "comunicacion";
+        router.replace({
+            query: { ...route.query, vista: "comunicacion", tab: ALIAS_COMUNICACION[vista] },
+        });
+    } else {
+        currentView.value = VISTAS_VALIDAS.includes(vista) ? vista : "overview";
+    }
     sidebarMovilAbierto.value = false; // al navegar se cierra el drawer móvil
     nextTick(() => contentRef.value?.focus({ preventScroll: true }));
 };
@@ -160,6 +174,8 @@ watch(currentView, (vista) => {
     } else {
         query.vista = vista;
     }
+    // El tab solo aplica a los contenedores con pestañas (hoy, Comunicación).
+    if (vista !== "comunicacion") delete query.tab;
     router.replace({ query });
 });
 

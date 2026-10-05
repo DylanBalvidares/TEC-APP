@@ -255,7 +255,7 @@ import {
     obtenerHistorialGlobal,
     marcarCorreoLeido,
 } from "../../../services/comunidad-service.js";
-import { obtenerUsuarios } from "../../../services/usuarios-services.js";
+import { useComunicacionStore } from "../../../stores/comunicacion.js";
 import { useTableControls } from "../../../composables/useTableControls.js";
 import DataTable from "../../ui/DataTable.vue";
 
@@ -267,6 +267,7 @@ const filtro = ref({
 });
 
 const emails = ref([]);
+const comunicacion = useComunicacionStore();
 const estadisticas = ref({
     total: 0,
     enviados: 0,
@@ -325,24 +326,18 @@ function rolRemitente(idRemitente) {
 
 // ── Carga de datos ───────────────────────────────────────────────────────
 const cargarRemitentes = async () => {
-    try {
-        const res = await obtenerUsuarios();
-        const lista = res?.data?.data ?? res?.data ?? [];
-        const mapa = {};
-        if (Array.isArray(lista)) {
-            for (const u of lista) {
-                const id = u.id_usuario ?? u.id;
-                if (id != null) {
-                    mapa[id] =
-                        u.rol?.nombre_rol || u.nombre_rol || "";
-                }
+    // Mapa de roles desde el caché compartido (antes: obtenerUsuarios por vista).
+    const ok = await comunicacion.asegurar();
+    const mapa = {};
+    if (ok && Array.isArray(comunicacion.usuarios)) {
+        for (const u of comunicacion.usuarios) {
+            const id = u.id_usuario ?? u.id;
+            if (id != null) {
+                mapa[id] = u.rol?.nombre_rol || u.nombre_rol || "";
             }
         }
-        mapaRemitentes.value = mapa;
-    } catch {
-        // Si falla, la columna muestra solo el ID crudo
-        mapaRemitentes.value = {};
     }
+    mapaRemitentes.value = mapa;
 };
 
 const cargarHistorial = async () => {
