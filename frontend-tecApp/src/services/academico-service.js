@@ -1370,3 +1370,79 @@ export const eliminarComunicado = async (
   }
 
 };
+
+ /* =========================================================
+    BOLETINES / LIBRETA
+ ========================================================= */
+
+
+/**
+ * Obtener períodos de boletines
+ *
+ * GET /api/academico/boletines/periodos
+ */
+export const obtenerPeriodosBoletines = async () => {
+
+  try {
+
+    const response = await axios.get(
+      `${API_URL}/boletines/periodos`,
+      getConfig()
+    );
+
+    return {
+      success: true,
+      data: response.data
+    };
+
+  } catch (error) {
+
+    return manejarErrorApi(error);
+
+  }
+
+};
+
+
+/**
+ * Obtener planilla de boletines de un curso
+ *
+ * GET /api/academico/boletines/planilla/curso/:id_curso
+ *
+ * Query opcional:
+ * id_periodo
+ */
+export const obtenerPlanillaBoletinCurso = async (
+  idCurso,
+  idPeriodo = null
+) => {
+
+  try {
+
+    const config = getConfig();
+
+    if (idPeriodo) {
+
+      config.params = {
+        id_periodo: idPeriodo
+      };
+
+    }
+
+    const response = await axios.get(
+      `${API_URL}/boletines/planilla/curso/${idCurso}`,
+      config
+    );
+
+    return {
+      success: true,
+      data: response.data
+    };
+
+  } catch (error) {
+
+    return manejarErrorApi(error);
+
+  }
+
+};
