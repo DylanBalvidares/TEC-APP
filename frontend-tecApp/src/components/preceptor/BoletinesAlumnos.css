@@ -1,0 +1,997 @@
+/* =========================================
+   PÁGINA
+========================================= */
+
+.boletines-page {
+    width: 100%;
+    min-height: 100%;
+}
+
+.boletines-contenido {
+    width: 100%;
+    max-width: 1250px;
+    margin: 0 auto;
+}
+
+
+/* =========================================
+   BOTÓN VOLVER
+========================================= */
+
+.volver-cursos-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    border: none;
+    background: transparent;
+
+    color: #666;
+
+    font-size: 14px;
+    font-weight: 500;
+
+    padding: 0;
+    margin-bottom: 20px;
+
+    cursor: pointer;
+
+    transition: 0.2s ease;
+}
+
+.volver-cursos-btn:hover {
+    color: #ca0d0d;
+    text-decoration: underline;
+}
+
+.volver-cursos-btn i {
+    font-size: 13px;
+}
+
+
+/* =========================================
+   ENCABEZADO
+========================================= */
+
+.boletines-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 22px;
+}
+
+.boletines-header h1 {
+    margin: 0 0 6px;
+
+    color: #2f2f2f;
+
+    font-size: 32px;
+    font-weight: 700;
+}
+
+.boletines-header p {
+    margin: 0;
+
+    color: #777;
+
+    font-size: 14px;
+}
+
+.boletines-header strong {
+    color: #555;
+}
+
+
+/* =========================================
+   ERROR
+========================================= */
+
+.boletines-error {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    background: #fff3f3;
+
+    border: 1px solid #f0c5c5;
+    border-radius: 12px;
+
+    padding: 13px 16px;
+
+    margin-bottom: 18px;
+
+    color: #b42323;
+
+    font-size: 14px;
+}
+
+.boletines-error i {
+    font-size: 16px;
+}
+
+
+/* =========================================
+   TOOLBAR
+========================================= */
+
+.boletines-toolbar {
+    width: 100%;
+
+    background: white;
+
+    border-radius: 15px;
+
+    padding: 16px;
+
+    box-shadow:
+        0 3px 10px rgba(0, 0, 0, 0.08);
+
+    margin-bottom: 12px;
+}
+
+
+/* =========================================
+   BUSCADOR
+========================================= */
+
+.buscador-boletines {
+    position: relative;
+
+    width: 100%;
+}
+
+.buscador-boletines i {
+    position: absolute;
+
+    left: 15px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    color: #999;
+
+    font-size: 14px;
+
+    pointer-events: none;
+}
+
+.buscador-boletines input {
+    width: 100%;
+    height: 45px;
+
+    padding: 0 15px 0 43px;
+
+    border: 1px solid #ddd;
+    border-radius: 10px;
+
+    outline: none;
+
+    background: #fff;
+
+    color: #333;
+
+    font-size: 14px;
+
+    box-sizing: border-box;
+
+    transition: 0.2s ease;
+}
+
+.buscador-boletines input::placeholder {
+    color: #aaa;
+}
+
+.buscador-boletines input:focus {
+    border-color: #ca0d0d;
+
+    box-shadow:
+        0 0 0 3px rgba(202, 13, 13, 0.08);
+}
+
+
+/* =========================================
+   CONTADOR
+========================================= */
+
+.boletines-contador {
+    display: flex;
+    align-items: center;
+
+    margin: 0 0 10px 3px;
+
+    color: #777;
+
+    font-size: 13px;
+}
+
+.boletines-contador span {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.boletines-contador i {
+    color: #ca0d0d;
+}
+
+
+/* =========================================
+   LISTA PRINCIPAL
+========================================= */
+
+.boletines-lista-wrapper {
+    width: 100%;
+
+    overflow-x: auto;
+}
+
+.boletines-lista {
+    width: 100%;
+    min-width: 650px;
+
+    background: white;
+
+    border-radius: 15px;
+
+    overflow: hidden;
+
+    box-shadow:
+        0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+
+/* =========================================
+   HEADER TABLA
+========================================= */
+
+.boletines-lista-header {
+    display: grid;
+
+    grid-template-columns: 1fr 180px;
+
+    align-items: center;
+
+    min-height: 48px;
+
+    padding: 0 22px;
+
+    background: #fafafa;
+
+    border-bottom: 1px solid #eee;
+
+    color: #777;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.4px;
+}
+
+.columna-accion {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+/* =========================================
+   FILA ALUMNO
+========================================= */
+
+.boletin-alumno-fila {
+    display: grid;
+
+    grid-template-columns: 1fr 180px;
+
+    align-items: center;
+
+    min-height: 72px;
+
+    padding: 0 22px;
+
+    border-bottom: 1px solid #eee;
+
+    transition: background 0.2s ease;
+}
+
+.boletin-alumno-fila:last-child {
+    border-bottom: none;
+}
+
+.boletin-alumno-fila:hover {
+    background: #fffafa;
+}
+
+
+/* =========================================
+   DATOS ALUMNO
+========================================= */
+
+.boletin-alumno-nombre {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+}
+
+.boletin-alumno-avatar {
+    width: 42px;
+    height: 42px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #f9dede;
+
+    color: #ca0d0d;
+
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.datos-alumno {
+    display: flex;
+    flex-direction: column;
+
+    gap: 4px;
+}
+
+.datos-alumno strong {
+    color: #333;
+
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.datos-alumno span {
+    color: #888;
+
+    font-size: 12px;
+}
+
+
+/* =========================================
+   BOTÓN VER BOLETÍN
+========================================= */
+
+.btn-ver-boletin {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    min-width: 135px;
+
+    padding: 9px 14px;
+
+    border: none;
+    border-radius: 9px;
+
+    background: #ca0d0d;
+
+    color: white;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: 0.2s ease;
+}
+
+.btn-ver-boletin:hover {
+    background: #a90909;
+
+    transform: translateY(-1px);
+}
+
+.btn-ver-boletin i {
+    font-size: 13px;
+}
+
+
+/* =========================================
+   ESTADOS VACÍOS / CARGANDO
+========================================= */
+
+.boletines-vacio {
+    min-height: 220px;
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 10px;
+
+    padding: 30px;
+
+    color: #999;
+
+    text-align: center;
+}
+
+.boletines-vacio > i {
+    font-size: 30px;
+
+    color: #d8b1b1;
+}
+
+.boletines-vacio p {
+    margin: 0;
+
+    font-size: 14px;
+}
+
+
+/* =========================================
+   MODAL
+========================================= */
+
+.boletin-modal {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 1000;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 25px;
+
+    background: rgba(0, 0, 0, 0.45);
+}
+
+.boletin-modal-contenido {
+    width: 100%;
+    max-width: 1050px;
+    max-height: 90vh;
+
+    overflow-y: auto;
+
+    background: white;
+
+    border-radius: 20px;
+
+    box-shadow:
+        0 15px 45px rgba(0, 0, 0, 0.2);
+
+    animation: aparecerBoletin 0.2s ease;
+}
+
+@keyframes aparecerBoletin {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+
+/* =========================================
+   HEADER MODAL
+========================================= */
+
+.boletin-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 22px 24px;
+
+    border-bottom: 1px solid #eee;
+}
+
+.boletin-modal-etiqueta {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 7px;
+
+    margin-bottom: 7px;
+
+    color: #ca0d0d;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.boletin-modal-etiqueta i {
+    font-size: 13px;
+}
+
+.boletin-modal-header h2 {
+    margin: 0 0 5px;
+
+    color: #2f2f2f;
+
+    font-size: 21px;
+}
+
+.boletin-modal-header p {
+    margin: 0;
+
+    color: #888;
+
+    font-size: 13px;
+}
+
+
+/* =========================================
+   BOTÓN CERRAR
+========================================= */
+
+.boletin-cerrar-modal {
+    width: 35px;
+    height: 35px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    border-radius: 9px;
+
+    background: #f3f3f3;
+
+    color: #666;
+
+    cursor: pointer;
+
+    transition: 0.2s ease;
+}
+
+.boletin-cerrar-modal:hover {
+    background: #fbe5e5;
+
+    color: #ca0d0d;
+}
+
+
+/* =========================================
+   TABLA BOLETÍN
+========================================= */
+
+.boletin-tabla-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    padding: 22px 24px 0;
+    box-sizing: border-box;
+}
+
+.boletin-tabla {
+    width: 100%;
+    min-width: 850px;
+
+    border-collapse: collapse;
+
+    overflow: hidden;
+
+    border: 1px solid #eee;
+    border-radius: 10px;
+
+    font-size: 13px;
+
+    table-layout: fixed;
+}
+
+.boletin-tabla th {
+    padding: 13px 12px;
+
+    background: #fafafa;
+
+    border-bottom: 1px solid #eee;
+
+    color: #666;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    text-align: center;
+
+    text-transform: uppercase;
+}
+
+.boletin-tabla th:first-child {
+    text-align: left;
+    width: 25%;
+}
+
+.boletin-tabla td {
+    padding: 14px 12px;
+
+    border-bottom: 1px solid #eee;
+
+    color: #555;
+
+    text-align: center;
+}
+
+.boletin-tabla td:first-child {
+    text-align: left;
+}
+
+.boletin-tabla tbody tr:last-child td {
+    border-bottom: none;
+}
+/* =========================================
+   SIN CALIFICACIONES
+========================================= */
+
+.boletin-sin-datos {
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+
+    text-align: center;
+
+    padding: 30px 35px 25px;
+}
+
+.boletin-sin-datos-icono {
+    width: 52px;
+    height: 52px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-bottom: 12px;
+
+    border-radius: 50%;
+
+    background: #f9dede;
+
+    color: #ca0d0d;
+
+    font-size: 20px;
+}
+
+.boletin-sin-datos h3 {
+    margin: 0 0 7px;
+
+    color: #444;
+
+    font-size: 16px;
+}
+
+.boletin-sin-datos p {
+    max-width: 580px;
+
+    margin: 0;
+
+    color: #888;
+
+    font-size: 13px;
+
+    line-height: 1.6;
+}
+
+
+/* =========================================
+   FOOTER MODAL
+========================================= */
+
+.boletin-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+
+    padding: 0 24px 22px;
+}
+
+.btn-cerrar-boletin {
+    padding: 10px 20px;
+
+    border: none;
+    border-radius: 9px;
+
+    background: #ca0d0d;
+
+    color: white;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: 0.2s ease;
+}
+
+.btn-cerrar-boletin:hover {
+    background: #a90909;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 900px) {
+
+    .boletines-contenido {
+        padding: 0 15px;
+        box-sizing: border-box;
+    }
+
+    .boletines-header h1 {
+        font-size: 28px;
+    }
+
+    .boletin-modal {
+        padding: 15px;
+    }
+
+    .boletin-modal-contenido {
+        max-height: 94vh;
+    }
+
+}
+
+
+@media (max-width: 700px) {
+
+    .boletines-header h1 {
+        font-size: 25px;
+    }
+
+    .boletines-header p {
+        font-size: 13px;
+    }
+
+    .boletines-lista {
+        min-width: 580px;
+    }
+
+    .boletines-lista-header,
+    .boletin-alumno-fila {
+        grid-template-columns: 1fr 150px;
+
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    .btn-ver-boletin {
+        min-width: auto;
+
+        padding: 8px 11px;
+    }
+
+    .btn-ver-boletin i {
+        margin-right: 0;
+    }
+
+    .boletin-modal-header {
+        padding: 18px;
+    }
+
+    .boletin-tabla-wrapper {
+        padding: 18px 18px 0;
+    }
+
+    .boletin-sin-datos {
+        padding: 25px 20px 20px;
+    }
+
+    .boletin-modal-footer {
+        padding: 0 18px 18px;
+    }
+
+}
+
+
+@media (max-width: 500px) {
+
+    .boletines-header h1 {
+        font-size: 23px;
+    }
+
+    .boletines-toolbar {
+        padding: 12px;
+    }
+
+    .boletines-lista-header,
+    .boletin-alumno-fila {
+        grid-template-columns: 1fr 130px;
+    }
+
+    .boletin-alumno-avatar {
+        width: 38px;
+        height: 38px;
+
+        font-size: 12px;
+    }
+
+    .datos-alumno strong {
+        font-size: 13px;
+    }
+
+    .datos-alumno span {
+        font-size: 11px;
+    }
+
+    .btn-ver-boletin {
+        font-size: 12px;
+    }
+
+}
+
+/* =========================================
+   INFORMACIÓN DEL ALUMNO
+========================================= */
+
+.boletin-info {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 12px;
+
+    padding: 20px 24px 0;
+}
+
+.boletin-info-item {
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
+
+    padding: 13px 15px;
+
+    background: #fafafa;
+
+    border: 1px solid #eeeeee;
+
+    border-radius: 10px;
+}
+
+.boletin-info-item span {
+    color: #888;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    text-transform: uppercase;
+}
+
+.boletin-info-item strong {
+    color: #444;
+
+    font-size: 13px;
+}
+
+.estado-cargado {
+    display: flex;
+    align-items: center;
+
+    gap: 6px;
+
+    color: #438a55 !important;
+}
+
+.estado-cargado i {
+    font-size: 11px;
+}
+
+
+/* =========================================
+   NOMBRE DE MATERIA
+========================================= */
+
+.materia-nombre {
+    font-weight: 600;
+
+    color: #3a3a3a !important;
+}
+
+
+/* =========================================
+   PROMEDIO
+========================================= */
+
+.promedio {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    min-width: 42px;
+
+    padding: 5px 8px;
+
+    border-radius: 7px;
+
+    background: #f9dede;
+
+    color: #ca0d0d;
+
+    font-size: 13px;
+}
+
+
+/* =========================================
+   PROMEDIO GENERAL
+========================================= */
+
+.promedio-general {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    margin: 18px 24px 0;
+
+    padding: 15px 18px;
+
+    border-radius: 12px;
+
+    background: #fff8f8;
+
+    border: 1px solid #f2dada;
+}
+
+.promedio-general div {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 4px;
+}
+
+.promedio-general span {
+    color: #888;
+
+    font-size: 12px;
+}
+
+.promedio-general strong {
+    color: #ca0d0d;
+
+    font-size: 22px;
+}
+
+.promedio-general > i {
+    color: #ca0d0d;
+
+    font-size: 20px;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 700px) {
+
+    .boletin-info {
+        grid-template-columns: 1fr;
+
+        padding: 18px 18px 0;
+    }
+
+    .promedio-general {
+        margin-left: 18px;
+        margin-right: 18px;
+    }
+
+}
