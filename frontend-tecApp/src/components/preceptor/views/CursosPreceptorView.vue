@@ -1,196 +1,147 @@
-
 <template>
   <div class="cursos-view">
 
     <!-- =========================
          VISTA DE CURSOS
     ========================== -->
-    <template v-if="!cursoSeleccionado">
 
-      <div class="boletines-header">
-        <h1>Cursos</h1>
-        <p>Seleccioná un curso para ver el listado de alumnos.</p>
-      </div>
+    <div class="boletines-header">
+      <h1>Cursos</h1>
 
-      <!-- Cargando -->
-      <div v-if="cargandoCursos" class="mensaje-estado">
-        <i class="fas fa-spinner fa-spin"></i>
-        Cargando cursos...
-      </div>
+      <p>
+        Seleccioná qué querés consultar del curso.
+      </p>
+    </div>
 
-      <!-- Error -->
-      <div v-else-if="errorCursos" class="mensaje-estado error">
-        <i class="fas fa-circle-exclamation"></i>
-        {{ errorCursos }}
-      </div>
 
-      <!-- Sin cursos -->
-      <div v-else-if="cursos.length === 0" class="mensaje-estado">
-        <i class="fas fa-school"></i>
-        No hay cursos disponibles.
-      </div>
+    <!-- =========================
+         CARGANDO
+    ========================== -->
 
-      <!-- Cursos -->
-      <div v-else class="cursos-container">
+    <div
+      v-if="cargandoCursos"
+      class="mensaje-estado"
+    >
+      <i class="fas fa-spinner fa-spin"></i>
+      Cargando cursos...
+    </div>
 
-        <div
-          v-for="curso in cursos"
-          :key="curso.id_curso"
-          class="curso-card"
-        >
 
-          <div class="curso-card-top">
+    <!-- =========================
+         ERROR
+    ========================== -->
 
-            <div class="curso-icon">
-              🎓
-            </div>
+    <div
+      v-else-if="errorCursos"
+      class="mensaje-estado error"
+    >
+      <i class="fas fa-circle-exclamation"></i>
+      {{ errorCursos }}
+    </div>
 
-            <span class="curso-turno">
-              {{ curso.turno || "Sin turno" }}
-            </span>
 
+    <!-- =========================
+         SIN CURSOS
+    ========================== -->
+
+    <div
+      v-else-if="cursos.length === 0"
+      class="mensaje-estado"
+    >
+      <i class="fas fa-school"></i>
+      No hay cursos disponibles.
+    </div>
+
+
+    <!-- =========================
+         CURSOS
+    ========================== -->
+
+    <div
+      v-else
+      class="cursos-container"
+    >
+
+      <div
+        v-for="curso in cursos"
+        :key="curso.id_curso"
+        class="curso-card"
+      >
+
+        <!-- Parte superior -->
+        <div class="curso-card-top">
+
+          <div class="curso-icon">
+            🎓
           </div>
 
-          <div class="curso-info">
+          <span class="curso-turno">
+            {{ curso.turno || "Sin turno" }}
+          </span>
 
-            <h2>
-              {{ curso.nombre_curso }}
-            </h2>
+        </div>
 
-            <p>
-              {{ curso.nivel || "Nivel no especificado" }}
-            </p>
 
-          </div>
+        <!-- Información -->
+        <div class="curso-info">
 
+          <h2>
+            {{ curso.nombre_curso }}
+          </h2>
+
+          <p>
+            {{ curso.nivel || "Nivel no especificado" }}
+          </p>
+
+        </div>
+
+
+        <!-- Acciones -->
+        <div class="curso-acciones">
+
+          <!-- Administrar alumnos -->
           <button
             class="curso-btn"
             type="button"
             @click="seleccionarCurso(curso)"
           >
+            <i class="fas fa-users"></i>
             Ver alumnos
-            <i class="fas fa-arrow-right"></i>
+          </button>
+
+
+          <!-- Consultar boletines -->
+          <button
+            class="curso-btn curso-btn-boletines"
+            type="button"
+            @click="verBoletines(curso)"
+          >
+            <i class="fas fa-file-lines"></i>
+            Ver boletines
           </button>
 
         </div>
 
       </div>
 
-    </template>
-
-
-    <!-- =========================
-         VISTA DE ALUMNOS
-    ========================== -->
-    <template v-else>
-
-      <button
-        type="button"
-        class="volver-cursos"
-        @click="volverCursos"
-      >
-        <i class="fas fa-arrow-left"></i>
-        Volver a cursos
-      </button>
-
-
-      <div class="boletines-header">
-
-        <h1>
-          {{ cursoSeleccionado.nombre_curso }}
-        </h1>
-
-        <p>
-          Listado de alumnos
-        </p>
-
-      </div>
-
-
-      <!-- Cargando alumnos -->
-      <div v-if="cargandoAlumnos" class="mensaje-estado">
-        <i class="fas fa-spinner fa-spin"></i>
-        Cargando alumnos...
-      </div>
-
-
-      <!-- Error alumnos -->
-      <div v-else-if="errorAlumnos" class="mensaje-estado error">
-        <i class="fas fa-circle-exclamation"></i>
-        {{ errorAlumnos }}
-      </div>
-
-
-      <!-- Sin alumnos -->
-      <div v-else-if="alumnos.length === 0" class="mensaje-estado">
-        <i class="fas fa-user-slash"></i>
-        No hay alumnos registrados en este curso.
-      </div>
-
-
-      <!-- Lista de alumnos -->
-      <div v-else class="alumnos-container">
-
-        <div class="alumnos-header">
-          <span>Alumno</span>
-          <span>DNI</span>
-          <span>Estado</span>
-        </div>
-
-
-        <div
-          v-for="alumno in alumnos"
-          :key="alumno.id_alumno"
-          class="alumno-fila"
-        >
-
-          <div class="alumno-info">
-
-            <div class="alumno-avatar">
-              {{ obtenerIniciales(alumno) }}
-            </div>
-
-            <div>
-              <strong>
-                {{ alumno.apellido }}, {{ alumno.nombre }}
-              </strong>
-            </div>
-
-          </div>
-
-
-          <span class="alumno-dni">
-            {{ alumno.dni || "—" }}
-          </span>
-
-
-          <span
-            class="alumno-estado"
-            :class="obtenerClaseEstado(alumno)"
-          >
-            {{ obtenerEstado(alumno) }}
-          </span>
-
-        </div>
-
-      </div>
-
-    </template>
+    </div>
 
   </div>
 </template>
+
 
 <script setup>
 
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 
-
 import {
   obtenerCursos
 } from "@/services/academico-service.js";
 
+
 const router = useRouter();
+
 
 // ==========================================
 //                 CURSOS
@@ -199,8 +150,8 @@ const router = useRouter();
 const cursos = ref([]);
 
 const cargandoCursos = ref(false);
-const errorCursos = ref("");
 
+const errorCursos = ref("");
 
 
 // ==========================================
@@ -210,6 +161,7 @@ const errorCursos = ref("");
 const cargarCursos = async () => {
 
   cargandoCursos.value = true;
+
   errorCursos.value = "";
 
   const resultado = await obtenerCursos();
@@ -221,7 +173,8 @@ const cargarCursos = async () => {
   } else {
 
     errorCursos.value =
-      resultado.message || "No se pudieron obtener los cursos.";
+      resultado.message ||
+      "No se pudieron obtener los cursos.";
 
   }
 
@@ -230,72 +183,27 @@ const cargarCursos = async () => {
 
 
 // ==========================================
-//          SELECCIONAR UN CURSO
+//        IR A ADMINISTRAR ALUMNOS
 // ==========================================
 
 const seleccionarCurso = (curso) => {
-  router.push(`/preceptor/alumnos/${curso.id_curso}`);
-}
 
-
-
-// ==========================================
-//             VOLVER A CURSOS
-// ==========================================
-
-const volverCursos = () => {
-
-  cursoSeleccionado.value = null;
-
-  alumnos.value = [];
-
-  errorAlumnos.value = "";
+  router.push(
+    `/preceptor/alumnos/${curso.id_curso}`
+  );
 
 };
 
 
 // ==========================================
-//               INICIALES
+//           IR A BOLETINES
 // ==========================================
 
-const obtenerIniciales = (alumno) => {
+const verBoletines = (curso) => {
 
-  const nombre = alumno.nombre || "";
-  const apellido = alumno.apellido || "";
-
-  return (
-    nombre.charAt(0) +
-    apellido.charAt(0)
-  ).toUpperCase();
-
-};
-
-
-// ==========================================
-//                ESTADO
-// ==========================================
-
-const obtenerEstado = (alumno) => {
-
-  if (alumno.estado) {
-    return alumno.estado;
-  }
-
-  return "—";
-
-};
-
-
-const obtenerClaseEstado = (alumno) => {
-
-  if (!alumno.estado) {
-    return "";
-  }
-
-  return alumno.estado
-    .toString()
-    .toLowerCase()
-    .replace(/\s+/g, "-");
+  router.push(
+    `/preceptor/boletines/${curso.id_curso}`
+  );
 
 };
 
@@ -309,170 +217,125 @@ onMounted(() => {
   cargarCursos();
 
 });
+
 </script>
 
 
 <style scoped>
+
 /* ==========================================
    MENSAJES DE ESTADO
 ========================================== */
 
 .mensaje-estado {
+
   padding: 50px 20px;
+
   text-align: center;
+
   color: #777;
+
   font-size: 15px;
+
 }
 
 .mensaje-estado i {
+
   margin-right: 8px;
+
 }
 
 .mensaje-estado.error {
+
   color: #c0152a;
+
 }
 
 
 /* ==========================================
-   VOLVER A CURSOS
+   ACCIONES DE CADA CURSO
 ========================================== */
 
-.volver-cursos {
-  display: inline-flex;
+.curso-acciones {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 10px;
+
+  margin-top: 18px;
+
+}
+
+
+/* ==========================================
+   BOTONES
+========================================== */
+
+.curso-btn {
+
+  width: 100%;
+
+  display: flex;
+
   align-items: center;
+
+  justify-content: center;
+
   gap: 8px;
 
-  padding: 0;
-  margin-bottom: 25px;
+  padding: 11px 16px;
 
   border: none;
-  background: transparent;
 
-  color: #666;
+  border-radius: 10px;
+
+  background: #c0152a;
+
+  color: #ffffff;
 
   font-family: inherit;
-  font-size: 14px;
-  font-weight: 600;
 
-  text-decoration: underline;
-  text-underline-offset: 4px;
+  font-size: 13px;
+
+  font-weight: 600;
 
   cursor: pointer;
 
-  transition: color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+
 }
 
-.volver-cursos:hover {
-  color: #c0152a;
+.curso-btn:hover {
+
+  background: #a91023;
+
+  transform: translateY(-1px);
+
 }
 
 
 /* ==========================================
-   LISTADO DE ALUMNOS
+   BOTÓN BOLETINES
 ========================================== */
 
-.alumnos-container {
-  width: 100%;
+.curso-btn-boletines {
 
-  background: #ffffff;
-
-  border-radius: 18px;
-
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-
-  overflow: hidden;
-}
-
-
-.alumnos-header,
-.alumno-fila {
-  display: grid;
-
-  grid-template-columns:
-    minmax(250px, 1.5fr)
-    1fr
-    150px;
-
-  align-items: center;
-
-  gap: 20px;
-}
-
-
-.alumnos-header {
-  padding: 15px 22px;
-
-  background: #f7f7f7;
-
-  color: #777;
-
-  font-size: 12px;
-  font-weight: 700;
-
-  text-transform: uppercase;
-}
-
-
-.alumno-fila {
-  padding: 16px 22px;
-
-  border-top: 1px solid #eeeeee;
-}
-
-
-.alumno-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-
-.alumno-avatar {
-  width: 42px;
-  height: 42px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 50%;
-
-  background: #f0e3ff;
+  background: #f3e9ff;
 
   color: #6f3fa3;
 
-  font-size: 13px;
-  font-weight: 700;
-
-  flex-shrink: 0;
 }
 
+.curso-btn-boletines:hover {
 
-.alumno-info strong {
-  font-size: 14px;
-  color: #333;
-}
+  background: #e7d5fa;
 
+  color: #5c3188;
 
-.alumno-dni {
-  color: #777;
-  font-size: 14px;
-}
-
-
-.alumno-estado {
-  justify-self: start;
-
-  padding: 6px 11px;
-
-  border-radius: 20px;
-
-  background: #f5f5f5;
-
-  color: #777;
-
-  font-size: 12px;
-  font-weight: 600;
 }
 
 
@@ -480,20 +343,22 @@ onMounted(() => {
    RESPONSIVE
 ========================================== */
 
-@media (max-width: 800px) {
+@media (max-width: 600px) {
 
-  .alumnos-header {
-    display: none;
-  }
+  .curso-acciones {
 
-  .alumno-fila {
-    grid-template-columns: 1fr;
     gap: 8px;
+
   }
 
-  .alumno-estado {
-    justify-self: start;
+  .curso-btn {
+
+    font-size: 12px;
+
+    padding: 10px 12px;
+
   }
 
 }
+
 </style>
