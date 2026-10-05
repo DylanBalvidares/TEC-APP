@@ -20,6 +20,8 @@ const NoticiasView = () => import("../components/alumno/views/NoticiaView.vue");
 const CursosView = () => import("../components/alumno/views/CursosView.vue");
 const ObjetosPerdidosView = () =>
   import("../components/alumno/views/ObjetosPerdidosView.vue");
+const BoletinesAlumnosView = () =>
+  import("../components/preceptor/views/BoletinesAlumnosView.vue");
 
 // Biblioteca y otros
 const Biblioteca = () => import("../components/bibliotecario/Biblioteca.vue");
@@ -205,6 +207,11 @@ const routes = [
       {
         path: "mensajes",
         component: MensajesPreceptorView,
+      },
+
+      {
+        path: "boletines/:id_curso",
+        component: BoletinesAlumnosView,
       },
 
       {
