@@ -63,6 +63,10 @@ const LibretaDigitalViewProfesor = () =>
   import("../components/profesores/views/LibretaDigitalView.vue");
 const LibretaPreceptorView = () =>
   import("../components/preceptor/views/LibretaPreceptorView.vue");
+const BoletinesPreceptorView = () =>
+  import("../components/preceptor/views/BoletinesPreceptorView.vue");
+const BoletinProfesorView = () =>
+  import("../components/profesores/views/BoletinProfesorView.vue");
 
 // WhatsApp
 const MensajesProfesorView = () =>
@@ -144,6 +148,7 @@ const routes = [
       { path: "materias", component: MateriasView },
       { path: "asistencias", component: AsistenciasView },
       { path: "libreta", component: LibretaDigitalViewProfesor },
+      { path: "boletines", component: BoletinProfesorView },
       { path: "plan", component: PlanEstudioViewProfesor },
       { path: "mensajes", component: MensajesProfesorView },
       { path: "", redirect: "/profesor/inicio" }, // Si entran a /alumno, van a inicio
@@ -175,7 +180,7 @@ const routes = [
 
       {
         path: "boletines",
-        redirect: "/preceptor/libreta",
+        component: BoletinesPreceptorView,
       },
 
       {

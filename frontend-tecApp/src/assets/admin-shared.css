@@ -10,6 +10,12 @@
     --card-bg: #ffffff;
     --nav-active-bg: #fbf0f0;
     --nav-active-fg: #a52420;
+    /* Alias de Boletines (ver BoletinesAdminView): mapean a la paleta base. */
+    --boletin-ink: #172033;
+    --boletin-muted: #687386;
+    --boletin-line: #e5e9f0;
+    --boletin-surface: #ffffff;
+    --boletin-soft: #f6f7f9;
 }
 
 /* ── Transiciones y Microanimaciones ────────────────────────────────────── */
@@ -721,6 +727,12 @@ html[data-tema="oscuro"] {
     --card-bg: #111827;
     --nav-active-bg: rgba(205, 50, 44, 0.22);
     --nav-active-fg: #fca5a5;
+    /* Alias de Boletines en modo oscuro. */
+    --boletin-ink: #f3f4f6;
+    --boletin-muted: #9ca3af;
+    --boletin-line: #374151;
+    --boletin-surface: #111827;
+    --boletin-soft: #1f2937;
     color-scheme: dark;
 }
 html[data-tema="oscuro"] body,

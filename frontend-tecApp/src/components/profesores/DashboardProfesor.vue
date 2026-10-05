@@ -88,6 +88,12 @@
                         </RouterLink>
                     </li>
                     <li @click="sidebarAbierto = false">
+                        <RouterLink to="/profesor/boletines" active-class="active" aria-label="Boletines">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 12h6m-6 4h6M9 8h6M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            Boletines
+                        </RouterLink>
+                    </li>
+                    <li @click="sidebarAbierto = false">
                         <RouterLink to="/profesor/plan" active-class="active" aria-label="Plan de Estudios">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                             Plan de Estudios

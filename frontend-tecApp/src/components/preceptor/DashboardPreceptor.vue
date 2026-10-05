@@ -221,6 +221,24 @@
           </li>
 
 
+          <!-- BOLETINES CUATRIMESTRALES -->
+
+          <li @click="sidebarAbierto = false">
+
+            <RouterLink
+              to="/preceptor/boletines"
+              active-class="active"
+            >
+
+              <i class="fas fa-file-invoice"></i>
+
+              Boletines
+
+            </RouterLink>
+
+          </li>
+
+
           <!-- PLAN DE ESTUDIOS -->
 
           <li @click="sidebarAbierto = false">
