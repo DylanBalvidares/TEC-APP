@@ -11,6 +11,12 @@ import Personal from "./personal-model.js";
 import Materia from "./materias-model.js";
 import Nota from "./notas-model.js";
 import HistorialNota from "./historial-notas-model.js";
+import PeriodoBoletin from "./periodos-boletin-model.js";
+import BoletinMateria from "./boletin-materias-model.js";
+import BoletinCalificacion from "./boletin-calificaciones-model.js";
+import BoletinFinalizacion from "./boletin-finalizaciones-model.js";
+import BoletinReapertura from "./boletin-reaperturas-model.js";
+import BoletinHistorial from "./boletin-historial-model.js";
 import Asignacion from "./asignaciones-model.js";
 import Cargo from "./cargos-model.js";
 import PlanEstudio from "./planes-estudio-model.js";
@@ -92,6 +98,40 @@ HistorialNota.belongsTo(Alumno, { foreignKey: "id_alumno" });
 HistorialNota.belongsTo(Asignacion, { foreignKey: "id_asignacion" });
 HistorialNota.belongsTo(Usuario, { foreignKey: "modificado_por", as: "usuarioModificador" });
 
+// ==========================================
+// Relaciones: Boletines cuatrimestrales
+// (aditivo: no toca Nota ni HistorialNota)
+// ==========================================
+PeriodoBoletin.hasMany(BoletinMateria, { foreignKey: "id_periodo" });
+BoletinMateria.belongsTo(PeriodoBoletin, { foreignKey: "id_periodo" });
+Asignacion.hasMany(BoletinMateria, { foreignKey: "id_asignacion" });
+BoletinMateria.belongsTo(Asignacion, { foreignKey: "id_asignacion" });
+BoletinMateria.belongsTo(Profesor, { foreignKey: "id_profesor", as: "profesorSnapshot" });
+BoletinMateria.belongsTo(PlanEstudio, { foreignKey: "id_plan", as: "planSnapshot" });
+
+PeriodoBoletin.hasMany(BoletinCalificacion, { foreignKey: "id_periodo" });
+BoletinCalificacion.belongsTo(PeriodoBoletin, { foreignKey: "id_periodo" });
+
+Asignacion.hasMany(BoletinCalificacion, { foreignKey: "id_asignacion" });
+BoletinCalificacion.belongsTo(Asignacion, { foreignKey: "id_asignacion" });
+
+Alumno.hasMany(BoletinCalificacion, { foreignKey: "id_alumno" });
+BoletinCalificacion.belongsTo(Alumno, { foreignKey: "id_alumno" });
+
+PeriodoBoletin.hasMany(BoletinFinalizacion, { foreignKey: "id_periodo" });
+BoletinFinalizacion.belongsTo(PeriodoBoletin, { foreignKey: "id_periodo" });
+Asignacion.hasMany(BoletinFinalizacion, { foreignKey: "id_asignacion" });
+BoletinFinalizacion.belongsTo(Asignacion, { foreignKey: "id_asignacion" });
+
+PeriodoBoletin.hasMany(BoletinReapertura, { foreignKey: "id_periodo" });
+BoletinReapertura.belongsTo(PeriodoBoletin, { foreignKey: "id_periodo" });
+Asignacion.hasMany(BoletinReapertura, { foreignKey: "id_asignacion" });
+BoletinReapertura.belongsTo(Asignacion, { foreignKey: "id_asignacion" });
+
+PeriodoBoletin.hasMany(BoletinHistorial, { foreignKey: "id_periodo" });
+BoletinHistorial.belongsTo(PeriodoBoletin, { foreignKey: "id_periodo" });
+BoletinHistorial.belongsTo(Usuario, { foreignKey: "modificado_por", as: "usuarioModificador" });
+
 Cargo.hasMany(Personal, { foreignKey: "id_cargo" });
 Personal.belongsTo(Cargo, { foreignKey: "id_cargo", as: "cargoPersonal" });
 
@@ -137,6 +177,12 @@ export {
   Asignacion,
   Nota,
   HistorialNota,
+  PeriodoBoletin,
+  BoletinMateria,
+  BoletinCalificacion,
+  BoletinFinalizacion,
+  BoletinReapertura,
+  BoletinHistorial,
   Materia,
   PlanEstudio,
   PlanMateria,

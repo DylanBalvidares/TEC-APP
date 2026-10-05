@@ -1,0 +1,225 @@
+ESPECIFICACIÓN Y PLAN DE IMPLEMENTACIÓN — BOLETINES DIGITALES
+Proyecto: TEC-APP
+Fecha de recopilación: 2026-10-03
+Estado: especificación funcional; no implementada
+
+1. OBJETIVO
+
+Implementar boletines digitales cuatrimestrales que permitan a los profesores
+cargar la calificación final de cada alumno por materia, a los preceptores
+consultar las planillas una vez finalizadas por los profesores y a administración
+controlar el período de carga y las reaperturas.
+
+2. REGLAS FUNCIONALES CONFIRMADAS
+
+2.1 Períodos
+- Los boletines son cuatrimestrales: primer y segundo cuatrimestre de cada ciclo
+  lectivo.
+- Administración configura para cada período una fecha de inicio y una fecha de
+  cierre de carga.
+- La escritura queda habilitada únicamente durante el período configurado.
+- Una vez cerrado el período, no se permite escribir hasta que administración lo
+  reabra.
+
+2.2 Calificaciones
+- Se registra una sola calificación final y definitiva por alumno, materia y
+  cuatrimestre.
+- Los tipos de calificación admitidos son:
+  - Numérica, usando el rango actual de la libreta: 0 a 10.
+  - TED: Trayectoria Educativa Discontinua.
+  - TEP: Trayectoria Educativa en Proceso.
+  - TEA: Trayectoria Educativa Avanzada.
+- Una calificación numérica 0 es válida y no equivale a falta de calificación.
+- Si no corresponde cargar una calificación, se permite indicar “Sin calificar”
+  y se exige un motivo obligatorio.
+- La ausencia de un dato no debe convertirse automáticamente en 0 ni en “Sin
+  calificar”; debe quedar como pendiente hasta que el profesor la resuelva.
+
+2.3 Materias y responsables
+- Se incluyen las materias del plan de estudios aplicable al curso y ciclo
+  lectivo.
+- Cada materia incluida debe tener un profesor responsable asignado antes de
+  poder completar el boletín del curso.
+- No se contempla omitir automáticamente una materia sin profesor asignado.
+
+2.4 Roles y permisos
+- Administración:
+  - Configura los períodos y sus fechas.
+  - Habilita y cierra la carga.
+  - Puede reabrir la carga.
+  - Puede supervisar los boletines.
+- Profesor:
+  - Carga calificaciones solo para sus asignaciones.
+  - Puede guardar avances y finalizar la carga de una materia.
+  - Puede solicitar una reapertura, pero no puede aprobarla ni ejecutarla.
+- Preceptor:
+  - Tiene acceso de solo lectura.
+  - Puede consultar la planilla de una materia cuando el profesor responsable
+    finaliza la carga.
+  - Puede consultar el boletín consolidado del curso cuando todas las materias
+    aplicables están finalizadas.
+- Primera etapa de consulta: uso interno por administración, profesores en sus
+  propias cargas y preceptores según las reglas anteriores.
+- El acceso de alumnos/familias y la descarga en PDF quedan fuera del alcance
+  inicial y pueden tratarse en una etapa posterior.
+
+2.5 Reaperturas y auditoría
+- El profesor solicita la reapertura.
+- Administración decide y ejecuta la reapertura.
+- La solicitud, la decisión, el usuario que intervino, las fechas y los cambios
+  posteriores deben quedar registrados en el historial.
+- Las calificaciones finales y definitivas solo pueden modificarse cuando la
+  carga esté abierta o haya sido reabierta por administración.
+
+3. FLUJO OPERATIVO
+
+1. Administración crea o selecciona el ciclo lectivo y el cuatrimestre, y define
+   fechas de inicio y cierre.
+2. Al preparar la carga, el sistema determina las materias del plan de estudios
+   que corresponden al curso y período, y exige que cada materia tenga profesor
+   responsable.
+3. Durante el período abierto, cada profesor carga la calificación final por
+   alumno y materia. Puede elegir una nota numérica, TED, TEP, TEA o “Sin
+   calificar” con motivo obligatorio.
+4. El profesor guarda avances y finaliza la carga de cada materia cuando todos
+   los alumnos estén resueltos.
+5. Al finalizar un profesor, el preceptor puede consultar la planilla de esa
+   materia.
+6. Cuando todas las materias aplicables del curso están finalizadas, el
+   preceptor puede consultar el boletín consolidado.
+7. Al llegar la fecha de cierre, el sistema bloquea la escritura.
+8. Si hace falta corregir datos tras el cierre, el profesor solicita reapertura y
+   administración la aprueba o rechaza. Una reapertura aprobada queda auditada.
+
+4. ESTADOS SUGERIDOS PARA EL FLUJO
+
+- Período: programado, abierto, cerrado.
+- Carga por materia: pendiente, en progreso, finalizada.
+- Calificación por alumno y materia: pendiente, numérica, TED, TEP, TEA o “Sin
+  calificar” con motivo.
+- Solicitud de reapertura: pendiente, aprobada o rechazada.
+
+Los estados son una propuesta técnica para representar las reglas funcionales;
+los nombres definitivos pueden ajustarse durante el diseño.
+
+5. SITUACIÓN ACTUAL DE LA LIBRETA DIGITAL
+
+- El backend publica las rutas bajo /api/academico y requiere autenticación.
+- El router de notas está en backend-tecApp/src/modules/academico/notas-router.js.
+- La nota actual es numérica, de 0 a 10, y no tiene período cuatrimestral.
+- La operación actual de carga hace upsert por alumno y asignación; no conserva
+  una calificación separada por cuatrimestre.
+- La vista del alumno calcula promedios a partir de las notas existentes.
+- El historial actual registra cambios de notas.
+- La ruta frontend /preceptor/boletines redirige actualmente a
+  /preceptor/libreta; aún no existe el flujo de boletines definido aquí.
+- Las calificaciones de boletín deben almacenarse separadas de las notas
+  actuales para no sobrescribirlas ni atribuirles un cuatrimestre que no tienen.
+- La lista de materias aplicable debe fijarse para el ciclo/período al habilitar
+  la carga, para evitar que cambios posteriores del plan alteren un boletín ya
+  iniciado.
+
+6. ENDPOINTS ACTUALES DE LIBRETA DIGITAL
+
+Todas estas rutas se montan bajo /api/academico y requieren autenticación.
+
+- GET    /api/academico/notas/profesor
+  Obtiene asignaciones, alumnos y notas del profesor autenticado.
+- GET    /api/academico/notas/preceptor/curso/:id_curso
+  Consulta la planilla de notas del curso; el backend comprueba la asignación
+  del curso al preceptor.
+- GET    /api/academico/notas/mis-notas
+  Permite al alumno consultar sus propias notas y promedios.
+- GET    /api/academico/notas/historial/alumno/:id_alumno
+  Consulta el historial con control de acceso por rol y pertenencia.
+- POST   /api/academico/notas
+  Crea o actualiza (upsert) la calificación numérica existente.
+- PATCH  /api/academico/notas
+  Modifica una nota existente.
+- DELETE /api/academico/notas/:id
+  Elimina una nota existente.
+- GET    /api/academico/notas/:id
+  Ruta legada para consultar una nota por ID.
+- GET    /api/academico/notas
+  Ruta legada para consultar todas las notas.
+
+Las rutas de notas actuales no son endpoints de boletines. Las rutas nuevas
+deberán diseñarse después de definir el modelo de datos y los permisos.
+
+7. PLAN DE IMPLEMENTACIÓN POR ETAPAS
+
+Etapa 1 — Revisión y diseño
+- Revisar relaciones actuales entre cursos, alumnos, asignaciones, materias,
+  profesores, planes de estudio, permisos y auditoría.
+- Definir el esquema aditivo para períodos, calificaciones de boletín, estado de
+  finalización por materia y solicitudes de reapertura.
+- No modificar ni borrar calificaciones actuales.
+- Revisar el diseño antes de implementar migraciones.
+
+Etapa 2 — Períodos y preparación del curso
+- Implementar administración de ciclos, cuatrimestres y fechas.
+- Implementar apertura y cierre de carga.
+- Determinar y fijar las materias aplicables al curso y período.
+- Impedir habilitar el cierre final del curso si hay materias sin profesor
+  responsable.
+
+Etapa 3 — Carga del profesor
+- Implementar consulta de alumnos y materias asignadas por período.
+- Implementar guardado de calificación final por alumno y materia.
+- Validar numéricos (0–10), TED, TEP, TEA y “Sin calificar” con motivo.
+- Asegurar que el profesor solo escriba en sus asignaciones y durante un período
+  abierto.
+- Registrar auditoría de las altas y modificaciones.
+
+Etapa 4 — Finalización de materia
+- Implementar guardado de avances y acción explícita de finalizar.
+- Bloquear la finalización si quedan alumnos pendientes.
+- Al finalizar, habilitar la planilla correspondiente para lectura del preceptor.
+- Mantener el boletín consolidado bloqueado mientras quede alguna materia
+  aplicable sin finalizar.
+
+Etapa 5 — Consulta del preceptor y supervisión administrativa
+- Implementar planillas de solo lectura para materias finalizadas.
+- Implementar boletín consolidado cuando todas las materias estén finalizadas.
+- Incorporar supervisión administrativa según permisos definidos.
+- Conectar la ruta frontend /preceptor/boletines con la nueva vista cuando el
+  flujo esté disponible.
+
+Etapa 6 — Solicitudes y reaperturas
+- Permitir que el profesor solicite reapertura e indique un motivo.
+- Permitir que administración apruebe o rechace la solicitud.
+- Al aprobar, habilitar la escritura para el alcance autorizado y auditar la
+  acción y los cambios siguientes.
+
+Etapa 7 — Verificación y habilitación gradual
+- Verificar permisos por rol y acceso a cursos/asignaciones ajenos.
+- Verificar que el período cerrado bloquee escrituras desde API.
+- Verificar validación de calificaciones, motivos y datos pendientes.
+- Verificar finalización por materia y disponibilidad del consolidado.
+- Verificar reapertura y auditoría.
+- Habilitar primero un período controlado antes del uso institucional general.
+
+8. CRITERIOS DE ACEPTACIÓN PRINCIPALES
+
+- Existe una sola calificación final por alumno, materia y cuatrimestre.
+- Las calificaciones de períodos distintos no se pisan.
+- El valor numérico 0 se distingue de una calificación pendiente o “Sin
+  calificar”.
+- “Sin calificar” exige motivo.
+- No se puede finalizar una materia si tiene alumnos pendientes.
+- No se puede completar el boletín del curso si alguna materia del plan no tiene
+  responsable o no fue finalizada.
+- El profesor solo accede a las materias que tiene asignadas.
+- El preceptor solo ve planillas finalizadas y no puede editarlas.
+- Las fechas del período y el cierre se aplican en el backend.
+- Solo administración puede ejecutar reaperturas.
+- Las calificaciones actuales de libreta permanecen disponibles y sin cambios.
+
+9. FUERA DEL ALCANCE INICIAL
+
+- Acceso de alumnos y familias a los boletines.
+- Descarga o generación de boletines PDF.
+- Carga de múltiples evaluaciones y cálculo automático de una nota final; la
+  regla definida es una calificación final directa por materia y cuatrimestre.
+
+FIN DE LA ESPECIFICACIÓN

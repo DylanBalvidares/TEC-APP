@@ -23,6 +23,7 @@ import materiasRouter from "./modules/academico/materias-router.js";
 import asignacionesRouter from "./modules/academico/asignaciones-router.js";
 import planesRouter from "./modules/academico/planes-router.js";
 import notasRouter from "./modules/academico/notas-router.js";
+import boletinesRouter from "./modules/academico/boletines-router.js";
 import personalRouter from "./modules/academico/personal-router.js";
 import cargosRouter from "./modules/academico/cargos-router.js";
 
@@ -180,6 +181,7 @@ app.use("/api/academico", autenticar, materiasRouter);
 app.use("/api/academico", autenticar, asignacionesRouter);
 app.use("/api/academico", autenticar, planesRouter);
 app.use("/api/academico", autenticar, notasRouter);
+app.use("/api/academico", autenticar, boletinesRouter);
 app.use("/api/academico", autenticar, personalRouter);
 app.use("/api/academico", autenticar, cargosRouter);
 app.use("/api/academico", autenticar, horariosRouter);

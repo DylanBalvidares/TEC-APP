@@ -5,6 +5,7 @@ import "dotenv/config";
 import "./db/conexionDB.js";
 import "./db/ensureCorreosTable.js";
 import "./db/ensureLibretaDigital.js";
+import "./db/ensureBoletines.js";
 import "./db/ensurePlanesEstudio.js";
 import "./db/ensureMensajesWhatsapp.js";
 import "./db/ensureCargos.js";
