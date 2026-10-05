@@ -16,6 +16,7 @@ import {
   Curso,
   Profesor,
   Personal,
+  PlanEstudio,
 } from "../src/db/models/index.js";
 import { invalidarCachePermisos } from "../src/middlewares/comprobarPermisos.js";
 import {
@@ -56,6 +57,29 @@ const mockPeriodoAbierto = (t) => {
   };
   t.mock.method(PeriodoBoletin, "findByPk", async () => periodoVivo());
   t.mock.method(PeriodoBoletin, "findOne", async () => periodoVivo());
+};
+
+// El snapshot (boletin_materias) es la fuente de verdad de la propiedad de una
+// materia en un período: sin él, el profesor no puede escribir.
+const mockMateriaPreparada = (t, idProfesor = 3) => {
+  t.mock.method(
+    BoletinMateria,
+    "findOne",
+    async () => fila({ id_periodo: 1, id_asignacion: 2, id_profesor: idProfesor }),
+  );
+};
+
+// Plan de estudios vigente para el año/cuatrimestre del período de prueba.
+const mockPlanVigente = (t, { materias = [{ id_materia: 5, anio: 1, cuatrimestre: "1" }] } = {}) => {
+  t.mock.method(PlanEstudio, "findByPk", async () =>
+    fila({
+      id_plan: 1,
+      estado: "activo",
+      fecha_vigencia_desde: "2020-01-01",
+      fecha_vigencia_hasta: null,
+      materiasPlan: materias,
+    }),
+  );
 };
 
 test("periodoEscribible respeta estado y fechas", () => {
@@ -105,30 +129,59 @@ test("actualizarPeriodo 404 y valida fechas", async (t) => {
   assert.equal(ok.estado, "cerrado");
 });
 
-test("prepararCurso exige ciclo, asignaciones y responsables", async (t) => {
+test("prepararCurso exige ciclo, plan vigente, asignaciones y responsables", async (t) => {
   mockPeriodoAbierto(t);
   t.mock.method(Curso, "findByPk", async () => null);
-  await assert.rejects(prepararCurso(1, 99), /curso.*no existe/i);
+  await assert.rejects(prepararCurso(1, 99, 1), /curso.*no existe/i);
 
-  t.mock.method(Curso, "findByPk", async () => fila({ id_curso: 1, ciclo_lectivo: 2025 }));
-  await assert.rejects(prepararCurso(1, 1), /otro ciclo/);
+  t.mock.method(Curso, "findByPk", async () => fila({ id_curso: 1, ciclo_lectivo: 2025, anio: 1 }));
+  await assert.rejects(prepararCurso(1, 1, 1), /otro ciclo/);
 
+  // Sin año no se puede determinar el plan aplicable.
   t.mock.method(Curso, "findByPk", async () => fila({ id_curso: 1, ciclo_lectivo: 2026 }));
-  t.mock.method(Asignacion, "findAll", async () => []);
-  await assert.rejects(prepararCurso(1, 1), /no tiene materias/);
+  await assert.rejects(prepararCurso(1, 1, 1), /año asignado/);
 
+  // El plan es obligatorio.
+  t.mock.method(Curso, "findByPk", async () => fila({ id_curso: 1, ciclo_lectivo: 2026, anio: 1 }));
+  await assert.rejects(prepararCurso(1, 1), /plan de estudios aplicable/);
+
+  // Plan sin materias para ese año/cuatrimestre.
+  mockPlanVigente(t, { materias: [{ id_materia: 5, anio: 2, cuatrimestre: "1" }] });
+  await assert.rejects(prepararCurso(1, 1, 1), /no tiene materias para el año/);
+
+  // Plan OK, pero el curso no tiene esa materia asignada.
+  mockPlanVigente(t);
+  t.mock.method(Asignacion, "findAll", async () => []);
+  await assert.rejects(prepararCurso(1, 1, 1), /Falta asignar profesor\/materia/);
+
+  // Asignada pero sin profesor responsable.
   t.mock.method(Asignacion, "findAll", async () => [
     fila({ id_asignacion: 2, id_profesor: null, id_materia: 5, materiaAsignacion: { nombre_materia: "Física" } }),
   ]);
-  await assert.rejects(prepararCurso(1, 1), /sin profesor responsable/);
+  await assert.rejects(prepararCurso(1, 1, 1), /sin profesor responsable/);
 
+  // Camino feliz: fija la materia del snapshot y su finalización pendiente.
   t.mock.method(Asignacion, "findAll", async () => [
     fila({ id_asignacion: 2, id_profesor: 3, id_materia: 5 }),
   ]);
-  t.mock.method(BoletinMateria, "findOrCreate", async () => [fila({}), true]);
-  t.mock.method(BoletinFinalizacion, "findOrCreate", async () => [fila({}), true]);
-  const resumen = await prepararCurso(1, 1);
+  t.mock.method(BoletinMateria, "findAll", async () => []);
+  const fijadas = [];
+  t.mock.method(BoletinMateria, "findOrCreate", async (opts) => {
+    fijadas.push(opts);
+    return [fila({}), true];
+  });
+  const finales = [];
+  t.mock.method(BoletinFinalizacion, "findOrCreate", async (opts) => {
+    finales.push(opts);
+    return [fila({}), true];
+  });
+  const resumen = await prepararCurso(1, 1, 1);
   assert.equal(resumen.fijadas, 1);
+  assert.equal(resumen.existentes, 0);
+  // El snapshot guarda el plan y el responsable, no solo la asignación.
+  assert.equal(fijadas[0].defaults.id_plan, 1);
+  assert.equal(fijadas[0].defaults.id_profesor, 3);
+  assert.equal(finales[0].defaults.estado, "pendiente");
 });
 
 test("obtenerCargaProfesor 404 sin perfil", async (t) => {
@@ -152,6 +205,7 @@ test("guardarCalificacion valida tipos y acepta el 0", async (t) => {
     /entre 0 y 10/,
   );
 
+  mockMateriaPreparada(t);
   t.mock.method(Asignacion, "findByPk", async () =>
     fila({ id_asignacion: 2, id_profesor: 3, id_curso: 1 }),
   );
@@ -192,6 +246,7 @@ test("guardarCalificacion valida tipos y acepta el 0", async (t) => {
 
 test("guardarCalificacion bloquea materia finalizada sin reapertura", async (t) => {
   mockPeriodoAbierto(t);
+  mockMateriaPreparada(t);
   t.mock.method(Asignacion, "findByPk", async () =>
     fila({ id_asignacion: 2, id_profesor: 3, id_curso: 1 }),
   );
@@ -209,6 +264,7 @@ test("guardarCalificacion bloquea materia finalizada sin reapertura", async (t) 
 
 test("finalizarMateria exige 0 pendientes y audita", async (t) => {
   mockPeriodoAbierto(t);
+  mockMateriaPreparada(t);
   t.mock.method(Asignacion, "findByPk", async () =>
     fila({ id_asignacion: 2, id_profesor: 3, id_curso: 1 }),
   );
@@ -280,6 +336,7 @@ test("obtenerConsolidado 409 si falta finalizar", async (t) => {
 
 test("reaperturas: solicitar valida y decidir audita", async (t) => {
   mockPeriodoAbierto(t);
+  mockMateriaPreparada(t);
   await assert.rejects(solicitarReapertura({}, 7, 3), /obligatorios/);
 
   t.mock.method(Asignacion, "findByPk", async () =>
@@ -369,7 +426,10 @@ test("rutas HTTP de boletines: 401/403 y flujo de carga", async (t) => {
   t.mock.method(Asignacion, "findAll", async () => filas([{ id_asignacion: 2, id_curso: 1 }]));
   t.mock.method(Alumno, "findByPk", async () => fila({ id_alumno: 1, id_curso: 1 }));
   t.mock.method(Alumno, "findAll", async () => filas([{ id_alumno: 1, id_curso: 1 }]));
-  t.mock.method(Curso, "findByPk", async () => fila({ id_curso: 1, ciclo_lectivo: 2026 }));
+  t.mock.method(Curso, "findByPk", async () => fila({ id_curso: 1, ciclo_lectivo: 2026, anio: 1 }));
+  t.mock.method(BoletinMateria, "findOne", async () =>
+    fila({ id_periodo: 1, id_asignacion: 2, id_profesor: 3 }),
+  );
   t.mock.method(BoletinFinalizacion, "findOne", async () =>
     fila({ estado: "en_progreso" }, { save: async () => true }),
   );
@@ -430,8 +490,9 @@ test("rutas HTTP de boletines: gestión, lectura y reaperturas", async (t) => {
   });
   mockPeriodoAbierto(t);
   t.mock.method(PeriodoBoletin, "create", async (d) => fila({ id_periodo: 2, ...d }));
+  mockPlanVigente(t);
   t.mock.method(Curso, "findByPk", async () =>
-    fila({ id_curso: 1, ciclo_lectivo: 2026, id_preceptor: 5 }),
+    fila({ id_curso: 1, ciclo_lectivo: 2026, anio: 1, id_preceptor: 5 }),
   );
   t.mock.method(Asignacion, "findAll", async () =>
     filas([{ id_asignacion: 2, id_profesor: 3, id_materia: 5 }]),
@@ -443,7 +504,11 @@ test("rutas HTTP de boletines: gestión, lectura y reaperturas", async (t) => {
   t.mock.method(Personal, "findOne", async () => fila({ id_personal: 5 }));
   t.mock.method(Alumno, "findAll", async () => filas([{ id_alumno: 1 }]));
   t.mock.method(BoletinMateria, "findOrCreate", async () => [fila({}), true]);
-  t.mock.method(BoletinMateria, "findAll", async () => filas([{ id_asignacion: 2 }]));
+  t.mock.method(BoletinMateria, "findOne", async () =>
+    fila({ id_periodo: 1, id_asignacion: 2, id_profesor: 3 }),
+  );
+  // Snapshot ya fijado con el plan 1: no debe exigir guardado.
+  t.mock.method(BoletinMateria, "findAll", async () => filas([{ id_asignacion: 2, id_plan: 1 }]));
   t.mock.method(BoletinFinalizacion, "findOrCreate", async () => [fila({}), true]);
   t.mock.method(BoletinFinalizacion, "findOne", async () =>
     fila({ estado: "finalizada" }, { save: async () => true }),
@@ -482,9 +547,16 @@ test("rutas HTTP de boletines: gestión, lectura y reaperturas", async (t) => {
   });
   assert.equal(editado.status, 200);
 
-  const prep = await srv.request("POST", "/api/academico/boletines/periodos/1/preparar", {
+  // El plan es obligatorio: sin id_plan responde 400.
+  const sinPlan = await srv.request("POST", "/api/academico/boletines/periodos/1/preparar", {
     token: authAdmin,
     body: { id_curso: 1 },
+  });
+  assert.equal(sinPlan.status, 400);
+
+  const prep = await srv.request("POST", "/api/academico/boletines/periodos/1/preparar", {
+    token: authAdmin,
+    body: { id_curso: 1, id_plan: 1 },
   });
   assert.equal(prep.status, 200);
 
