@@ -55,6 +55,8 @@ const CursosPreceptorView = () =>
 const AlumnosView = () => import("../components/preceptor/views/AlumnosView.vue");
 const ComunicadosViewPreceptor = () =>
   import("../components/preceptor/views/ComunicadosView.vue");
+const MantenimientoPreceptorView = () =>
+  import("../components/preceptor/views/MantenimientoPreceptorView.vue");
 
 // Libreta Digital
 const LibretaAlumnoView = () =>
@@ -164,6 +166,18 @@ const routes = [
     children: [
 
       {
+        path: "inicio",
+        component: MantenimientoPreceptorView,
+        meta: { maintenanceTitle: "Inicio" },
+      },
+
+      {
+        path: "asistencias",
+        component: MantenimientoPreceptorView,
+        meta: { maintenanceTitle: "Asistencias" },
+      },
+
+      {
         path: "cursos",
         component: CursosPreceptorView,
       },
@@ -196,6 +210,24 @@ const routes = [
       {
         path: "comunicados",
         component: ComunicadosViewPreceptor,
+      },
+
+      {
+        path: "reportes",
+        component: MantenimientoPreceptorView,
+        meta: { maintenanceTitle: "Reportes" },
+      },
+
+      {
+        path: "calendario",
+        component: MantenimientoPreceptorView,
+        meta: { maintenanceTitle: "Calendario" },
+      },
+
+      {
+        path: ":pathMatch(.*)*",
+        component: MantenimientoPreceptorView,
+        meta: { maintenanceTitle: "Sección" },
       },
 
       {
