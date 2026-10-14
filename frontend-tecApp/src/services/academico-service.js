@@ -1007,3 +1007,143 @@ export const obtenerPlanillaBoletinCurso = async (
   }
 
 };
+
+// ==========================================
+// ASISTENCIAS
+// ==========================================
+
+// Obtener todas las asistencias
+export const obtenerAsistencias = async () => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/asistencias`,
+      getConfig()
+    );
+
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error);
+  }
+};
+
+// Obtener una asistencia por su ID
+export const obtenerAsistenciaPorId = async (idAsistencia) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/asistencias/${idAsistencia}`,
+      getConfig()
+    );
+
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error);
+  }
+};
+
+// Registrar varias asistencias juntas
+export const registrarAsistenciasLote = async (datos) => {
+  try {
+    const response = await axios.post(
+      `${API_URL}/asistencias/lote`,
+      datos,
+      getConfig()
+    );
+
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error);
+  }
+};
+
+// Registrar una asistencia individual
+export const crearAsistencia = async (datos) => {
+  try {
+    const response = await axios.post(
+      `${API_URL}/asistencias/nueva`,
+      datos,
+      getConfig()
+    );
+
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error);
+  }
+};
+
+// Modificar una asistencia existente
+export const modificarAsistencia = async (datos) => {
+  try {
+    const response = await axios.patch(
+      `${API_URL}/asistencias/modificar`,
+      datos,
+      getConfig()
+    );
+
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error);
+  }
+};
+
+// Eliminar una asistencia
+export const eliminarAsistencia = async (idAsistencia) => {
+  try {
+    const response = await axios.delete(
+      `${API_URL}/asistencias/${idAsistencia}`,
+      getConfig()
+    );
+
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error);
+  }
+};
+
+
+export async function obtenerHistorialAsistencias({
+  id_curso,
+  fecha_desde,
+  fecha_hasta
+} = {}) {
+  try {
+    const config = getConfig();
+    const params = {};
+
+    if (id_curso) params.id_curso = id_curso;
+    if (fecha_desde) params.fecha_desde = fecha_desde;
+    if (fecha_hasta) params.fecha_hasta = fecha_hasta;
+
+    config.params = params;
+
+    const response = await axios.get(
+      `${API_URL}/asistencias/historial`,
+      config
+    );
+
+    return {
+      success: true,
+      data: response.data
+    };
+  } catch (error) {
+    return manejarErrorApi(error);
+  }
+}
+
+export const obtenerHistorialAsistenciasCurso = async (filtros = {}) => {
+    try {
+        const config = getConfig();
+        config.params = filtros;
+
+        const response = await axios.get(
+            `${API_URL}/asistencias/historial`,
+            config
+        );
+
+        return {
+            success: true,
+            data: response.data
+        };
+    } catch (error) {
+        return manejarErrorApi(error);
+    }
+};
