@@ -20,6 +20,7 @@ import CursosPreceptorView from "../components/preceptores/views/CursosPreceptor
 import AlumnosView from "../components/preceptores/views/AlumnosView.vue";
 import ComunicadosView from "../components/preceptores/views/ComunicadosView.vue";
 import BoletinesAlumnosView from "../components/preceptores/views/BoletinesAlumnosView.vue";
+import AsistenciasView from "../components/preceptores/views/AsistenciasView.vue";
 
 // ==============================
 // RUTAS
@@ -88,6 +89,11 @@ const routes = [
         path: "comunicados",
         component: ComunicadosView,
       },
+
+      {
+        path: "asistencias",
+        component: AsistenciasView
+      }
     ],
   },
 
