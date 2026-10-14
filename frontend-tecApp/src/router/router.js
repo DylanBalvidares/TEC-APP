@@ -59,6 +59,8 @@ const ComunicadosViewPreceptor = () =>
   import("../components/preceptor/views/ComunicadosView.vue");
 const MantenimientoPreceptorView = () =>
   import("../components/preceptor/views/MantenimientoPreceptorView.vue");
+const AsistenciasPreceptorView = () =>
+  import("../components/preceptor/views/AsistenciasView.vue");
 
 // Libreta Digital
 const LibretaAlumnoView = () =>
@@ -175,8 +177,7 @@ const routes = [
 
       {
         path: "asistencias",
-        component: MantenimientoPreceptorView,
-        meta: { maintenanceTitle: "Asistencias" },
+        component: AsistenciasPreceptorView,
       },
 
       {
@@ -241,7 +242,6 @@ const routes = [
         path: "",
         redirect: "/preceptor/cursos",
       },
-
     ],
   },
 
