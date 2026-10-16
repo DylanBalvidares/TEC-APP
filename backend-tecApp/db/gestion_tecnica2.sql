@@ -532,6 +532,7 @@ CREATE TABLE `boletin_materias` (
     `id_asignacion` int(11) NOT NULL,
     `id_materia`    int(11) NOT NULL,
     `id_profesor`   int(11) NOT NULL,
+    `id_plan`       int(11) DEFAULT NULL,
     `createdAt`     datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updatedAt`     datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id_boletin_materia`),
