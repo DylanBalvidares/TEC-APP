@@ -9,7 +9,7 @@
             <div class="page-header-info">
 
                 <img
-                    src="/frontend-tecApp/noticias-header.png"
+                    src="/noticias-header.png"
                     alt="Comunicados"
                     class="page-header-icon"
                 />

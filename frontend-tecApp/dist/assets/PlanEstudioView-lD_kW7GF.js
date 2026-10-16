@@ -1,0 +1,1 @@
+import{P as o}from"./PlanEstudioConsulta-CHoDKWrK.js";import{o as t,I as r}from"./index-C7tmYXYl.js";import"./PlanEstudioDetalle-BP-dsx9i.js";import"./academico-service-C213vX7o.js";const m={__name:"PlanEstudioView",setup(a){return(e,s)=>(t(),r(o))}};export{m as default};

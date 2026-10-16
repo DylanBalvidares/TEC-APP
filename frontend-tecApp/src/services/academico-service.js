@@ -1479,20 +1479,8 @@ export const obtenerAsistenciaPorId = async (idAsistencia) => {
   }
 };
 
-// Registrar varias asistencias juntas
-export const registrarAsistenciasLote = async (datos) => {
-  try {
-    const response = await axios.post(
-      `${API_URL}/asistencias/lote`,
-      datos,
-      getConfig()
-    );
-
-    return { success: true, data: response.data };
-  } catch (error) {
-    return manejarErrorApi(error);
-  }
-};
+// Registrar varias asistencias juntas (alias de guardarAsistenciasLote)
+export const registrarAsistenciasLote = (datos) => guardarAsistenciasLote(datos);
 
 // Registrar una asistencia individual
 export const crearAsistencia = async (datos) => {
@@ -1539,50 +1527,7 @@ export const eliminarAsistencia = async (idAsistencia) => {
 };
 
 
-export async function obtenerHistorialAsistencias({
-  id_curso,
-  fecha_desde,
-  fecha_hasta
-} = {}) {
-  try {
-    const config = getConfig();
-    const params = {};
-
-    if (id_curso) params.id_curso = id_curso;
-    if (fecha_desde) params.fecha_desde = fecha_desde;
-    if (fecha_hasta) params.fecha_hasta = fecha_hasta;
-
-    config.params = params;
-
-    const response = await axios.get(
-      `${API_URL}/asistencias/historial`,
-      config
-    );
-
-    return {
-      success: true,
-      data: response.data
-    };
-  } catch (error) {
-    return manejarErrorApi(error);
-  }
-}
-
-export const obtenerHistorialAsistenciasCurso = async (filtros = {}) => {
-    try {
-        const config = getConfig();
-        config.params = filtros;
-
-        const response = await axios.get(
-            `${API_URL}/asistencias/historial`,
-            config
-        );
-
-        return {
-            success: true,
-            data: response.data
-        };
-    } catch (error) {
-        return manejarErrorApi(error);
-    }
-};
+// Alias de compatibilidad para el preceptor: delega en
+// obtenerHistorialAsistencias (definido arriba) para no duplicar la lógica.
+export const obtenerHistorialAsistenciasCurso = (filtros = {}) =>
+  obtenerHistorialAsistencias(filtros);
