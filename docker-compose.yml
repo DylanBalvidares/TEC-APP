@@ -1,13 +1,13 @@
 services:
   mysql-db:
     env_file:
-      - ./backend-tecApp/db/.env
+      - ./.env
     image: mysql:8.0
     container_name: mysql-gestion
     restart: unless-stopped
     environment:
       # Obligatorio: evita el clásico root/root_pass por defecto.
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:?Definí MYSQL_ROOT_PASSWORD en backend-tecApp/db/.env}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:?root_pass}
       - MYSQL_DATABASE=${MYSQL_DATABASE:-gestion_tecnica2}
     ports:
       # Sólo accesible desde la máquina anfitriona, no desde la red.
@@ -28,7 +28,7 @@ services:
 
   backend:
     env_file:
-    - ./backend-tecApp/db/.env
+    - ./.env
     environment:
       - NODE_ENV=${NODE_ENV:-production}
     build:
