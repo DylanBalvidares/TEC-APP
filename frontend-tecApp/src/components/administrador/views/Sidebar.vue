@@ -51,20 +51,32 @@ const busqueda = ref("");
 
 const grupos = [
     {
-        titulo: "General",
+        titulo: "Inicio",
         items: [
             { vista: "overview", nombre: "Inicio", icono: "ti-home" },
+        ],
+    },
+    {
+        titulo: "Usuarios",
+        items: [
             { vista: "alumnos", nombre: "Alumnos", icono: "ti-school" },
             { vista: "profesores", nombre: "Profesores", icono: "ti-chalkboard" },
+            { vista: "personal", nombre: "Personal", icono: "ti-users" },
+            { vista: "usuarios", nombre: "Usuarios", icono: "ti-user-shield" },
+            { vista: "roles", nombre: "Roles y permisos", icono: "ti-lock" },
+        ],
+    },
+    {
+        titulo: "Academico",
+        items: [
             { vista: "cursos", nombre: "Cursos", icono: "ti-book" },
-            { vista: "asistencias", nombre: "Asistencias", icono: "ti-calendar-check" },
             { vista: "materias", nombre: "Materias", icono: "ti-books" },
             { vista: "asignaciones", nombre: "Asignaciones", icono: "ti-git-branch" },
+            { vista: "asistencias", nombre: "Asistencias", icono: "ti-calendar-check" },
             { vista: "horarios", nombre: "Horarios", icono: "ti-calendar-time" },
             { vista: "convivencia", nombre: "Convivencia", icono: "ti-alert-triangle" },
             { vista: "planes", nombre: "Planes de Estudio", icono: "ti-layers" },
             { vista: "libreta", nombre: "Libreta Digital", icono: "ti-book-open" },
-            { vista: "boletines", nombre: "Boletines", icono: "ti-file-text" },
         ],
     },
     {
@@ -73,18 +85,16 @@ const grupos = [
             { vista: "comunicacion", nombre: "Comunicación", icono: "ti-messages" },
             { vista: "notificaciones", nombre: "Notificaciones", icono: "ti-bell" },
             { vista: "certificados", nombre: "Certificados", icono: "ti-certificate" },
+            { vista: "boletines", nombre: "Boletines", icono: "ti-file-text" },
         ],
     },
     {
-        titulo: "Sistema",
+        titulo: "Configuración",
         items: [
-            { vista: "personal", nombre: "Personal", icono: "ti-users" },
-            { vista: "usuarios", nombre: "Usuarios", icono: "ti-user-shield" },
-            { vista: "roles", nombre: "Roles y permisos", icono: "ti-lock" },
-            { vista: "auditoria", nombre: "Auditoría", icono: "ti-history" },
             { vista: "biblioteca", nombre: "Biblioteca", icono: "ti-books" },
             { vista: "objetos", nombre: "Objetos perdidos", icono: "ti-package" },
             { vista: "reportes", nombre: "Reportes", icono: "ti-chart-bar" },
+            { vista: "auditoria", nombre: "Auditoría", icono: "ti-history" },
             { vista: "config", nombre: "Configuración", icono: "ti-settings" },
             { vista: "backup", nombre: "Backup", icono: "ti-database-export" },
         ],
