@@ -839,7 +839,7 @@ import {
 } from "@/services/comunidad-service.js";
 
 import TelefonoInput from "@/components/ui/TelefonoInput.vue";
-import { validarTelefonoAR } from "@/utils/validators.js";
+import { validarTelefonoAR, validarEmail } from "@/utils/validators.js";
 
 
 /* =========================================================
@@ -1182,6 +1182,15 @@ const siguientePaso = () => {
       return;
     }
 
+    // Solo el paso activo está renderizado (v-if), así que el "required"
+    // nativo del input no protege este campo en el submit final.
+    const errorEmailPasoUno = validarEmail(formulario.value.email);
+
+    if (errorEmailPasoUno) {
+      errorFormulario.value = errorEmailPasoUno;
+      return;
+    }
+
   }
 
 
@@ -1217,6 +1226,14 @@ const guardarAlumno = async () => {
   if (errorTelefono.value) {
     return;
   }
+
+  // Defensa extra: no llamar a la API con un Gmail vacío o inválido.
+  const errorEmailGuardado = validarEmail(formulario.value.email);
+  if (errorEmailGuardado) {
+    errorFormulario.value = errorEmailGuardado;
+    return;
+  }
+
   guardandoAlumno.value = true;
 
   let resultado;

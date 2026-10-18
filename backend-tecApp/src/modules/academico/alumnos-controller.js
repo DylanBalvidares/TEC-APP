@@ -12,6 +12,17 @@ import {
 const COLUMNAS_ALUMNOS = ["id_alumno", "nombre", "apellido", "dni", "estado", "id_curso"];
 const ALIAS_ALUMNOS = { curso: "id_curso" };
 
+// Normaliza el email del legajo: trim y vacío => null (evita que el validador
+// isEmail del modelo rechace "" y tumbe el alta). En modificarAlumno un valor
+// undefined se preserva tal cual para no borrar el email ya almacenado.
+function normalizarEmail(valor) {
+  if (valor === undefined) return undefined;
+  if (valor === null) return null;
+  if (typeof valor !== "string") return null;
+  const limpio = valor.trim();
+  return limpio || null;
+}
+
 async function validarIdentidadAlumno(data) {
   console.log("\x1b[1m\x1b[34m[CTRL]\x1b[0m Ejecutando controlador: validarIdentidadAlumno");
   const { dni, nacimiento } = data;
@@ -235,7 +246,10 @@ async function crearAlumno(alumno) {
   const errorTelefono = validarTelefonoAR(alumno?.telefono_tutor, false);
   if (errorTelefono) throw new ErrorHandler(400, `Teléfono del tutor: ${errorTelefono}`);
   try {
-    const data = await Alumno.create(alumno);
+    const data = await Alumno.create({
+      ...alumno,
+      email: normalizarEmail(alumno?.email),
+    });
     return data;
   } catch (error) {
     console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en crearAlumno:", error);
@@ -246,6 +260,13 @@ async function crearAlumno(alumno) {
 
     if (error.name === "SequelizeForeignKeyConstraintError") {
       throw new ErrorHandler(400, "El curso o usuario especificado no existe");
+    }
+
+    if (error.name === "SequelizeValidationError") {
+      throw new ErrorHandler(
+        400,
+        "Datos de validación incorrectos. Verifique los campos enviados.",
+      );
     }
 
     throw new ErrorHandler(500, "Error interno al crear alumno");
@@ -321,6 +342,7 @@ async function modificarAlumno(alumno) {
     apellido,
     dni,
     fecha_nacimiento,
+    email,
     nombre_tutor,
     telefono_tutor,
     domicilio,
@@ -345,6 +367,7 @@ async function modificarAlumno(alumno) {
         apellido,
         dni,
         fecha_nacimiento,
+        email: normalizarEmail(email),
         nombre_tutor,
         telefono_tutor,
         domicilio,

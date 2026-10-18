@@ -88,6 +88,54 @@ test("crearAlumno valida telefono y duplicados", async (t) => {
   await assert.rejects(crearAlumno({ ...ALUMNO }), /no existe/);
 });
 
+test("crearAlumno normaliza el email del legajo", async (t) => {
+  let recibido = null;
+  t.mock.method(Alumno, "create", async (d) => {
+    recibido = d;
+    return fila({ id_alumno: 5, ...d });
+  });
+
+  // Sin email en el payload: undefined, el modelo lo deja en NULL.
+  await crearAlumno({ ...ALUMNO });
+  assert.equal(recibido.email, undefined);
+  // Email vacío/espacios: null (no "" que el validador isEmail rechazaría).
+  await crearAlumno({ ...ALUMNO, email: "" });
+  assert.equal(recibido.email, null);
+  await crearAlumno({ ...ALUMNO, email: "   " });
+  assert.equal(recibido.email, null);
+  // Email válido: trim.
+  await crearAlumno({ ...ALUMNO, email: "  ana.paz@gmail.com " });
+  assert.equal(recibido.email, "ana.paz@gmail.com");
+});
+
+test("crearAlumno mapea SequelizeValidationError a 400", async (t) => {
+  const invalido = new Error("isEmail on email failed");
+  invalido.name = "SequelizeValidationError";
+  t.mock.method(Alumno, "create", async () => {
+    throw invalido;
+  });
+
+  await assert.rejects(
+    crearAlumno({ ...ALUMNO, email: "sin-arroba" }),
+    (e) => e.status === 400 && /validación incorrectos/.test(e.message),
+  );
+});
+
+test("modificarAlumno no borra el email si no viene en el payload", async (t) => {
+  let campos = null;
+  t.mock.method(Alumno, "update", async (d) => {
+    campos = d;
+    return [1];
+  });
+
+  // Sin email en el payload: undefined, Sequelize no lo toca.
+  await modificarAlumno({ id_alumno: 9, nombre: "Ana" });
+  assert.equal(campos.email, undefined);
+  // Con email vacío se limpia a null en vez de guardar "".
+  await modificarAlumno({ id_alumno: 9, nombre: "Ana", email: "  " });
+  assert.equal(campos.email, null);
+});
+
 test("eliminarAlumno 404 y 409 con registros", async (t) => {
   t.mock.method(Alumno, "destroy", async () => 0);
   await assert.rejects(eliminarAlumno(9), /No se encontro/);
