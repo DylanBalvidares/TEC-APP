@@ -393,6 +393,7 @@ CREATE TABLE `alumnos` (
     `nombre_tutor`     varchar(100) NOT NULL,
     `telefono_tutor`   varchar(20)  NOT NULL,
     `domicilio`        varchar(255) NOT NULL,
+    `email`            varchar(150) DEFAULT NULL,
     `estado`           ENUM('activo','egresado','baja','condicional') DEFAULT 'activo',
     `id_curso`         int(11)      DEFAULT NULL,
     `id_usuario`       int(11)      DEFAULT NULL,

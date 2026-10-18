@@ -44,6 +44,16 @@ const Alumno = sequelize.define(
       allowNull: false,
     },
 
+    // Email de contacto del alumno (legajo). No es la cuenta de acceso:
+    // alimenta el envío de correos cuando el alumno no tiene usuario asociado.
+    email: {
+      type: DataTypes.STRING(150),
+      allowNull: true,
+      validate: {
+        isEmail: true,
+      },
+    },
+
     estado: {
       type: DataTypes.ENUM("activo", "egresado", "baja", "condicional"),
     },

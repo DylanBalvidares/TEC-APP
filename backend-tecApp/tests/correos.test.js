@@ -86,6 +86,43 @@ test("enviarEmailAAlumno valida, envía y persiste", async (t) => {
   assert.match(res.mensaje, /ana@tecnica2\.edu\.ar/);
 });
 
+test("enviarEmailAAlumno usa el email del legajo si no hay cuenta de usuario", async (t) => {
+  const enviados = mailOk(t);
+  t.mock.method(Alumno, "findByPk", async () =>
+    fila({ ...ALUMNO, id_usuario: null, email: "ana.paz@gmail.com" }),
+  );
+  accesoPreceptor(t);
+
+  const res = await enviarEmailAAlumno(1, { asunto: "Nota", mensaje: "Hola" }, 4);
+  assert.match(res.mensaje, /ana\.paz@gmail\.com/);
+  assert.equal(enviados[0].to, "ana.paz@gmail.com");
+});
+
+test("enviarEmailAAlumno prefiere el email de la cuenta sobre el del legajo", async (t) => {
+  mailOk(t);
+  t.mock.method(Alumno, "findByPk", async () =>
+    fila({ ...ALUMNO, email: "ana.paz@gmail.com" }),
+  );
+  accesoPreceptor(t);
+  emailEnDb(t); // email de la cuenta: ana@tecnica2.edu.ar
+
+  const res = await enviarEmailAAlumno(1, { asunto: "Nota", mensaje: "Hola" }, 4);
+  assert.match(res.mensaje, /ana@tecnica2\.edu\.ar/);
+});
+
+test("enviarEmailAAlumno rechaza si no hay cuenta ni email de legajo", async (t) => {
+  mailOk(t);
+  t.mock.method(Alumno, "findByPk", async () =>
+    fila({ ...ALUMNO, id_usuario: null }),
+  );
+  accesoPreceptor(t);
+
+  await assert.rejects(
+    enviarEmailAAlumno(1, { asunto: "Nota", mensaje: "Hola" }, 4),
+    /cuenta de usuario ni email/,
+  );
+});
+
 test("enviarEmailAAlumno persiste fallido si el mailer falla", async (t) => {
   fijarTransporter({
     sendMail: async () => {

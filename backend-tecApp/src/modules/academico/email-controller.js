@@ -64,23 +64,33 @@ async function enviarEmailAAlumno(idAlumno, datosEmail, idUsuarioPreceptor) {
 
     await verificarAccesoPreceptorAlumno(idUsuarioPreceptor, alumno);
 
-    if (!alumno.id_usuario) {
-      throw new ErrorHandler(404, "El alumno no tiene una cuenta de usuario asociada");
+    // Destino: primero el email de la cuenta de usuario (si el alumno tiene
+    // una), si no el email del legajo. Error solo si el alumno no tiene
+    // ninguno de los dos.
+    let emailAlumno = null;
+
+    if (alumno.id_usuario) {
+      const [resultadoEmail] = await sequelize.query(
+        "SELECT email FROM usuarios WHERE id_usuario = :id_usuario",
+        {
+          replacements: { id_usuario: alumno.id_usuario },
+          type: sequelize.QueryTypes.SELECT,
+        },
+      );
+
+      emailAlumno = resultadoEmail?.email || null;
     }
 
-    const [resultadoEmail] = await sequelize.query(
-      "SELECT email FROM usuarios WHERE id_usuario = :id_usuario",
-      {
-        replacements: { id_usuario: alumno.id_usuario },
-        type: sequelize.QueryTypes.SELECT,
-      },
-    );
-
-    if (!resultadoEmail || !resultadoEmail.email) {
-      throw new ErrorHandler(404, "No se encontró el email del alumno");
+    if (!emailAlumno && alumno.email) {
+      emailAlumno = alumno.email;
     }
 
-    const emailAlumno = resultadoEmail.email;
+    if (!emailAlumno) {
+      throw new ErrorHandler(
+        404,
+        "El alumno no tiene cuenta de usuario ni email de contacto cargado en su legajo. Editalo y cargale un Gmail.",
+      );
+    }
 
     let resultadoEmailEnvio;
     try {

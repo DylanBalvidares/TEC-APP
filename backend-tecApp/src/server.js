@@ -12,6 +12,7 @@ import "./db/ensureCargos.js";
 import "./db/ensureAuditoria.js";
 import "./db/ensureConfiguracion.js";
 import "./db/ensureHorarios.js";
+import "./db/ensureAlumnos.js";
 import "./db/ensureObservaciones.js";
 import "./db/ensureNotificaciones.js";
 
