@@ -5,6 +5,10 @@ import { fileURLToPath } from "url";
 import ErrorHandler from "./ErrorHandler.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// .env central de la raíz del repo (antes backend-tecApp/db/.env, movido a la
+// raíz). dotenv no pisa variables ya definidas; se conserva la ruta vieja por
+// compatibilidad con setups que la tengan.
+dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 dotenv.config({ path: path.resolve(__dirname, "../../db/.env") });
 
 let transporter = null;
