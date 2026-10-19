@@ -10,7 +10,8 @@
     "db:migrate:undo": "sequelize-cli db:migrate:undo",
     "db:migrate:undo:all": "sequelize-cli db:migrate:undo:all",
     "db:migrate:docker": "docker compose -f ../docker-compose.yml exec -T backend npm run db:migrate",
-    "seed": "docker compose -f ../docker-compose.yml exec -T backend node /app/src/db/seed.js"
+    "seed": "node src/db/seed.js",
+    "seed:docker": "docker compose -f ../docker-compose.yml exec -T backend node /app/src/db/seed.js"
   },
   "dependencies": {
     "axios": "^1.6.0",

@@ -1,8 +1,12 @@
 -- ============================================================
--- SEED — CURSOS
+-- SEED LEGACY — CURSOS
 -- Requiere datos base ya cargados: profesores (id_profesor=1)
 -- y personal (id_personal=1). Reescribe/inserta cursos de prueba.
--- Uso: npm run seed
+-- Uso manual: mysql ... < seed.sql
+--
+-- NOTA: este archivo ya no es el seed actual. El dataset completo
+-- de prueba se carga con el comando "npm run seed" (desde la raiz
+-- o desde backend-tecApp/), que corre src/db/seed.js.
 -- ============================================================
 
 INSERT IGNORE INTO `cursos`

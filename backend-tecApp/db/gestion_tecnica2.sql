@@ -17,6 +17,11 @@ SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
 
+-- El entrypoint de Docker suele correr este archivo con cliente latin1;
+-- sin esta línea los literales UTF-8 (ej. el estado 'dañado' de recursos)
+-- quedan doble-codificados en la DB.
+SET NAMES utf8mb4 COLLATE utf8mb4_general_ci;
+
 DROP DATABASE IF EXISTS gestion_tecnica2;
 CREATE DATABASE gestion_tecnica2 CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE gestion_tecnica2;

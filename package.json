@@ -6,7 +6,9 @@
   "scripts": {
     "start": "docker compose up",
     "down" : "docker compose down",
-    "start -d": "docker compose up -d"
+    "start -d": "docker compose up -d",
+    "seed": "npm --prefix backend-tecApp run seed",
+    "seed:docker": "npm --prefix backend-tecApp run seed:docker"
   },
   "description": "tec-app",
   "dependencies": {
