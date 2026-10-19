@@ -151,7 +151,7 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { useAuthStore } from "@/stores/auth.js";
-import { obtenerNoticias, crearNoticia as crearNoticiaApi, actualizarNoticia, eliminarNoticia as eliminarNoticiaApi, obtenerTodosComunicados } from "@/services/comunidad-service.js";
+import { obtenerNoticias, crearNoticia as crearNoticiaApi, actualizarNoticia, eliminarNoticia as eliminarNoticiaApi, obtenerTodosComunicados, marcarComunicadoLeido } from "@/services/comunidad-service.js";
 import { extraerComunicados, nombreAutor, textoDestino, textoImportancia } from "@/utils/comunicados.js";
 import Modal from "@/components/ui/Modal.vue";
 
@@ -177,7 +177,16 @@ const noticias = ref([]);
 // Mensajes largos: se muestran recortados hasta que el alumno pide ver más.
 const expandidas = ref({});
 const toggleExpandida = (clave) => {
-  expandidas.value = { ...expandidas.value, [clave]: !expandidas.value[clave] };
+  const abriendo = !expandidas.value[clave];
+  expandidas.value = { ...expandidas.value, [clave]: abriendo };
+  // Abrir un comunicado confirma la lectura: marca silenciosa e idempotente
+  // (el backend valida que seas destinatario real; fallar no interrumpe).
+  if (abriendo) {
+    const item = noticias.value.find((n) => n.clave === clave);
+    if (item?.esComunicado && item.id) {
+      marcarComunicadoLeido(item.id).catch(() => {});
+    }
+  }
 };
 const esLargo = (texto) => typeof texto === "string" && texto.length > 220;
 

@@ -130,9 +130,61 @@ router.get("/comunicados/:id", LECTURA_COMUNIDAD, async (req, res) => {
   }
 });
 
+// ── Confirmaciones de lectura (E-confirmaciones) ───────────────────────────
+// El receptor marca su lectura al abrir el comunicado (idempotente y sólo si
+// es destinatario real del comunicado).
+router.post("/comunicados/:id/leido", LECTURA_COMUNIDAD, async (req, res) => {
+  try {
+    const resultado = await comunicadosCtrl.marcarComunicadoLeido(
+      req.params.id,
+      req.headers["id_usuario"],
+    );
+    return res.status(200).json(resultado);
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({ message: error.message });
+  }
+});
+
+// Confirmaciones de lectura de un comunicado (preceptor/administrativo).
+router.get("/comunicados/:id/lecturas", LECTURA_COMUNIDAD, async (req, res) => {
+  try {
+    const confirmaciones = await comunicadosCtrl.obtenerConfirmacionesLectura(
+      req.params.id,
+      req.headers["id_usuario"],
+      req.headers["id_rol"],
+    );
+    return res.status(200).json(confirmaciones);
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({ message: error.message });
+  }
+});
+
+// Resumen X/Y para los badges de las listas de gestión (?ids=a,b,c...).
+router.get("/comunicados/lecturas/resumen", LECTURA_COMUNIDAD, async (req, res) => {
+  try {
+    const ids = String(req.query.ids || "")
+      .split(",")
+      .map((v) => v.trim())
+      .filter(Boolean);
+    const resumen = await comunicadosCtrl.resumenLecturasComunicados(
+      ids,
+      req.headers["id_usuario"],
+      req.headers["id_rol"],
+    );
+    return res.status(200).json(resumen);
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({ message: error.message });
+  }
+});
+
 router.post("/comunicados", comprobarPermisos("comunicado_crear"), async (req, res) => {
   try {
-    const comunicado = await comunicadosCtrl.crearComunicado(req.body);
+    const comunicado = await comunicadosCtrl.crearComunicado({
+      ...req.body,
+      // La autoría la firma el token, nunca el body: nadie puede atribuirse
+      // comunicados de otro (necesario para las confirmaciones de lectura).
+      autor_id: Number(req.headers["id_usuario"]) || null,
+    });
     return res.status(201).json(comunicado);
   } catch (error) {
     return res.status(error.statusCode || 500).json({ message: error.message });

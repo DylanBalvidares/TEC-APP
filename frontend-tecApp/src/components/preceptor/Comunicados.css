@@ -1210,3 +1210,28 @@
     }
 
 }
+
+
+/* ── Badge de confirmaciones de lectura (X/Y) ─────────────── */
+
+.lectura-badge {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 5px;
+
+    padding: 5px 9px;
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+    border-radius: 4px;
+
+    background: #e7f6ed;
+
+    border: 1px solid #bfe5cf;
+
+    color: #16794a;
+}

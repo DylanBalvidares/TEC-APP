@@ -153,6 +153,19 @@
                                 {{ textoImportancia(elemento.importancia) }}
                             </span>
 
+                            <span
+                                v-if="elemento.tipo === 'comunicado' && resumenLecturas[elemento.id_comunicado]"
+                                class="lectura-badge"
+                                title="Confirmaciones de lectura"
+                            >
+                                <i class="fa-solid fa-check"></i>
+                                {{
+                                    resumenLecturas[elemento.id_comunicado].leidos
+                                }}/{{
+                                    resumenLecturas[elemento.id_comunicado].total
+                                }}
+                            </span>
+
 
                             <span
                                 v-else
@@ -380,6 +393,12 @@
                     </p>
 
                 </div>
+
+                <!-- Confirmaciones de lectura (X/Y y padrón), comunicados. -->
+                <ConfirmacionesLectura
+                    v-if="detalleAbierto.tipo === 'comunicado'"
+                    :id-comunicado="detalleAbierto.id_comunicado"
+                />
 
             </div>
 
@@ -666,6 +685,12 @@ import {
 } from "@/services/academico-service.js";
 
 import {
+    obtenerResumenLecturas
+} from "@/services/comunidad-service.js";
+
+import ConfirmacionesLectura from "../../ui/ConfirmacionesLectura.vue";
+
+import {
     useAuthStore
 } from "@/stores/auth.js";
 
@@ -688,6 +713,40 @@ const alumnos = ref([]);
 const comunicados = ref([]);
 
 const emails = ref([]);
+
+
+/* =========================================================
+   RESUMEN DE LECTURAS (badges X/Y de confirmaciones)
+========================================================= */
+
+const resumenLecturas = ref({});
+
+const cargarResumenLecturas = async () => {
+
+    try {
+
+        const ids = comunicados.value
+            .map((comunicado) => comunicado.id_comunicado)
+            .filter(Boolean)
+            .slice(0, 100);
+
+        const resultado = await obtenerResumenLecturas(ids);
+
+        const filas = resultado?.data || [];
+
+        resumenLecturas.value = Object.fromEntries(
+            filas
+                .filter((fila) => fila.visible)
+                .map((fila) => [fila.id_comunicado, fila])
+        );
+
+    } catch (error) {
+
+        resumenLecturas.value = {};
+
+    }
+
+};
 
 
 /* =========================================================
@@ -865,6 +924,10 @@ const cargarDatos = async () => {
             comunicados.value = [];
 
         }
+
+        // Badges X/Y de confirmaciones de lectura: en silencio, nunca rompe
+        // el listado si el endpoint de lecturas no responde.
+        cargarResumenLecturas();
 
 
         /* =====================================================

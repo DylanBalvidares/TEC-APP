@@ -45,6 +45,18 @@
                 >
                     <template #celda-titulo="{ fila: comunicado }">
                         <strong>{{ comunicado.titulo }}</strong>
+                        <div
+                            v-if="resumenLecturas[comunicado.id_comunicado]"
+                            class="badge-lecturas"
+                            title="Confirmaciones de lectura"
+                        >
+                            <i class="ti ti-check"></i>
+                            {{
+                                resumenLecturas[comunicado.id_comunicado].leidos
+                            }}/{{
+                                resumenLecturas[comunicado.id_comunicado].total
+                            }}
+                        </div>
                     </template>
                     <template #celda-destino="{ fila: comunicado }">
                         <span style="text-transform: capitalize">
@@ -159,6 +171,11 @@
                         </span>
                     </div>
                 </div>
+
+                <!-- Confirmaciones de lectura del comunicado (X/Y y padrón). -->
+                <ConfirmacionesLectura
+                    :id-comunicado="comunicadoSeleccionado.id_comunicado"
+                />
             </div>
 
             <div class="card-footer">
@@ -327,6 +344,8 @@ import {
 import { obtenerCursos } from "../../../services/academico-service.js";
 import { useTableControls } from "../../../composables/useTableControls.js";
 import DataTable from "../../ui/DataTable.vue";
+import ConfirmacionesLectura from "../../ui/ConfirmacionesLectura.vue";
+import { obtenerResumenLecturas } from "../../../services/comunidad-service.js";
 
 // ── Estado ──────────────────────────────────────────────────────────────────
 const comunicacion = useComunicacionStore();
@@ -455,6 +474,27 @@ const cambiarVista = (nuevaVista, comunicado = null) => {
 };
 
 // ── CRUD ─────────────────────────────────────────────────────────────────────
+// Resumen X/Y de confirmaciones de lectura para los badges de la lista. Un
+// fallo aquí no rompe el listado: los badges simplemente no aparecen.
+const resumenLecturas = ref({});
+const cargarResumenLecturas = async () => {
+    try {
+        const ids = comunicados.value
+            .map((c) => c.id_comunicado)
+            .filter(Boolean)
+            .slice(0, 100);
+        const res = await obtenerResumenLecturas(ids);
+        const filas = res?.data || [];
+        resumenLecturas.value = Object.fromEntries(
+            filas
+                .filter((r) => r.visible)
+                .map((r) => [r.id_comunicado, r]),
+        );
+    } catch (error) {
+        resumenLecturas.value = {};
+    }
+};
+
 const fetchComunicados = async () => {
     cargando.value = true;
     errorCarga.value = "";
@@ -462,6 +502,7 @@ const fetchComunicados = async () => {
         const res = await obtenerTodosComunicados();
         const data = res?.data || res;
         comunicados.value = Array.isArray(data) ? data : [];
+        cargarResumenLecturas();
     } catch (error) {
         errorCarga.value =
             error?.response?.data?.message ||
@@ -1173,5 +1214,21 @@ textarea:focus {
     .form-group[style*="grid-column: span 2"] {
         grid-column: span 1 !important;
     }
+}
+
+/* Badge X/Y de confirmaciones de lectura en la lista. */
+.badge-lecturas {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: #eef6f1;
+    border: 1px solid #cfe8d9;
+    color: #14603a;
+    font-size: 11px;
+    font-weight: 600;
+    width: fit-content;
 }
 </style>

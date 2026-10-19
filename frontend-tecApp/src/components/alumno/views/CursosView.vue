@@ -65,7 +65,7 @@
       </div>
 
       <div v-for="(c, index) in comunicados" :key="c.id_comunicado || index" class="comunicado-card" :class="{ abierto: c.abierto }">
-        <button type="button" class="comunicado-header" @click="c.abierto = !c.abierto" :aria-expanded="!!c.abierto">
+        <button type="button" class="comunicado-header" @click="alternarComunicadoCurso(c)" :aria-expanded="!!c.abierto">
           <div class="comunicado-header-left">
             <div class="comunicado-icono">
               <i class="fas fa-bullhorn"></i>
@@ -94,7 +94,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { obtenerMisMaterias } from "@/services/academico-service.js";
-import { obtenerTodosComunicados } from "@/services/comunidad-service.js";
+import { obtenerTodosComunicados, marcarComunicadoLeido } from "@/services/comunidad-service.js";
 import {
   claseImportancia,
   extraerComunicados,
@@ -131,6 +131,15 @@ const cargarDatos = async () => {
     console.error("Error al cargar datos del servicio:", error);
     materias.value = [];
     comunicados.value = [];
+  }
+};
+
+// Abrir el acordeón confirma la lectura: marca silenciosa e idempotente
+// (el backend valida destinatario; fallar no interrumpe la vista).
+const alternarComunicadoCurso = (comunicado) => {
+  comunicado.abierto = !comunicado.abierto;
+  if (comunicado.abierto && comunicado.id_comunicado) {
+    marcarComunicadoLeido(comunicado.id_comunicado).catch(() => {});
   }
 };
 

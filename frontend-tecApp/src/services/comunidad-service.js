@@ -150,6 +150,51 @@ export const eliminarComunicado = async (id) => {
   }
 };
 
+// ── Confirmaciones de lectura (E-confirmaciones) ───────────────────────────
+
+// El receptor marca su lectura al ver el comunicado (idempotente; el backend
+// valida que sea destinatario real).
+export const marcarComunicadoLeido = async (id) => {
+  try {
+    const response = await axios.post(
+      `${API_URL}/comunidad/comunicados/${id}/leido`,
+      {},
+      getConfig(),
+    );
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, `Error al registrar la lectura del comunicado ${id}`);
+  }
+};
+
+// Confirmaciones de lectura: padrón de destinatarios (leídos / pendientes).
+export const obtenerConfirmacionesLectura = async (id) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/comunidad/comunicados/${id}/lecturas`,
+      getConfig(),
+    );
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, `Error al obtener las confirmaciones del comunicado ${id}`);
+  }
+};
+
+// Resumen X/Y para los badges de las listas de gestión.
+export const obtenerResumenLecturas = async (ids) => {
+  try {
+    const lista = (ids || []).map(Number).filter(Boolean).join(",");
+    if (!lista) return { success: true, data: [] };
+    const response = await axios.get(
+      `${API_URL}/comunidad/comunicados/lecturas/resumen?ids=${encodeURIComponent(lista)}`,
+      getConfig(),
+    );
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "Error al obtener el resumen de lecturas");
+  }
+};
+
 // ==========================================
 //      SERVICIOS DE EMAILS
 // ==========================================
