@@ -436,19 +436,6 @@
                         />
                         <span v-if="erroresForm.telefono_tutor" class="field-error">{{ erroresForm.telefono_tutor }}</span>
                     </div>
-
-                    <div class="form-group">
-                        <label for="email">Email (para la cuenta de acceso)</label>
-                        <input
-                            id="email"
-                            v-model="form.email"
-                            type="email"
-                            placeholder="Ej: alumno@tecnica2.edu.ar"
-                            :class="{ 'input-error': erroresForm.email }"
-                            @blur="validarCampo('email')"
-                        />
-                        <span v-if="erroresForm.email" class="field-error">{{ erroresForm.email }}</span>
-                    </div>
                 </div>
 
                 <div class="form-row">
@@ -464,10 +451,15 @@
                 </div>
 
                 <UserAccessPanel
-                    v-if="vistaActiva === 'crear'"
+                    v-if="vistaActiva === 'crear' || vistaActiva === 'editar'"
+                    :key="vistaActiva + '-' + (form.id_alumno ?? 'nuevo')"
+                    :modo="vistaActiva"
+                    :usuarioActual="usuarioVinculado"
                     :defaultRolId="1"
                     :listaRoles="listaRoles"
                     :emailSugerido="form.email"
+                    :abiertoPorDefecto="vistaActiva === 'crear'"
+                    :cuentaOpcional="true"
                     @update:usuarioData="handleUsuarioData"
                 />
 
@@ -609,15 +601,14 @@ import {
     modificarAlumno,
     darDeBajaAlumno,
     obtenerCursos,
-    sincronizarUsuarioAlumno,
+    actualizarCuentaAlumno,
 } from "../../../services/academico-service.js";
-import { obtenerRoles, crearUsuario } from "../../../services/usuarios-services.js";
+import { obtenerRoles } from "../../../services/usuarios-services.js";
 import { formatDate, toInputDate } from "../../../utils/formatters.js";
 import {
     validarRequerido,
     validarLongitudMinima,
     validarDNI,
-    validarEmail,
     validarTelefonoAR,
     validarFechaInput,
     validarFormulario,
@@ -652,6 +643,16 @@ const mostrarBajas = ref(false);
 const panelUsuarioData = ref(null);
 const listaRoles = ref([]);
 const primerInputRef = ref(null);
+
+// Cuenta vigente del alumno en edición (precarga del panel UserAccessPanel).
+// El listado trae el include `usuario` del backend (id_usuario + email).
+const usuarioVinculado = computed(() => {
+    if (vistaActiva.value !== "editar" || !form.value?.id_usuario) return null;
+    return {
+        id_usuario: form.value.id_usuario,
+        email: form.value.usuario?.email || "",
+    };
+});
 
 const etiquetaEstado = {
     activo: "Activo",
@@ -787,7 +788,6 @@ const REGLAS_VALIDACION = {
     dni: validarDNI,
     telefono_tutor: (v) => validarTelefonoAR(v, false),
     fecha_nacimiento: (v) => (v ? validarFechaInput(v) : ""),
-    email: (v) => v ? validarEmail(v) : "",
     estado: (v) => validarRequerido(v, "El estado"),
 };
 
@@ -894,6 +894,7 @@ const guardarAlumno = async () => {
         }
 
         let idAlumno = null;
+        let alumnoCreado = false;
         if (vistaActiva.value === "crear") {
             const res = await crearAlumno(payload);
             if (res?.success === false) {
@@ -903,6 +904,7 @@ const guardarAlumno = async () => {
                 );
             }
             idAlumno = res?.data?.id_alumno ?? res?.data?.data?.id_alumno ?? null;
+            alumnoCreado = true;
         } else {
             const res = await modificarAlumno(payload);
             if (res?.success === false) {
@@ -913,51 +915,58 @@ const guardarAlumno = async () => {
             }
         }
 
-        // Si estamos en modo crear y el panel de usuario estaba activo
-        if (vistaActiva.value === "crear" && panelUsuarioData.value !== null) {
-            const { email, contrasena, id_rol } = panelUsuarioData.value;
+        let avisoCredenciales = "";
+
+        // ── Cuenta de acceso: crear (alumno nuevo o sin cuenta) o actualizar ──
+        const datosCuenta = construirDatosCuenta();
+        if (datosCuenta) {
+            const idDestino = alumnoCreado ? idAlumno : payload.id_alumno;
 
             try {
-                const userPayload = {
-                    nombre: form.value.nombre,
-                    apellido: form.value.apellido,
-                    email,
-                    contrasena,
-                    id_rol,
-                };
-                const resUsuario = await crearUsuario(userPayload);
-                if (resUsuario?.success === false) {
+                const resCuenta = await actualizarCuentaAlumno(idDestino, datosCuenta);
+                if (resCuenta?.success === false) {
                     throw new Error(
-                        resUsuario.message ||
-                        "No se pudo crear la cuenta de usuario.",
+                        resCuenta.message ||
+                        "No se pudo actualizar la cuenta de acceso.",
                     );
                 }
 
-                // PATCH sincronizar usuario ↔ entidad
-                await sincronizarUsuarioAlumno({
-                    idAlumno,
-                    idUsuario: resUsuario.data?.id_usuario,
-                });
-
-                // ✅ Full success: entity + account created
+                // ✅ Full success: ficha + cuenta guardadas
                 exitoGuardar.value = true;
+                // El envío de credenciales puede fallar aun quedando la cuenta
+                // guardada: el backend responde bien pero con un aviso.
+                avisoCredenciales = resCuenta?.data?.aviso || "";
             } catch (userError) {
-                // ⚠️ Entidad creada pero la cuenta falló
+                // ⚠️ Ficha guardada, pero la cuenta falló: es reintentable
+                // desde la propia edición de la ficha. Se muestra el motivo
+                // real del backend (ej. "el correo ya está en uso").
+                const detalle =
+                    userError?.response?.data?.message ||
+                    userError?.message ||
+                    "motivo desconocido";
                 errorGuardar.value =
-                    "El alumno fue inscrito, pero la cuenta de usuario no pudo ser registrada. " +
-                    "Podés crear la cuenta manualmente desde la sección Usuarios.";
-                console.error("Error al crear cuenta de usuario:", userError);
+                    (alumnoCreado
+                        ? `El alumno fue inscrito, pero su cuenta de acceso no pudo registrarse: ${detalle}. `
+                        : `La ficha se actualizó, pero la cuenta de acceso no se pudo guardar: ${detalle}. `) +
+                    "Podés reintentarlo desde la edición de la ficha del alumno.";
+                console.error("Error al gestionar la cuenta de usuario:", userError);
             }
         } else {
-            // Panel desactivado o modo editar: éxito normal
+            // Panel desactivado o sin cambios de cuenta: éxito normal
             exitoGuardar.value = true;
         }
 
-        toast.success(
-            vistaActiva.value === "crear"
-                ? "Alumno inscripto correctamente."
-                : "Ficha del alumno actualizada correctamente.",
-        );
+        if (errorGuardar.value) {
+            toast.error(errorGuardar.value);
+        } else if (avisoCredenciales) {
+            toast.error(avisoCredenciales);
+        } else {
+            toast.success(
+                vistaActiva.value === "crear"
+                    ? "Alumno inscripto correctamente."
+                    : "Ficha del alumno actualizada correctamente.",
+            );
+        }
         await fetchAlumnos();
         await recargarTabla();
         cambiarVista("lista");
@@ -970,6 +979,37 @@ const guardarAlumno = async () => {
     } finally {
         guardando.value = false;
     }
+};
+
+/**
+ * Arma el payload de cuenta para PATCH /alumnos/:id/cuenta, o devuelve null
+ * cuando no hay nada que hacer:
+ *  - crear: la cuenta solo se crea si hay contraseña o si se marcó el envío
+ *    de credenciales (el backend genera la contraseña y la manda por email);
+ *    en caso contrario el alumno queda "Sin cuenta".
+ *  - editar: solo si cambió el email, se escribió una contraseña nueva o se
+ *    pidió el envío de credenciales.
+ */
+const construirDatosCuenta = () => {
+    const datos = panelUsuarioData.value;
+    if (!datos) return null;
+
+    const email = (datos.email || "").trim();
+    const contrasena = (datos.contrasena || "").trim();
+    const enviarCredenciales = datos.enviarCredenciales === true;
+
+    if (vistaActiva.value === "crear") {
+        // Sin contraseña y sin envío marcado: guardar sin cuenta.
+        if (!contrasena && !enviarCredenciales) return null;
+        return { email, contrasena, enviarCredenciales };
+    }
+
+    const emailVigente = usuarioVinculado.value?.email || "";
+    const cambioEmail = Boolean(email) && email !== emailVigente;
+
+    if (!cambioEmail && !contrasena && !enviarCredenciales) return null;
+
+    return { email: email || emailVigente, contrasena, enviarCredenciales };
 };
 
 const pedirConfirmacion = (alumno) => {

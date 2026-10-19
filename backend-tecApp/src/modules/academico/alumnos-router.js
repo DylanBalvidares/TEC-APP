@@ -3,6 +3,7 @@ import {
   crearAlumno,
   crearAlumnosEnLote,
   sincronizarUsuarioAlumno,
+  gestionarCuentaAlumno,
   obtenerAlumno,
   obtenerTodosAlumnos,
   obtenerAlumnosCurso,
@@ -219,6 +220,39 @@ alumnosRouter.patch(
         despues: req.body,
       });
       return res.status(200).json(resultado);
+    } catch (error) {
+      return res.status(error.status || 500).json({ message: error.message });
+    }
+  },
+);
+
+// ============== CREAR/ACTUALIZAR CUENTA DE ACCESO DEL ALUMNO ==============
+// Un solo endpoint para los dos casos del formulario de alumnos:
+// - alumno sin cuenta -> crea el usuario (rol Alumno) y lo vincula;
+// - alumno con cuenta -> actualiza email y/o contraseña.
+// El guard de preceptor (validarCursoPreceptor) asegura que sólo toque
+// alumnos de sus cursos.
+alumnosRouter.patch(
+  "/alumnos/:id/cuenta",
+  comprobarPermiso([
+    "administrativo_editar_alumno",
+    "preceptor_editar_alumno",
+  ]),
+  validarCursoPreceptor,
+  async (req, res) => {
+    try {
+      const resultado = await gestionarCuentaAlumno(req.params.id, req.body);
+      await auditarEscritura(req, {
+        accion: resultado.creada ? "crear" : "modificar",
+        entidad: "cuenta_alumno",
+        id_entidad: req.params.id,
+        // Solo quedan datos no sensibles: la contraseña jamás se audita.
+        despues: {
+          email: req.body?.email ?? null,
+          enviarCredenciales: Boolean(req.body?.enviarCredenciales),
+        },
+      });
+      return res.status(resultado.creada ? 201 : 200).json(resultado);
     } catch (error) {
       return res.status(error.status || 500).json({ message: error.message });
     }

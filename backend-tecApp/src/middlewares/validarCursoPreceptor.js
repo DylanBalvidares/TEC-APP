@@ -63,7 +63,9 @@ const validarCursoPreceptor = async (req, res, next) => {
         idCursoObjetivo = parseInt(req.body.id_curso);
       }
     } else if (req.method === "PATCH") {
-      const idAlumno = req.body.id_alumno || req.body.id;
+      // Rutas tipo PATCH /alumnos/:id/cuenta traen el id por params; el resto
+      // (PATCH /alumnos) lo trae en el body.
+      const idAlumno = req.body.id_alumno || req.body.id || req.params.id;
       if (!idAlumno) {
         return next(new ErrorHandler(400, "ID de alumno no especificado para modificar"));
       }

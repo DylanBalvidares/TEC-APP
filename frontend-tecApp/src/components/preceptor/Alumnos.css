@@ -442,6 +442,17 @@
   flex-shrink: 0;
 }
 
+/* Cuenta de acceso vinculada al legajo (junto al email en la fila) */
+.alumno-email .cuenta-icono {
+  color: #16a34a;
+  flex-shrink: 0;
+  cursor: help;
+}
+
+.alumno-email .cuenta-icono.sin-cuenta {
+  color: #d97706;
+}
+
 .alumno-email span {
   overflow: hidden;
   text-overflow: ellipsis;

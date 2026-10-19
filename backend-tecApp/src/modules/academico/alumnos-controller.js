@@ -1,8 +1,11 @@
 import { Op } from "sequelize";
+import bcrypt from "bcryptjs";
+import crypto from "node:crypto";
 import ErrorHandler from "../../utils/ErrorHandler.js";
-import { Alumno, Curso, Asistencia } from "../../db/models/index.js";
+import { Alumno, Curso, Asistencia, Usuario } from "../../db/models/index.js";
 import sequelize from "../../db/conexionDB.js";
 import { validarTelefonoAR } from "../../utils/whatsappProvider.js";
+import { enviarCredencialesAcceso } from "../../utils/sendMail.js";
 import {
   pidePaginacion,
   parsearPaginacion,
@@ -11,6 +14,35 @@ import {
 
 const COLUMNAS_ALUMNOS = ["id_alumno", "nombre", "apellido", "dni", "estado", "id_curso"];
 const ALIAS_ALUMNOS = { curso: "id_curso" };
+
+// Contraseña de la cuenta de acceso: mismo estándar que usuarios-controller
+// (bcrypt con 10 rondas).
+const RONDAS_BCRYPT = 10;
+
+// Rol asignado a toda cuenta creada desde la ficha de un alumno.
+const ROL_ALUMNO_ID = 1;
+
+//Nunca se toca una cuenta root desde la ficha de un alumno.
+const ROL_ROOT_ID = 8;
+
+// Genera una contraseña de acceso legible por email: 12 alfanuméricos, sin
+// caracteres ambiguos (0/O, 1/l/I). Solo viaja dentro del mail de credenciales:
+// nunca se devuelve en la respuesta ni se loguea su contenido.
+function generarContrasenaSegura() {
+  const ALFABETO = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+  let contrasena = "";
+  for (let i = 0; i < 12; i += 1) {
+    contrasena += ALFABETO[crypto.randomInt(ALFABETO.length)];
+  }
+  return contrasena;
+}
+
+// Include estándar para exponer la cuenta de acceso en los lecturas de alumnos.
+const INCLUDE_CUENTA = {
+  model: Usuario,
+  as: "usuario",
+  attributes: ["id_usuario", "email"],
+};
 
 // Normaliza el email del legajo: trim y vacío => null (evita que el validador
 // isEmail del modelo rechace "" y tumbe el alta). En modificarAlumno un valor
@@ -60,10 +92,8 @@ async function obtenerTodosAlumnos(query = {}) {
   console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: obtenerTodosAlumnos");
   try {
     const incluir = [
-      {
-        model: Curso,
-        attributes: ["nombre_curso"],
-      },
+      { model: Curso, attributes: ["nombre_curso"] },
+      INCLUDE_CUENTA,
     ];
 
     // Sin page/limit: listado completo como antes (compatibilidad).
@@ -116,7 +146,9 @@ async function obtenerAlumno(id) {
       throw new ErrorHandler(400, "ID de alumno inválida");
     }
 
-    const alumno = await Alumno.findByPk(id);
+    const alumno = await Alumno.findByPk(id, {
+      include: [INCLUDE_CUENTA],
+    });
 
     if (!alumno) {
       throw new ErrorHandler(404, "No se encontro el alumno especificado");
@@ -143,6 +175,7 @@ async function obtenerAlumnosCurso(id, fecha = null) {
       where: {
         id_curso: id,
       },
+      include: [INCLUDE_CUENTA],
     });
 
     if (!alumnos.length) {
@@ -297,6 +330,169 @@ async function sincronizarUsuarioAlumno(payload) {
   } catch (error) {
     console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en sincronizarAlumno:", error);
     throw new ErrorHandler(500, "Error interno al sincronizar alumno");
+  }
+}
+
+// Crea o actualiza la cuenta de acceso (usuarios) de un alumno desde su ficha.
+// - Sin cuenta: exige email + contrasena, crea el usuario con rol Alumno (1)
+//   y vincula alumnos.id_usuario.
+// - Con cuenta: actualiza el email si cambió y/o la contraseña si viene.
+// Lo usan administrativo (sus alumnos) y preceptor (limitado por
+// validarCursoPreceptor a sus cursos); ver PATCH /alumnos/:id/cuenta.
+async function gestionarCuentaAlumno(id, datosCuenta = {}) {
+  console.log("\x1b[1m\x1b[36m[INFO]\x1b[0m Ejecutando controlador: gestionarCuentaAlumno");
+  const idAlumno = Number(id);
+  if (!idAlumno || idAlumno < 0) {
+    throw new ErrorHandler(400, "ID de alumno inválida");
+  }
+
+  const email =
+    typeof datosCuenta?.email === "string" ? datosCuenta.email.trim() : "";
+  const contrasena =
+    typeof datosCuenta?.contrasena === "string" ? datosCuenta.contrasena.trim() : "";
+  // Casilla "Enviar credenciales por email": si no viene contraseña, se
+  // genera una seguridad en el servidor y sale por email al guardar.
+  const enviarCredenciales = datosCuenta?.enviarCredenciales === true;
+  let contrasenaUsada = contrasena;
+  if (enviarCredenciales && !contrasenaUsada) {
+    contrasenaUsada = generarContrasenaSegura();
+  }
+
+  try {
+    const alumno = await Alumno.findByPk(idAlumno);
+    if (!alumno) {
+      throw new ErrorHandler(404, "No se encontro el alumno especificado");
+    }
+
+    // Con cuenta vinculada: solo email y/o contraseña (el rol queda igual).
+    if (alumno.id_usuario) {
+      const cuenta = await Usuario.findByPk(alumno.id_usuario);
+      if (!cuenta) {
+        throw new ErrorHandler(404, "No se encontró la cuenta vinculada al alumno");
+      }
+
+      if (Number(cuenta.id_rol) === ROL_ROOT_ID) {
+        throw new ErrorHandler(
+          403,
+          "No se puede modificar una cuenta root desde la ficha del alumno",
+        );
+      }
+
+      const datosAActualizar = {};
+      if (email && email !== cuenta.email) {
+        datosAActualizar.email = email;
+      }
+      if (contrasenaUsada) {
+        datosAActualizar.contrasena = await bcrypt.hash(contrasenaUsada, RONDAS_BCRYPT);
+      }
+
+      if (Object.keys(datosAActualizar).length === 0) {
+        return {
+          ok: true,
+          creada: false,
+          cambios: false,
+          message: "La cuenta ya está actualizada",
+        };
+      }
+
+      await cuenta.update(datosAActualizar);
+
+      let credencialesEnviadas;
+      let aviso;
+      if (enviarCredenciales) {
+        const enviado = await enviarCredencialesAcceso(
+          `${alumno.nombre} ${alumno.apellido}`.trim(),
+          datosAActualizar.email ?? cuenta.email,
+          contrasenaUsada,
+        );
+        credencialesEnviadas = Boolean(enviado);
+        if (!enviado) {
+          aviso =
+            "La cuenta quedó guardada, pero no se pudo enviar el email de credenciales. Podés reintentarlo desde la edición de la ficha.";
+        }
+      }
+
+      return {
+        ok: true,
+        creada: false,
+        cambios: true,
+        message: "Cuenta de acceso actualizada",
+        usuario: {
+          id_usuario: cuenta.id_usuario,
+          email: datosAActualizar.email ?? cuenta.email,
+        },
+        ...(enviarCredenciales
+          ? { credencialesEnviadas, ...(aviso ? { aviso } : {}) }
+          : {}),
+      };
+    }
+
+    // Sin cuenta: alta y vinculación en un solo paso.
+    if (!email || !contrasenaUsada) {
+      throw new ErrorHandler(
+        400,
+        !contrasenaUsada
+          ? "El email y la contraseña son obligatorios para crear la cuenta de acceso"
+          : "El email es obligatorio: es el correo de la cuenta y donde se envían las credenciales",
+      );
+    }
+
+    const nuevaCuenta = await Usuario.create({
+      nombre: alumno.nombre,
+      apellido: alumno.apellido,
+      email,
+      contrasena: await bcrypt.hash(contrasenaUsada, RONDAS_BCRYPT),
+      id_rol: ROL_ALUMNO_ID,
+    });
+
+    await Alumno.update(
+      { id_usuario: nuevaCuenta.id_usuario },
+      { where: { id_alumno: idAlumno } },
+    );
+
+    let credencialesEnviadas;
+    let aviso;
+    if (enviarCredenciales) {
+      const enviado = await enviarCredencialesAcceso(
+        `${alumno.nombre} ${alumno.apellido}`.trim(),
+        nuevaCuenta.email,
+        contrasenaUsada,
+      );
+      credencialesEnviadas = Boolean(enviado);
+      if (!enviado) {
+        aviso =
+          "La cuenta quedó creada, pero no se pudo enviar el email de credenciales. Podés reintentarlo desde la edición de la ficha.";
+      }
+    }
+
+    return {
+      ok: true,
+      creada: true,
+      cambios: true,
+      message: "Cuenta de acceso creada y vinculada",
+      usuario: { id_usuario: nuevaCuenta.id_usuario, email: nuevaCuenta.email },
+      ...(enviarCredenciales
+        ? { credencialesEnviadas, ...(aviso ? { aviso } : {}) }
+        : {}),
+    };
+  } catch (error) {
+    if (error instanceof ErrorHandler) throw error;
+
+    if (error.name === "SequelizeUniqueConstraintError") {
+      throw new ErrorHandler(
+        400,
+        "El correo electrónico ya está en uso por otro usuario",
+      );
+    }
+    if (error.name === "SequelizeValidationError") {
+      throw new ErrorHandler(
+        400,
+        "Datos de la cuenta inválidos. Verificá el email y la contraseña.",
+      );
+    }
+
+    console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en gestionarCuentaAlumno:", error);
+    throw new ErrorHandler(500, "Error interno al gestionar la cuenta del alumno");
   }
 }
 
@@ -659,6 +855,7 @@ export {
   crearAlumnosEnLote,
   validarLoteAlumnos,
   sincronizarUsuarioAlumno,
+  gestionarCuentaAlumno,
   eliminarAlumno,
   modificarAlumno,
   darDeBajaAlumno,

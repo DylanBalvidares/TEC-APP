@@ -39,6 +39,7 @@ import Sancion from "./sancion-model.js";
 import Observacion from "./observacion-model.js";
 import Notificacion from "./notificacion-model.js";
 import NotificacionPreferencia from "./notificacion-preferencia-model.js";
+import ComunicadoLectura from "./comunicado-lectura-model.js";
 
 // ==========================================
 // Relaciones: Usuarios & RBAC
@@ -70,6 +71,11 @@ Personal.hasMany(Curso, { foreignKey: "id_preceptor", as: "cursosPreceptor" });
 
 Curso.hasMany(Alumno, { foreignKey: "id_curso" });
 Alumno.belongsTo(Curso, { foreignKey: "id_curso" });
+
+// Cuenta de acceso del alumno (tabla usuarios, misma clave que profesores/
+// personal). Alias "usuario": disponible en los GET de alumnos para mostrar
+// el estado "Con cuenta / Sin cuenta" y editarla desde su ficha.
+Alumno.belongsTo(Usuario, { foreignKey: "id_usuario", as: "usuario" });
 
 Alumno.hasMany(Asistencia, { foreignKey: "id_alumno" });
 Asistencia.belongsTo(Alumno, { foreignKey: "id_alumno" });
@@ -202,4 +208,5 @@ export {
   Observacion,
   Notificacion,
   NotificacionPreferencia,
+  ComunicadoLectura,
 };

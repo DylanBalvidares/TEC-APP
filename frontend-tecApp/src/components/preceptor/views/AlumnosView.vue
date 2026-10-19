@@ -151,6 +151,18 @@
             <span :title="alumno.email">
               {{ alumno.email || "—" }}
             </span>
+
+            <!-- Cuenta de acceso vinculada al legajo -->
+            <i
+              v-if="alumno.id_usuario"
+              class="fa-solid fa-user-check cuenta-icono"
+              title="Tiene cuenta de acceso vinculada"
+            ></i>
+            <i
+              v-else
+              class="fa-solid fa-user-slash cuenta-icono sin-cuenta"
+              title="Sin cuenta de acceso vinculada"
+            ></i>
           </div>
 
           <!-- TUTOR -->
@@ -461,6 +473,18 @@
                 <option value="inactivo">Inactivo</option>
               </select>
             </div>
+
+            <!-- CUENTA DE ACCESO (opcional / editable) -->
+            <UserAccessPanel
+              :key="(modoEdicion ? 'edit-' + alumnoEditandoId : 'nuevo')"
+              :modo="modoEdicion ? 'editar' : 'crear'"
+              :usuarioActual="cuentaVinculada"
+              :ocultarRol="true"
+              :emailSugerido="formulario.email"
+              :abiertoPorDefecto="!modoEdicion"
+              :cuentaOpcional="true"
+              @update:usuarioData="actualizarDatosCuenta"
+            />
 
           </div>
 
@@ -831,6 +855,7 @@ import {
   crearAlumno,
   modificarAlumno,
   eliminarAlumno,
+  actualizarCuentaAlumno,
   enviarEmailAlumno
 } from "@/services/academico-service.js";
 
@@ -839,6 +864,7 @@ import {
 } from "@/services/comunidad-service.js";
 
 import TelefonoInput from "@/components/ui/TelefonoInput.vue";
+import UserAccessPanel from "@/components/ui/UserAccessPanel.vue";
 import { validarTelefonoAR, validarEmail } from "@/utils/validators.js";
 
 
@@ -928,6 +954,25 @@ const formularioInicial = () => ({
 
 
 const formulario = ref(formularioInicial());
+
+
+/* =========================================================
+   CUENTA DE ACCESO (panel UserAccessPanel)
+========================================================= */
+
+// Datos emitidos por el panel (email/contrasena) o null si está oculto.
+const datosCuentaUsuario = ref(null);
+
+// Cuenta actualmente vinculada al alumno en edición/creación.
+const cuentaVinculada = ref(null);
+
+// Si la ficha del alumno ya se creó pero la cuenta falla, guardamos el id
+// para reintentar la cuenta al volver a "Guardar" sin duplicar el alumno.
+const alumnoPendienteCuenta = ref(null);
+
+const actualizarDatosCuenta = (datos) => {
+  datosCuentaUsuario.value = datos;
+};
 
 
 /* =========================================================
@@ -1106,6 +1151,10 @@ const abrirModalNuevo = () => {
 
   errorFormulario.value = "";
 
+  cuentaVinculada.value = null;
+  datosCuentaUsuario.value = null;
+  alumnoPendienteCuenta.value = null;
+
   mostrarModalAlumno.value = true;
 
 };
@@ -1139,6 +1188,16 @@ const abrirModalEditar = (alumno) => {
 
   errorFormulario.value = "";
 
+  cuentaVinculada.value = alumno.id_usuario
+    ? {
+        id_usuario: alumno.id_usuario,
+        email: alumno.usuario?.email || ""
+      }
+    : null;
+
+  datosCuentaUsuario.value = null;
+  alumnoPendienteCuenta.value = null;
+
   mostrarModalAlumno.value = true;
 
 };
@@ -1153,6 +1212,9 @@ const cerrarModalAlumno = () => {
   if (guardandoAlumno.value) {
     return;
   }
+
+  datosCuentaUsuario.value = null;
+  alumnoPendienteCuenta.value = null;
 
   mostrarModalAlumno.value = false;
 
@@ -1254,6 +1316,14 @@ const guardarAlumno = async () => {
       estado: formulario.value.estado
     });
 
+  } else if (alumnoPendienteCuenta.value !== null) {
+
+    // Reintento: la ficha ya existe, solo falta crear/vincular la cuenta.
+    resultado = {
+      success: true,
+      data: { id_alumno: alumnoPendienteCuenta.value }
+    };
+
   } else {
 
     resultado = await crearAlumno({
@@ -1282,11 +1352,117 @@ const guardarAlumno = async () => {
   }
 
 
+  // ── Cuenta de acceso (crear y editar comparten el endpoint) ──
+  const idAlumno =
+    resultado?.data?.id_alumno ?? resultado?.data?.data?.id_alumno ?? null;
+
+  await datosCuentaFormulario(idAlumno);
+
+};
+
+
+/**
+ * Maneja la creación/actualización de la cuenta de acceso tras guardar la
+ * ficha. Si la cuenta falla, muestra el error en el modal y (si la ficha recién
+ * se creó) retiene el id para reintentar al volver a "Guardar".
+ */
+const datosCuentaFormulario = async (idAlumno) => {
+
+  try {
+
+    // Panel oculto: no hay nada que crear ni actualizar.
+    if (datosCuentaUsuario.value === null) {
+      await finalizarGuardado();
+      return;
+    }
+
+    const email = String(datosCuentaUsuario.value.email || "").trim();
+    const contrasena = String(datosCuentaUsuario.value.contrasena || "").trim();
+    const enviarCredenciales =
+      datosCuentaUsuario.value.enviarCredenciales === true;
+
+    if (email) {
+      const errorEmailCuenta = validarEmail(email);
+      if (errorEmailCuenta) {
+        errorFormulario.value = errorEmailCuenta;
+        return;
+      }
+    }
+
+    const sinCuentaVinculada = cuentaVinculada.value === null;
+
+    // Alta de cuenta: requiere email y contraseña (o el envío de credenciales,
+    // en cuyo caso el backend genera la contraseña y la manda por email).
+    if (sinCuentaVinculada && (!email || (!contrasena && !enviarCredenciales))) {
+      errorFormulario.value =
+        "Completá el correo y la contraseña (o marcá 'Enviar credenciales por email') " +
+        "para crear la cuenta; también podés plegar la sección para guardar sin cuenta.";
+      return;
+    }
+
+    // Solo llamamos a la API si hay un cambio real.
+    if (
+      !sinCuentaVinculada &&
+      email === cuentaVinculada.value.email &&
+      !contrasena &&
+      !enviarCredenciales
+    ) {
+      await finalizarGuardado();
+      return;
+    }
+
+    if (!idAlumno) {
+      errorFormulario.value =
+        "No se pudo identificar al alumno para actualizar su cuenta.";
+      return;
+    }
+
+    const resultadoCuenta = await actualizarCuentaAlumno(idAlumno, {
+      email: email || cuentaVinculada.value?.email || "",
+      contrasena: contrasena || "",
+      enviarCredenciales: enviarCredenciales,
+    });
+
+    if (!resultadoCuenta.success) {
+      // Ficha guardada: se queda el modal para reintentar la cuenta.
+      errorFormulario.value =
+        resultadoCuenta.message ||
+        "No se pudo actualizar la cuenta de acceso del alumno.";
+
+      if (!modoEdicion.value && idAlumno) {
+        alumnoPendienteCuenta.value = idAlumno;
+      }
+      return;
+    }
+
+    // La cuenta quedó guardada, pero el envío del email pudo fallar: se avisa
+    // en el modal (y queda retentable presionando "Guardar" de nuevo).
+    if (resultadoCuenta.data?.aviso) {
+      errorFormulario.value = resultadoCuenta.data.aviso;
+      if (!modoEdicion.value && idAlumno) {
+        alumnoPendienteCuenta.value = idAlumno;
+      }
+      await cargarAlumnos();
+      return;
+    }
+
+    alumnoPendienteCuenta.value = null;
+    errorFormulario.value = "";
+
+    await finalizarGuardado();
+
+  } finally {
+    guardandoAlumno.value = false;
+  }
+
+};
+
+
+const finalizarGuardado = async () => {
+
   mostrarModalAlumno.value = false;
 
   await cargarAlumnos();
-
-  guardandoAlumno.value = false;
 
 };
 

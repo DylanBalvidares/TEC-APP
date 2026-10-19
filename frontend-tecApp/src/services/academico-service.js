@@ -837,6 +837,26 @@ export const sincronizarUsuarioAlumno = async (payload) => {
   }
 };
 
+/**
+ * Crear o actualizar la cuenta de acceso (usuario) de un alumno.
+ * Si el alumno no tiene cuenta, exige email y contrasena (rol Alumno).
+ * Si ya tiene, actualiza el email y/o la contraseña que se envíen.
+ *
+ * PATCH /api/academico/alumnos/:id/cuenta
+ */
+export const actualizarCuentaAlumno = async (idAlumno, datosCuenta) => {
+  try {
+    const response = await axios.patch(
+      `${API_URL}/alumnos/${idAlumno}/cuenta`,
+      datosCuenta,
+      getConfig()
+    );
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "No se pudo actualizar la cuenta de acceso del alumno");
+  }
+};
+
 export const sincronizarUsuarioProfesor = async (payload) => {
   try {
     const response = await axios.patch(`${API_URL}/profesores/sincronizar-usuario-profesor`, payload, getConfig());
