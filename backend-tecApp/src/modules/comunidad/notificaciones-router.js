@@ -3,6 +3,7 @@ import comprobarPermiso, { soloAutenticado } from "../../middlewares/comprobarPe
 import {
   listarMisNotificaciones,
   marcarNotificacionLeida,
+  marcarTodasLeidas,
   obtenerPreferencias,
   guardarPreferencias,
 } from "./notificaciones-controller.js";
@@ -13,6 +14,20 @@ const idPropio = (req) => Number(req.headers["id_usuario"]);
 
 const manejar = (res, error) =>
   res.status(error.status || error.statusCode || 500).json({ message: error.message });
+
+// Antes que "/:id/leida" para que la ruta exacta no compita con el patrón.
+notificacionesRouter.patch(
+  "/notificaciones/leidas",
+  comprobarPermiso(soloAutenticado),
+  async (req, res) => {
+    try {
+      const data = await marcarTodasLeidas(idPropio(req));
+      return res.status(200).json({ ok: true, ...data });
+    } catch (error) {
+      return manejar(res, error);
+    }
+  },
+);
 
 notificacionesRouter.get(
   "/notificaciones/mias",

@@ -24,6 +24,7 @@
         </div>
 
         <div class="user-section" ref="profileMenuRef">
+            <CampanitaNotificaciones icono="ti ti-bell" />
             <button
                 class="tema-btn"
                 type="button"
@@ -132,6 +133,7 @@ import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "../../../stores/auth";
 import Modal from "../../ui/Modal.vue";
+import CampanitaNotificaciones from "../../ui/CampanitaNotificaciones.vue";
 import { etiquetaRol } from "../../../utils/roles.js";
 import { usarTema } from "../../../composables/useTema.js";
 

@@ -16,18 +16,62 @@ export async function crearNotificacion({ id_usuario, tipo, titulo, cuerpo = nul
   });
   const preferencias = await obtenerPreferencias(id_usuario);
   // Tiempo real (E13): avisa al canal SSE para que el destinatario la vea
-  // sin recargar. Si no hay suscriptores, no hace nada.
+  // sin recargar. Si no hay suscriptores, no hace nada. Envío dirigido: el
+  // evento solo viaja por el stream del dueño.
   const plano = typeof notificacion.toJSON === "function" ? notificacion.toJSON() : notificacion;
-  emitir("notificacion", {
-    id_usuario: Number(id_usuario),
-    id_notificacion: plano.id_notificacion ?? plano.id ?? null,
-    tipo: String(tipo),
-    titulo: plano.titulo ?? String(titulo),
-  });
+  emitir(
+    "notificacion",
+    {
+      id_usuario: Number(id_usuario),
+      id_notificacion: plano.id_notificacion ?? plano.id ?? null,
+      tipo: String(tipo),
+      titulo: plano.titulo ?? String(titulo),
+    },
+    { id_usuario: Number(id_usuario) },
+  );
   return {
     notificacion,
     canales: seleccionarCanal(tipo, preferencias),
   };
+}
+
+/**
+ * Crea notificaciones de panel para varios usuarios (ej. fan-out de un
+ * comunicado) y emite un evento SSE dirigido por cada una. No lanza por IDs
+ * vacíos: en ese caso no hay destinatarios y devuelve 0 creadas.
+ */
+export async function crearNotificacionMasiva(idsUsuarios, { tipo, titulo, cuerpo = null }) {
+  const idsUnicos = [...new Set((idsUsuarios || []).map(Number).filter(Boolean))];
+  if (idsUnicos.length === 0) {
+    return { creadas: 0 };
+  }
+  if (!tipo) throw new ErrorHandler(400, "El tipo es obligatorio");
+  if (!titulo || !String(titulo).trim()) throw new ErrorHandler(400, "El título es obligatorio");
+
+  const filas = await Notificacion.bulkCreate(
+    idsUnicos.map((id) => ({
+      id_usuario: id,
+      tipo: String(tipo),
+      titulo: String(titulo).trim().slice(0, 200),
+      cuerpo: cuerpo ? String(cuerpo).slice(0, 2000) : null,
+    })),
+  );
+
+  for (const fila of filas) {
+    const plano = typeof fila.toJSON === "function" ? fila.toJSON() : fila;
+    emitir(
+      "notificacion",
+      {
+        id_usuario: plano.id_usuario,
+        id_notificacion: plano.id_notificacion ?? plano.id ?? null,
+        tipo: String(tipo),
+        titulo: plano.titulo ?? String(titulo),
+      },
+      { id_usuario: Number(plano.id_usuario) },
+    );
+  }
+
+  return { creadas: filas.length };
 }
 
 export async function listarMisNotificaciones(idUsuario, { soloNoLeidas = false } = {}) {
@@ -49,6 +93,17 @@ export async function marcarNotificacionLeida(idUsuario, idNotificacion) {
   }
   if (!notificacion.leida) await notificacion.update({ leida: true });
   return { mensaje: "Notificación marcada como leída" };
+}
+
+/** Marca como leídas todas las notificaciones del usuario. */
+export async function marcarTodasLeidas(idUsuario) {
+  const id = Number(idUsuario);
+  if (!id) throw new ErrorHandler(400, "El destinatario es obligatorio");
+  const [actualizadas] = await Notificacion.update(
+    { leida: true },
+    { where: { id_usuario: id, leida: false } },
+  );
+  return { actualizadas };
 }
 
 export async function obtenerPreferencias(idUsuario) {

@@ -62,6 +62,8 @@ test("rutas del centro: mías, leída y preferencias", async (t) => {
     fila({ id_usuario: 4, update: async () => [1] }),
     true,
   ]);
+  // Marcar todas: devuelve 2 filas afectadas (afirma el test).
+  t.mock.method(Notificacion, "update", async () => [2]);
   const srv = await obtenerServidor();
   // id_usuario del token = 4: dueño de la notificación mockeada.
   const auth = { token: token({ id: 4, id_rol: ROLES.ALUMNO }) };
@@ -90,4 +92,12 @@ test("rutas del centro: mías, leída y preferencias", async (t) => {
     body: { nota: ["panel"] },
   });
   assert.equal(guardar.status, 200);
+
+  // Marcar todas como leídas (campanita): solo la propia cuenta.
+  const todas = await srv.request("PATCH", "/api/comunidad/notificaciones/leidas", {
+    ...auth,
+    body: {},
+  });
+  assert.equal(todas.status, 200);
+  assert.equal(todas.data.actualizadas, 2);
 });

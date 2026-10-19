@@ -45,6 +45,15 @@ export const marcarNotificacionLeida = async (id) => {
   }
 };
 
+export const marcarTodasLeidas = async () => {
+  try {
+    const r = await axios.patch(`${API_URL}/leidas`, {}, getConfig());
+    return { success: true, data: r.data };
+  } catch (e) {
+    return manejarErrorApi(e, "Error al marcar todas como leídas");
+  }
+};
+
 export const obtenerPreferencias = async () => {
   try {
     const r = await axios.get(`${API_URL}/preferencias`, getConfig());

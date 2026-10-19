@@ -4,20 +4,13 @@ import { suscribir } from "../../utils/eventos.js";
 
 const eventosRouter = Router();
 
-// EventSource no puede enviar headers: se acepta el JWT por query (?token=)
-// solo en este endpoint SSE y se promueve a Authorization antes de autenticar.
-function tokenPorQuery(req, res, next) {
-  if (!req.headers?.authorization && typeof req.query?.token === "string" && req.query.token) {
-    req.headers.authorization = `Bearer ${req.query.token}`;
-  }
-  next();
-}
+// EventSource no puede enviar headers: el JWT viaja por query (?token=) y el
+// middleware `autenticar` lo acepta SOLO cuando la URL es /api/admin/eventos.
 
 // Canal SSE de eventos (colas y edición concurrente). Latido cada 25 s
 // para mantener viva la conexión detrás de proxies.
 eventosRouter.get(
   "/eventos",
-  tokenPorQuery,
   comprobarPermiso(soloAutenticado),
   async (req, res) => {
     res.setHeader("Content-Type", "text/event-stream");
@@ -31,7 +24,12 @@ eventosRouter.get(
     };
     enviar({ tipo: "conectado", datos: {}, fecha: new Date().toISOString() });
 
-    const desuscribir = suscribir({ write: enviar, end: () => {} });
+    // Se registra la identidad del token: los eventos dirigidos
+    // (ej. notificaciones) llegan solo a su dueño.
+    const desuscribir = suscribir(
+      { write: enviar, end: () => {} },
+      { id_usuario: req.headers["id_usuario"] ?? null },
+    );
     const latido = setInterval(() => res.write(": latido\n\n"), 25000);
 
     req.on("close", () => {

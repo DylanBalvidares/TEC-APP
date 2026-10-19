@@ -2,6 +2,7 @@ import ErrorHandler from "../../utils/ErrorHandler.js";
 import { Alumno, Personal, Curso, Correo } from "../../db/models/index.js";
 import sequelize from "../../db/conexionDB.js";
 import { enviarEmailAlumno } from "../../utils/sendMail.js";
+import { crearNotificacion } from "../comunidad/notificaciones-controller.js";
 
 async function verificarAccesoPreceptorAlumno(idUsuarioPreceptor, alumno) {
   if (!idUsuarioPreceptor) {
@@ -116,6 +117,25 @@ async function enviarEmailAAlumno(idAlumno, datosEmail, idUsuarioPreceptor) {
       estado: "enviado",
       message_id: resultadoEmailEnvio?.messageId || null,
     });
+
+    // El correo ya salió: si el alumno tiene cuenta, le queda también la
+    // notificación de panel (campanita). Jamás puede romper la respuesta del
+    // envío, por eso va encerrado y solo loguea errores.
+    if (alumno.id_usuario) {
+      try {
+        await crearNotificacion({
+          id_usuario: alumno.id_usuario,
+          tipo: "comunicado",
+          titulo: asunto,
+          cuerpo: mensaje ? String(mensaje).slice(0, 300) : null,
+        });
+      } catch (errorNotificacion) {
+        console.error(
+          "\x1b[1m\x1b[31m[ERROR]\x1b[0m Error notificando el email (no bloquea el envío):",
+          errorNotificacion.message,
+        );
+      }
+    }
 
     return {
       mensaje: `Email enviado correctamente a ${alumno.nombre} ${alumno.apellido} (${emailAlumno})`,

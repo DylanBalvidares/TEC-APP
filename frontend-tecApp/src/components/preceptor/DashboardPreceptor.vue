@@ -38,6 +38,9 @@
       </div>
 
 
+      <!-- Campanita de notificaciones (realtime + historial de la cuenta) -->
+      <CampanitaNotificaciones icono="fas fa-bell" class="campanita-preceptor" />
+
       <!-- =================================================
            PERFIL
       ================================================== -->
@@ -469,6 +472,8 @@ import {
   onMounted,
   onUnmounted
 } from "vue";
+
+import CampanitaNotificaciones from "../ui/CampanitaNotificaciones.vue";
 
 import {
   useRouter

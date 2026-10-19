@@ -2,7 +2,20 @@ import jwt from "jsonwebtoken";
 import obtenerJWTSecret from "../utils/jwtSecret.js";
 
 export function autenticar(req, res, next) {
-  const authHeader = req.headers["authorization"];
+  let authHeader = req.headers["authorization"];
+
+  // El canal SSE (/api/admin/eventos) no puede mandar headers (EventSource):
+  // sólo para ese endpoint se acepta el JWT por query (?token=). En cualquier
+  // otro endpoint el token viaja exclusivamente por Authorization.
+  if (
+    !authHeader &&
+    typeof req.query?.token === "string" &&
+    req.query.token &&
+    req.originalUrl?.startsWith("/api/admin/eventos")
+  ) {
+    authHeader = `Bearer ${req.query.token}`;
+  }
+
   const token = authHeader && authHeader.split(" ")[1];
 
   if (!token) {

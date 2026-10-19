@@ -5,6 +5,8 @@ import { obtenerServidor, cerrarServidor } from "./helpers/http.js";
 import { ROLES, token } from "./helpers/auth.js";
 import { fila, filas, sinToken, sinPermiso } from "./helpers/crud.js";
 import { Alumno, Personal, Curso, Correo } from "../src/db/models/index.js";
+import Notificacion from "../src/db/models/notificacion-model.js";
+import NotificacionPreferencia from "../src/db/models/notificacion-preferencia-model.js";
 import sequelize from "../src/db/conexionDB.js";
 import { invalidarCachePermisos } from "../src/middlewares/comprobarPermisos.js";
 import {
@@ -153,6 +155,47 @@ test("enviarEmailAAlumno exige preceptor del curso", async (t) => {
     enviarEmailAAlumno(1, { asunto: "a", mensaje: "m" }, 4),
     /personal/,
   );
+});
+
+test("enviarEmailAAlumno deja notificación de panel al alumno con cuenta", async (t) => {
+  mailOk(t);
+  t.mock.method(Alumno, "findByPk", async () => fila({ ...ALUMNO })); // id_usuario 10
+  accesoPreceptor(t);
+  emailEnDb(t);
+
+  const notificaciones = [];
+  t.mock.method(Notificacion, "create", async (d) => {
+    notificaciones.push(d);
+    return fila({ id_notificacion: 5, ...d });
+  });
+  t.mock.method(NotificacionPreferencia, "findByPk", async () => null);
+
+  const res = await enviarEmailAAlumno(1, { asunto: "Informe", mensaje: "Detalle" }, 4);
+  assert.match(res.mensaje, /enviado/);
+  assert.equal(notificaciones.length, 1);
+  assert.equal(notificaciones[0].id_usuario, 10);
+  assert.equal(notificaciones[0].tipo, "comunicado");
+  assert.equal(notificaciones[0].titulo, "Informe");
+
+  // Un alumno sin cuenta no puede recibir notificación: no hay id_usuario.
+  t.mock.method(Alumno, "findByPk", async () =>
+    fila({ ...ALUMNO, id_usuario: null, email: "ana.paz@gmail.com" }),
+  );
+  await enviarEmailAAlumno(1, { asunto: "Nota", mensaje: "Hola" }, 4);
+  assert.equal(notificaciones.length, 1);
+});
+
+test("el fallo de la notificación no rompe el envío del email", async (t) => {
+  mailOk(t);
+  t.mock.method(Alumno, "findByPk", async () => fila({ ...ALUMNO }));
+  accesoPreceptor(t);
+  emailEnDb(t);
+  t.mock.method(Notificacion, "create", async () => {
+    throw new Error("db caída al notificar");
+  });
+
+  const res = await enviarEmailAAlumno(1, { asunto: "Nota", mensaje: "Hola" }, 4);
+  assert.match(res.mensaje, /enviado/);
 });
 
 test("obtenerCorreosDeAlumno y marcarCorreoLeido", async (t) => {

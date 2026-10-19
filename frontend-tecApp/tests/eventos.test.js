@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { defineComponent } from "vue";
 import { mount, flushPromises } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
-import { usarEventos } from "../src/composables/useEventos.js";
+import { usarEventos, reiniciarEventos } from "../src/composables/useEventos.js";
 import { useAuthStore } from "../src/stores/auth.js";
 
 class FuenteFalsa {
@@ -10,6 +10,7 @@ class FuenteFalsa {
   constructor(url) {
     this.url = url;
     this.oyentes = {};
+    this.cerrada = false;
     FuenteFalsa.instancias.push(this);
   }
   addEventListener(tipo, fn) {
@@ -25,14 +26,18 @@ class FuenteFalsa {
   }
 }
 
-function montar() {
+const montados = [];
+
+function montar({ oyenteRoto = false } = {}) {
   let api = null;
   const Comp = defineComponent({
     setup() {
       api = usarEventos({
-        alEvento: (e) => {
-          api.recibidos.push(e);
-        },
+        alEvento: oyenteRoto
+          ? () => {
+              throw new Error("oyente roto");
+            }
+          : (e) => api.recibidos.push(e),
       });
       api.recibidos = [];
       return () => null;
@@ -40,6 +45,7 @@ function montar() {
     template: "<div />",
   });
   const wrapper = mount(Comp);
+  montados.push(wrapper);
   return { wrapper, api };
 }
 
@@ -48,6 +54,14 @@ beforeEach(() => {
   vi.stubGlobal("EventSource", FuenteFalsa);
   setActivePinia(createPinia());
   useAuthStore().token = "jwt-falso";
+  reiniciarEventos();
+});
+
+afterEach(() => {
+  // El composable se desconecta al desmontar: refleja el ref-count real.
+  for (const wrapper of montados) wrapper.unmount();
+  montados.length = 0;
+  vi.unstubAllGlobals();
 });
 
 describe("usarEventos", () => {
@@ -58,18 +72,59 @@ describe("usarEventos", () => {
     expect(FuenteFalsa.instancias[0].url).toContain("/api/admin/eventos?token=jwt-falso");
   });
 
-  it("reparte eventos nombrados al callback", async () => {
-    const { api } = montar();
-    api.conectar();
+  it("varios consumidores comparten una sola conexión", () => {
+    const a = montar();
+    const b = montar();
+    a.api.conectar();
+    b.api.conectar();
+    expect(FuenteFalsa.instancias.length).toBe(1);
+
+    // El que se desconecta no cierra el stream del otro.
+    a.api.desconectar();
+    expect(FuenteFalsa.instancias[0].cerrada).toBe(false);
+    b.api.desconectar();
+    expect(FuenteFalsa.instancias[0].cerrada).toBe(true);
+
+    // reconectar reinstala una conexión nueva
+    b.api.conectar();
+    expect(FuenteFalsa.instancias.length).toBe(2);
+    expect(FuenteFalsa.instancias[1].cerrada).toBe(false);
+  });
+
+  it("reparte eventos nombrados y anónimos a todos los oyentes", async () => {
+    const a = montar();
+    const b = montar();
+    a.api.conectar();
+    b.api.conectar();
     const fuente = FuenteFalsa.instancias[0];
+
     fuente.emitir("notificacion", { tipo: "notificacion", datos: { titulo: "Hola" } });
     await flushPromises();
-    expect(api.recibidos.length).toBe(1);
-    expect(api.ultimoEvento.value.datos.titulo).toBe("Hola");
+    expect(a.api.recibidos.length).toBe(1);
+    expect(b.api.recibidos.length).toBe(1);
+    expect(b.api.ultimoEvento.value.datos.titulo).toBe("Hola");
+
+    // Los eventos anónimos (onmessage) también pasan por el mismo reparto.
+    fuente.emitir("message", { tipo: "cola", datos: { pendientes: 3 } });
+    await flushPromises();
+    expect(a.api.recibidos.length).toBe(2);
+    expect(b.api.recibidos.length).toBe(2);
+    expect(b.api.ultimoEvento.value.tipo).toBe("cola");
+  });
+
+  it("un oyente roto no tumba la repartición", async () => {
+    const sano = montar();
+    const roto = montar({ oyenteRoto: true });
+    sano.api.conectar();
+    roto.api.conectar();
+    FuenteFalsa.instancias[0].emitir("notificacion", { tipo: "notificacion", datos: { titulo: "X" } });
+    await flushPromises();
+    expect(sano.api.recibidos.length).toBe(1);
+    expect(roto.api.recibidos.length).toBe(0);
   });
 
   it("desconectar cierra la fuente y marca estado", () => {
-    const { api, wrapper } = montar();
+    const { api } = montar();
     api.conectar();
     const fuente = FuenteFalsa.instancias[0];
     fuente.onopen();
@@ -77,7 +132,6 @@ describe("usarEventos", () => {
     api.desconectar();
     expect(fuente.cerrada).toBe(true);
     expect(api.conectado.value).toBe(false);
-    wrapper.unmount();
   });
 
   it("no conecta sin token", () => {
@@ -85,5 +139,6 @@ describe("usarEventos", () => {
     const { api } = montar();
     api.conectar();
     expect(FuenteFalsa.instancias.length).toBe(0);
+    expect(api.conectado.value).toBe(false);
   });
 });

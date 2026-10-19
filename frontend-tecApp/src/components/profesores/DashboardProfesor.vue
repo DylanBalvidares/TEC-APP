@@ -14,6 +14,8 @@
                 </div>
             </div>
 
+                <CampanitaNotificaciones icono="fas fa-bell" />
+
                 <div class="profile-container" ref="profileContainer">
                 <button class="profile-trigger" @click.stop="toggleProfileMenu" :aria-expanded="profileMenuOpen" aria-haspopup="true">
                     <img :src="avatarUrl" alt="Avatar" />
@@ -196,6 +198,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted } from "vue";
 import Modal from '@/components/ui/Modal.vue';
+import CampanitaNotificaciones from "../ui/CampanitaNotificaciones.vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth.js";
 import { obtenerAsignacionesProfesor } from "@/services/academico-service.js";

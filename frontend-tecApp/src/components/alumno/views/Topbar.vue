@@ -15,11 +15,8 @@
     </div>
 
     <div class="nav-derecha">
-      <!-- Notification bell (decorative) -->
-      <button class="icon-btn" aria-label="Notificaciones">
-        <i class="fas fa-bell"></i>
-        <span class="notification-dot"></span>
-      </button>
+      <!-- Campanita de notificaciones (realtime + historial de la cuenta) -->
+      <CampanitaNotificaciones />
 
       <div class="profile-container" ref="profileContainer">
         <button class="profile-trigger" @click.stop="toggleMenu" id="profile-btn-alumno">
@@ -60,6 +57,7 @@
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth.js";
+import CampanitaNotificaciones from "../../ui/CampanitaNotificaciones.vue";
 
 defineEmits(["toggle-sidebar"]);
 
