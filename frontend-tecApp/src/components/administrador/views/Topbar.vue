@@ -14,7 +14,7 @@
             <div class="brand-divider"></div>
             <nav class="breadcrumb" aria-label="Ubicación actual">
                 <button class="breadcrumb-raiz" @click="$emit('ir-inicio')">
-                    Tec-app
+                    TEC-APP
                 </button>
                 <template v-if="currentPage !== 'Inicio'">
                     <i class="ti ti-chevron-right" aria-hidden="true"></i>
@@ -25,15 +25,6 @@
 
         <div class="user-section" ref="profileMenuRef">
             <CampanitaNotificaciones icono="ti ti-bell" />
-            <button
-                class="tema-btn"
-                type="button"
-                :aria-label="etiquetaTema"
-                :title="etiquetaTema"
-                @click="alternarTema"
-            >
-                <i :class="iconoTema" aria-hidden="true"></i>
-            </button>
             <button
                 class="avatar-btn"
                 ref="profileButtonRef"
@@ -89,9 +80,9 @@
                         <button
                             type="button"
                             class="dropdown-item"
-                            @click="irAlPerfil"
+                            @click="irAlPerfil('ver-perfil')"
                         >
-                            <i class="ti ti-user-circle"></i> Mi Perfil
+                            <i class="ti ti-user-circle"></i> Ver perfil
                         </button>
                     </div>
 
@@ -135,22 +126,12 @@ import { useAuthStore } from "../../../stores/auth";
 import Modal from "../../ui/Modal.vue";
 import CampanitaNotificaciones from "../../ui/CampanitaNotificaciones.vue";
 import { etiquetaRol } from "../../../utils/roles.js";
-import { usarTema } from "../../../composables/useTema.js";
-
-const { temaEfectivo, alternarTema } = usarTema();
-const iconoTema = computed(() =>
-  temaEfectivo.value === "oscuro" ? "ti ti-sun" : "ti ti-moon",
-);
-const etiquetaTema = computed(() =>
-  temaEfectivo.value === "oscuro" ? "Cambiar a modo claro" : "Cambiar a modo oscuro",
-);
-
 defineProps({
     currentPage: { type: String, default: "Inicio" },
     sidebarAbierto: { type: Boolean, default: true },
 });
 
-const emit = defineEmits(["toggle-sidebar", "ir-inicio", "ir-perfil"]);
+const emit = defineEmits(["toggle-sidebar", "ir-inicio", "ver-perfil"]);
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -203,9 +184,9 @@ const cerrarMenuUsuario = () => {
 };
 
 // Acceso al perfil dentro del mismo dashboard (mantiene sidebar/topbar)
-const irAlPerfil = () => {
+const irAlPerfil = (evento) => {
     menuAbierto.value = false;
-    emit("ir-perfil");
+    emit(evento);
 };
 
 const handleClickOutside = (event) => {
@@ -347,26 +328,6 @@ const ejecutarLogout = () => {
     display: flex;
     align-items: center;
     gap: 8px;
-}
-
-.tema-btn {
-    background: transparent;
-    border: 1px solid transparent;
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: inherit;
-    font-size: 18px;
-}
-.tema-btn:hover,
-.tema-btn:focus-visible {
-    border-color: #cd322c;
-    box-shadow: 0 0 0 2px rgba(205, 50, 44, 0.1);
-    outline: none;
 }
 
 .avatar-btn {

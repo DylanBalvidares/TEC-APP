@@ -6,7 +6,7 @@
           <img src="/logoEscuela.png" alt="logo" width="22" height="22" />
         </div>
         <div class="brand-text">
-          <h1>GESTIÓN ESCOLAR</h1>
+          <h1>TEC-APP</h1>
           <p>Portal Educativo Institucional</p>
         </div>
       </header>

@@ -1,49 +1,24 @@
 <template>
   <div class="biblioteca-page">
-    <nav class="navbar">
-      <div class="nav-izquierda">
-        <div class="logo">
-          <div>
-            <img src="/logoEscuela.png" width="60" height="60">
-          </div>
-          <div class="logo-titulo">
-            <h2>GESTIÓN ESCOLAR</h2>
-            <p>Biblioteca</p>
-          </div>
-        </div>
-      </div>
-  
-      <div class="profile-container" id="profileContainer">
-        <button class="profile-trigger" id="profileBtn" @click="toggleProfileMenu">
-          <img :src="avatarUrl" alt="User">
-        </button>
-
-        <div class="profile-menu" :class="{ 'active': isProfileMenuOpen }" id="profileMenu">
-          <div class="menu-header">
-            <img :src="avatarUrl" class="large-avatar">
-            <p class="user-name">{{ userName }}</p>
-            <p class="user-email">{{ userDni ? `DNI: ${userDni}` : 'Sin documento' }}</p>
-          </div>
-          <hr>
-          <div class="menu-body">
-            <p class="user-role">Curso: <span id="roleBadge" :style="{ color: badgeColor }">{{ userCurso }}</span></p>
-            <a href="#" class="menu-item"><i class="fas fa-user-cog"></i> Mi Perfil</a>
-            <a href="#" class="menu-item"><i class="fas fa-book"></i> Mis Cursos</a>
-          </div>
-          <hr>
-          <button class="sign-out-btn" @click="logout">Cerrar Sesión</button>
-        </div>
-      </div>       
-    </nav>
+    <AppTopbar
+      current-page="Libros"
+      :sidebar-abierto="sidebarEstaVisible"
+      sidebar-id="sidebar-biblioteca-libros"
+      @toggle-sidebar="toggleSidebar"
+      @ir-inicio="$router.push('/biblioteca')"
+      @ver-perfil="abrirPerfil(false)"
+    />
+    <UserProfileDialog v-model="profileDialogOpen" :edit="profileDialogEdit" />
 
     <div class="container">
-      <aside class="sidebar">
+      <div class="sidebar-overlay" :class="{ visible: isMobile && sidebarAbierto }" @click="closeSidebar"></div>
+      <aside id="sidebar-biblioteca-libros" class="sidebar" :class="{ abierto: sidebarAbierto, colapsado: !isMobile && sidebarColapsado }">
         <ul>
-          <RouterLink to="/inicio"><li><i class="fas fa-home"></i> Inicio</li></RouterLink>
-          <RouterLink to="/noticias"><li><i class="fas fa-newspaper"></i> Noticias</li></RouterLink>
-          <RouterLink to="/biblioteca"><li class="active"><i class="fas fa-book"></i> Biblioteca</li></RouterLink>
-          <RouterLink to="/objetos-perdidos"><li><i class="fas fa-box"></i> Objetos Perdidos</li></RouterLink>
-          <RouterLink to="/cursos"><li><i class="fas fa-graduation-cap"></i> Cursos</li></RouterLink>
+          <RouterLink to="/inicio" @click="closeSidebar"><li><i class="fas fa-home"></i> Inicio</li></RouterLink>
+          <RouterLink to="/noticias" @click="closeSidebar"><li><i class="fas fa-newspaper"></i> Noticias</li></RouterLink>
+          <RouterLink to="/biblioteca" @click="closeSidebar"><li class="active"><i class="fas fa-book"></i> Biblioteca</li></RouterLink>
+          <RouterLink to="/objetos-perdidos" @click="closeSidebar"><li><i class="fas fa-box"></i> Objetos Perdidos</li></RouterLink>
+          <RouterLink to="/cursos" @click="closeSidebar"><li><i class="fas fa-graduation-cap"></i> Cursos</li></RouterLink>
         </ul>
         <div class="sidebar-help">
           <i class="fas fa-question-circle"></i>
@@ -138,8 +113,11 @@
 
 <script>
 import { useAuthStore } from '../../stores/auth.js';
+import AppTopbar from '../ui/AppTopbar.vue';
+import UserProfileDialog from '../ui/UserProfileDialog.vue';
 
 export default {
+  components: { AppTopbar, UserProfileDialog },
   name: 'BibliotecaLibros',
   setup() {
     const authStore = useAuthStore();
@@ -148,6 +126,11 @@ export default {
   data() {
     return {
       isProfileMenuOpen: false,
+      profileDialogOpen: false,
+      profileDialogEdit: false,
+      sidebarAbierto: false,
+      sidebarColapsado: false,
+      isMobile: window.matchMedia?.('(max-width: 900px)').matches || false,
       userName: '',
       userDni: '',
       userCurso: '',
@@ -159,6 +142,7 @@ export default {
     };
   },
   computed: {
+    sidebarEstaVisible() { return this.isMobile ? this.sidebarAbierto : !this.sidebarColapsado; },
     avatarUrl() {
       if (!this.userName) return 'https://ui-avatars.com/api/?name=Usuario&background=0D8ABC&color=fff';
       const nameForApi = this.userName.split(' ').join('+');
@@ -191,10 +175,16 @@ export default {
     }
   },
   created() {
+    window.addEventListener('resize', this.actualizarViewport);
     this.cargarDatosUsuario();
     this.initLocalStorageData();
   },
+  beforeUnmount() { window.removeEventListener('resize', this.actualizarViewport); },
   methods: {
+    toggleSidebar() { if (this.isMobile) this.sidebarAbierto = !this.sidebarAbierto; else this.sidebarColapsado = !this.sidebarColapsado; },
+    closeSidebar() { this.sidebarAbierto = false; },
+    actualizarViewport() { const mobile = window.innerWidth <= 900; if (mobile !== this.isMobile) { this.isMobile = mobile; this.sidebarAbierto = false; } },
+    abrirPerfil(edit) { this.profileDialogEdit = edit; this.profileDialogOpen = true; },
     cargarDatosUsuario() {
       this.userName = this.authStore.usuario?.nombre || this.authStore.usuario?.nombre_usuario || 'Usuario Escuela';
       this.userDni = this.authStore.usuario?.dni || '';
@@ -658,5 +648,18 @@ select {
     .filters-right {
         flex-direction: column;
     }
+}
+
+.sidebar-overlay { display:none; }
+@media (min-width: 901px) {
+  .sidebar { transition: width .25s ease, min-width .25s ease, padding .25s ease; }
+  .sidebar.colapsado { width:0; min-width:0; padding:0; overflow:hidden; box-shadow:none; }
+  .sidebar.colapsado > * { visibility:hidden; }
+}
+@media (max-width: 900px) {
+  .container { flex-direction:row; }
+  .sidebar { position:fixed; top:64px; left:0; z-index:1002; width:250px; height:calc(100vh - 64px); overflow-y:auto; transform:translateX(-100%); transition:transform .25s ease; }
+  .sidebar.abierto { transform:translateX(0); }
+  .sidebar-overlay.visible { display:block; position:fixed; inset:64px 0 0; z-index:1001; background:rgba(0,0,0,.35); }
 }
 </style>

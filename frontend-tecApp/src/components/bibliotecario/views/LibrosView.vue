@@ -22,7 +22,7 @@
                         <img src="logoEscuela.png" width="60" height="60" />
                     </div>
                     <div class="logo-titulo">
-                        <h2>GESTIÓN ESCOLAR</h2>
+                        <h2>TEC-APP</h2>
                         <p>Biblioteca</p>
                     </div>
                 </div>
@@ -51,8 +51,9 @@
                             Curso: <span id="roleBadge">Profesor</span>
                         </p>
                         <a href="#" class="menu-item"
-                            ><i class="fas fa-user-cog"></i> Mi Perfil</a
+                            ><i class="fas fa-user-cog"></i> Ver perfil</a
                         >
+                        <a href="#" class="menu-item"
                         <a href="#" class="menu-item"
                             ><i class="fas fa-book"></i> Mis Cursos</a
                         >

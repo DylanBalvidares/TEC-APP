@@ -5,148 +5,15 @@
          NAVBAR
     ===================================================== -->
 
-    <nav class="navbar">
-
-      <div class="nav-izquierda">
-
-        <button
-          class="hamburger-btn"
-          @click="sidebarAbierto = !sidebarAbierto"
-        >
-          <i class="fas fa-bars"></i>
-        </button>
-
-        <div class="logo">
-
-          <img
-            src="/logoEscuela.png"
-            width="48"
-            height="48"
-            alt="Logo"
-          >
-
-          <div class="logo-titulo">
-
-            <h2>GESTIÓN ESCOLAR</h2>
-
-            <p>Panel Preceptor</p>
-
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <!-- Campanita + perfil agrupados a la derecha del navbar: con el navbar
-           en `justify-content: space-between`, dejarlos como hermanos sueltos
-           centraba la campanita en el medio de la barra. -->
-      <div class="nav-derecha">
-
-        <!-- Campanita de notificaciones (realtime + historial de la cuenta) -->
-        <CampanitaNotificaciones icono="fas fa-bell" class="campanita-preceptor" />
-
-        <!-- =================================================
-             PERFIL
-        ================================================== -->
-
-        <div
-          class="profile-container"
-          ref="profileContainer"
-        >
-
-          <button
-            class="profile-trigger"
-            @click.stop="toggleProfileMenu"
-            :aria-expanded="profileMenuOpen"
-            aria-haspopup="true"
-          >
-
-            <img
-              :src="avatarUrl"
-              alt="Avatar"
-            >
-
-          </button>
-
-
-          <div
-            class="profile-menu"
-            :class="{ active: profileMenuOpen }"
-          >
-
-            <div class="menu-header">
-
-              <img
-                :src="avatarUrl"
-                class="large-avatar"
-                alt="Avatar"
-              >
-
-              <p class="user-name">
-                {{ userName }}
-              </p>
-
-              <p class="user-email">
-                {{ userEmail }}
-              </p>
-
-            </div>
-
-
-            <hr>
-
-
-            <div class="menu-body">
-
-              <p class="user-role">
-
-                Rol:
-
-                <span class="role-badge">
-                  Preceptor
-                </span>
-
-              </p>
-
-
-              <button
-                type="button"
-                class="menu-item"
-                @click="openProfile = true"
-              >
-
-                <i class="fas fa-user"></i>
-
-                Mi Perfil
-
-              </button>
-
-            </div>
-
-
-            <hr>
-
-
-            <button
-              class="sign-out-btn"
-              @click="cerrarSesion"
-            >
-
-              <i class="fas fa-right-from-bracket"></i>
-
-              Cerrar sesión
-
-            </button>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </nav>
-
+    <AppTopbar
+      :current-page="currentPage"
+      :sidebar-abierto="sidebarAbierto"
+      sidebar-id="sidebar-preceptor"
+      @toggle-sidebar="toggleSidebar"
+      @ir-inicio="router.push('/preceptor/inicio')"
+      @ver-perfil="abrirPerfil(false)"
+    />
+    <UserProfileDialog v-model="profileDialogOpen" :edit="profileDialogEdit" />
 
 
     <!-- =====================================================
@@ -161,7 +28,7 @@
       <div
         class="sidebar-overlay"
         :class="{ visible: sidebarAbierto }"
-        @click="sidebarAbierto = false"
+        @click="closeSidebar"
       ></div>
 
 
@@ -170,8 +37,9 @@
       ================================================== -->
 
       <aside
+        id="sidebar-preceptor"
         class="sidebar"
-        :class="{ abierto: sidebarAbierto }"
+        :class="{ abierto: sidebarAbierto, colapsado: sidebarColapsado }"
       >
 
         <ul>
@@ -179,7 +47,7 @@
 
           <!-- INICIO -->
 
-          <li @click="sidebarAbierto = false">
+          <li @click="closeSidebar">
 
             <RouterLink
               to="/preceptor/inicio"
@@ -197,7 +65,7 @@
 
           <!-- ASISTENCIAS -->
 
-          <li @click="sidebarAbierto = false">
+          <li @click="closeSidebar">
 
             <RouterLink
               to="/preceptor/asistencias"
@@ -215,7 +83,7 @@
 
           <!-- LIBRETA DIGITAL -->
 
-          <li @click="sidebarAbierto = false">
+          <li @click="closeSidebar">
 
             <RouterLink
               to="/preceptor/libreta"
@@ -233,7 +101,7 @@
 
           <!-- BOLETINES CUATRIMESTRALES -->
 
-          <li @click="sidebarAbierto = false">
+          <li @click="closeSidebar">
 
             <RouterLink
               to="/preceptor/boletines"
@@ -251,7 +119,7 @@
 
           <!-- PLAN DE ESTUDIOS -->
 
-          <li @click="sidebarAbierto = false">
+          <li @click="closeSidebar">
 
             <RouterLink
               to="/preceptor/plan"
@@ -282,7 +150,7 @@
 
           <!-- WHATSAPP -->
 
-          <li @click="sidebarAbierto = false">
+          <li @click="closeSidebar">
 
             <RouterLink
               to="/preceptor/mensajes"
@@ -300,7 +168,7 @@
 
           <!-- COMUNICADOS -->
 
-          <li @click="sidebarAbierto = false">
+          <li @click="closeSidebar">
 
             <RouterLink
               to="/preceptor/comunicados"
@@ -318,7 +186,7 @@
 
           <!-- REPORTES -->
 
-          <li @click="sidebarAbierto = false">
+          <li @click="closeSidebar">
 
             <RouterLink
               to="/preceptor/reportes"
@@ -336,7 +204,7 @@
 
           <!-- CALENDARIO -->
 
-          <li @click="sidebarAbierto = false">
+          <li @click="closeSidebar">
 
             <RouterLink
               to="/preceptor/calendario"
@@ -398,74 +266,7 @@
          MODAL PERFIL
     ===================================================== -->
 
-    <div
-      v-if="openProfile"
-      class="profile-modal-overlay"
-      @click.self="openProfile = false"
-    >
 
-      <div class="profile-modal">
-
-        <button
-          class="cerrar-modal"
-          @click="openProfile = false"
-        >
-
-          <i class="fas fa-xmark"></i>
-
-        </button>
-
-
-        <div class="profile-modal-header">
-
-          <img
-            :src="avatarUrl"
-            alt="Avatar"
-          >
-
-          <h2>
-            Mi Perfil
-          </h2>
-
-        </div>
-
-
-        <div class="profile-modal-body">
-
-          <p>
-            <strong>Nombre:</strong>
-            {{ userName }}
-          </p>
-
-          <p>
-            <strong>Email:</strong>
-            {{ userEmail }}
-          </p>
-
-          <p>
-            <strong>Rol:</strong>
-            Preceptor
-          </p>
-
-        </div>
-
-
-        <div class="profile-modal-actions">
-
-          <button
-            class="btn-cerrar"
-            @click="openProfile = false"
-          >
-
-            Cerrar
-
-          </button>
-
-        </div>
-
-      </div>
-
-    </div>
 
   </div>
 </template>
@@ -475,152 +276,43 @@
 
 import {
   ref,
-  computed,
-  onMounted,
-  onUnmounted
+  computed
 } from "vue";
 
-import CampanitaNotificaciones from "../ui/CampanitaNotificaciones.vue";
+import AppTopbar from "../ui/AppTopbar.vue";
+import UserProfileDialog from "../ui/UserProfileDialog.vue";
+import { useResponsiveSidebar } from "../../composables/useResponsiveSidebar.js";
 
 import {
-  useRouter
+  useRouter,
+  useRoute
 } from "vue-router";
-
-import {
-  useAuthStore
-} from "@/stores/auth.js";
-
 
 /* =========================================================
    ROUTER / AUTH
 ========================================================= */
 
 const router = useRouter();
-
-const authStore =
-  useAuthStore();
-
+const route = useRoute();
+const profileDialogOpen = ref(false);
+const profileDialogEdit = ref(false);
+const currentPage = computed(() => ({ inicio: 'Inicio', asistencias: 'Asistencias', libreta: 'Libreta Digital', boletines: 'Boletines', cursos: 'Cursos', alumnos: 'Alumnos', comunicados: 'Comunicados', mensajes: 'WhatsApp', plan: 'Plan de Estudios' }[route.path.split('/').filter(Boolean).at(-1)] || 'Inicio'));
+const abrirPerfil = (edit) => { profileDialogEdit.value = edit; profileDialogOpen.value = true; };
 
 /* =========================================================
    SIDEBAR
 ========================================================= */
 
-const sidebarAbierto =
-  ref(false);
+const { sidebarOpen: sidebarAbierto, desktopCollapsed: sidebarColapsado, toggleSidebar, closeSidebar } = useResponsiveSidebar();
 
-
-/* =========================================================
-   USUARIO
-========================================================= */
-
-const userName =
-  computed(
-    () =>
-      authStore.usuario?.nombre ||
-      "Usuario Escuela"
-  );
-
-
-const userEmail =
-  computed(
-    () =>
-      authStore.usuario?.email ||
-      "usuario@escuela.edu"
-  );
-
-
-const avatarUrl =
-  computed(
-    () =>
-      `https://ui-avatars.com/api/?name=${encodeURIComponent(
-        userName.value
-      )}&background=c0152a&color=fff`
-  );
-
-
-/* =========================================================
-   PERFIL
-========================================================= */
-
-const profileMenuOpen =
-  ref(false);
-
-const openProfile =
-  ref(false);
-
-
-const toggleProfileMenu =
-  () => {
-
-    profileMenuOpen.value =
-      !profileMenuOpen.value;
-
-  };
-
-
-/* =========================================================
-   CLICK FUERA DEL PERFIL
-========================================================= */
-
-const handleClickOutside =
-  (event) => {
-
-    if (
-      !event.target.closest(
-        ".profile-container"
-      )
-    ) {
-
-      profileMenuOpen.value =
-        false;
-
-    }
-
-  };
-
-
-/* =========================================================
-   CERRAR SESIÓN
-========================================================= */
-
-const cerrarSesion =
-  () => {
-
-    authStore.logout();
-
-    router.push("/");
-
-  };
-
-
-/* =========================================================
-   EVENTOS
-========================================================= */
-
-onMounted(
-  () => {
-
-    document.addEventListener(
-      "click",
-      handleClickOutside
-    );
-
-  }
-);
-
-
-onUnmounted(
-  () => {
-
-    document.removeEventListener(
-      "click",
-      handleClickOutside
-    );
-
-  }
-);
 
 </script>
 
 
 <style src="./preceptores.css"></style>
+<style scoped>
+@media (min-width: 901px) {
+  .sidebar.colapsado { width: 0; min-width: 0; padding: 0; overflow: hidden; box-shadow: none; transition: width .25s ease, padding .25s ease; }
+  .sidebar.colapsado > * { visibility: hidden; }
+}
+</style>

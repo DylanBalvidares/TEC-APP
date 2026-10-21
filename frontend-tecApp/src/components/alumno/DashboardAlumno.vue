@@ -1,9 +1,17 @@
 <template>
   <div class="dashboard-wrapper">
-    <Topbar @toggle-sidebar="sidebarAbierto = !sidebarAbierto" />
+    <AppTopbar
+      :current-page="currentPage"
+      :sidebar-abierto="sidebarAbierto"
+      sidebar-id="sidebar-alumno"
+      @toggle-sidebar="toggleSidebar"
+      @ir-inicio="irInicio"
+      @ver-perfil="abrirPerfil(false)"
+    />
+    <UserProfileDialog v-model="perfilAbierto" :edit="editarPerfil" />
     <div class="dashboard-body">
-      <Sidebar :abierto="sidebarAbierto" @close="sidebarAbierto = false" />
-      <div class="sidebar-overlay" :class="{ visible: sidebarAbierto }" @click="sidebarAbierto = false"></div>
+      <Sidebar :abierto="sidebarAbierto" :colapsado="sidebarColapsado" @close="closeSidebar" />
+      <div class="sidebar-overlay" :class="{ visible: sidebarAbierto }" @click="closeSidebar"></div>
       <main class="view-container">
         <router-view v-slot="{ Component }">
           <transition name="fade-slide" mode="out-in">
@@ -16,11 +24,22 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-import Topbar from "./views/Topbar.vue";
+import { computed, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import AppTopbar from "../ui/AppTopbar.vue";
+import UserProfileDialog from "../ui/UserProfileDialog.vue";
+import { useResponsiveSidebar } from "../../composables/useResponsiveSidebar.js";
 import Sidebar from "./views/Sidebar.vue";
 
-const sidebarAbierto = ref(false);
+const { sidebarOpen: sidebarAbierto, desktopCollapsed: sidebarColapsado, toggleSidebar, closeSidebar } = useResponsiveSidebar();
+const perfilAbierto = ref(false);
+const editarPerfil = ref(false);
+const route = useRoute();
+const router = useRouter();
+const nombresPagina = { inicio: "Inicio", noticias: "Noticias", cursos: "Cursos", libreta: "Libreta Digital", "objetos-perdidos": "Objetos perdidos" };
+const currentPage = computed(() => nombresPagina[route.path.split("/").filter(Boolean).at(-1)] || "Inicio");
+const abrirPerfil = (edit) => { editarPerfil.value = edit; perfilAbierto.value = true; };
+const irInicio = () => router.push('/alumno/inicio');
 </script>
 
 <style scoped>

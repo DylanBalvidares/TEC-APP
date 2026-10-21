@@ -403,12 +403,6 @@ img {
     z-index: 101;
     opacity: 0;
     transition: opacity 0.3s ease;
-    backdrop-filter: blur(2px);
-  }
-
-  .sidebar-overlay.visible {
-    display: block;
-    opacity: 1;
   }
 
   /* HAMBURGER BTN */
@@ -429,6 +423,11 @@ img {
   }
 
   @media (max-width: 900px) {
+    .sidebar-overlay.visible {
+      display: block;
+      opacity: 1;
+    }
+
     .hamburger-btn {
       display: flex;
       align-items: center;

@@ -1,5 +1,13 @@
 <template>
-  <div class="dashboard-container">
+  <div class="biblioteca-dashboard-page">
+    <AppTopbar
+      current-page="Inicio"
+      :show-menu-toggle="false"
+      @ir-inicio="$router.push('/biblioteca/dashboard')"
+      @ver-perfil="abrirPerfil(false)"
+    />
+    <UserProfileDialog v-model="profileDialogOpen" :edit="profileDialogEdit" />
+    <main class="dashboard-container">
     <div class="stats-grid">
       <div class="stat-card">
         <h3>Libros</h3>
@@ -47,13 +55,17 @@
         </div>
       </div>
     </div>
+    </main>
   </div>
 </template>
 
 <script>
 import { useAuthStore } from '../../stores/auth.js';
+import AppTopbar from '../ui/AppTopbar.vue';
+import UserProfileDialog from '../ui/UserProfileDialog.vue';
 
 export default {
+  components: { AppTopbar, UserProfileDialog },
   name: 'BibliotecaDashboard',
   setup() {
     const authStore = useAuthStore();
@@ -64,7 +76,9 @@ export default {
       libros: [],
       recursos: [],
       prestamos: [],
-      userName: 'Bibliotecario'
+      userName: 'Bibliotecario',
+      profileDialogOpen: false,
+      profileDialogEdit: false
     };
   },
   computed: {
@@ -98,6 +112,10 @@ export default {
     this.cargarDatos();
   },
   methods: {
+    abrirPerfil(edit) {
+      this.profileDialogEdit = edit;
+      this.profileDialogOpen = true;
+    },
     cargarDatos() {
       this.libros = JSON.parse(localStorage.getItem('libros')) || [];
       this.recursos = JSON.parse(localStorage.getItem('recursos')) || [];
@@ -137,6 +155,9 @@ export default {
 .dashboard-container {
   padding: 20px;
   background: #f8f9fa;
+  min-height: 100vh;
+}
+.biblioteca-dashboard-page {
   min-height: 100vh;
 }
 .stats-grid {

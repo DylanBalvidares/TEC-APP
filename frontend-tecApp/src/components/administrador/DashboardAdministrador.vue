@@ -5,8 +5,9 @@
             :sidebar-abierto="menuAbierto"
             @toggle-sidebar="alternarSidebar"
             @ir-inicio="setView('overview')"
-            @ir-perfil="setView('perfil')"
+            @ver-perfil="abrirPerfil"
         />
+        <UserProfileDialog v-model="perfilAbierto" :edit="editarPerfil" />
 
         <div class="dash" :class="{ 'sidebar-colapsado': sidebarColapsado }">
             <Sidebar
@@ -46,6 +47,7 @@ import { useRoute, useRouter } from "vue-router";
 
 import Sidebar from "./views/Sidebar.vue";
 import Topbar from "./views/Topbar.vue";
+import UserProfileDialog from "../ui/UserProfileDialog.vue";
 import { useComunicacionStore } from "../../stores/comunicacion.js";
 import Overview from "./views/Overview.vue";
 import RolesView from "./views/RolesView.vue";
@@ -126,7 +128,7 @@ const pageNames = {
   notificaciones: "Notificaciones",
   certificados: "Certificados",
   backup: "Backup",
-  perfil: "Mi Perfil",
+  perfil: "Ver perfil",
 };
 const nombrePagina = (vista) => pageNames[vista] || "Inicio";
 
@@ -138,6 +140,12 @@ const vistaInicial = VISTAS_VALIDAS.includes(route.query.vista)
     ? route.query.vista
     : "overview";
 const currentView = ref(vistaInicial);
+const perfilAbierto = ref(false);
+const editarPerfil = ref(false);
+const abrirPerfil = () => {
+    editarPerfil.value = false;
+    perfilAbierto.value = true;
+};
 const contentRef = ref(null);
 const sidebarRef = ref(null);
 const comunicacion = useComunicacionStore();
@@ -198,7 +206,9 @@ const menuAbierto = computed(() =>
 );
 
 const esPantallaMovil = () =>
-    window.matchMedia("(max-width: 768px)").matches;
+    typeof window.matchMedia === "function"
+        ? window.matchMedia("(max-width: 768px)").matches
+        : window.innerWidth <= 768;
 
 const alternarSidebar = () => {
     if (esPantallaMovil()) {

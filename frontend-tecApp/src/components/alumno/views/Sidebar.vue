@@ -1,5 +1,5 @@
 <template>
-  <aside class="sidebar" :class="{ open: abierto }" id="sidebar-alumno">
+  <aside class="sidebar" :class="{ open: abierto, collapsed: colapsado }" id="sidebar-alumno">
     <div class="sidebar-inner">
       <!-- Mobile close button -->
       <button class="sidebar-close" @click="$emit('close')" aria-label="Cerrar menú">
@@ -62,6 +62,10 @@ defineProps({
     type: Boolean,
     default: false,
   },
+  colapsado: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 defineEmits(["close"]);
@@ -81,6 +85,21 @@ defineEmits(["close"]);
   overflow-y: auto;
   overflow-x: hidden;
   box-shadow: 4px 0 16px rgba(0,0,0,0.08);
+}
+
+@media (min-width: 901px) {
+  .sidebar {
+    transition: width 0.25s ease, min-width 0.25s ease, padding 0.25s ease;
+  }
+  .sidebar.collapsed {
+    width: 0;
+    min-width: 0;
+    padding: 0;
+    box-shadow: none;
+  }
+  .sidebar.collapsed .sidebar-inner {
+    visibility: hidden;
+  }
 }
 
 .sidebar-inner {
