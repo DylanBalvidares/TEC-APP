@@ -91,14 +91,18 @@ docker logs backend-tec-app    # ver arranque (ensures + conexión)
 ```
 
 - **MySQL solo en `127.0.0.1:3306`**; phpMyAdmin en `127.0.0.1:8000`.
-- **Variables**: `.env` en raíz (solo para interpolación del compose:
-  `MYSQL_ROOT_PASSWORD`, `MYSQL_DATABASE`, `NODE_ENV`) + `backend-tecApp/db/.env`
-  (inyectado a contenedores vía `env_file`: `DATABASE_URL`, `JWT_SECRET`,
-  `CORS_ORIGINS`, email...). Ambos gitignored.
+- **Variables**: `.env` en la raíz, inyectado a los contenedores vía `env_file`
+  (`MYSQL_ROOT_PASSWORD`, `MYSQL_DATABASE`, `NODE_ENV`, `DATABASE_URL`,
+  `JWT_SECRET`, `CORS_ORIGINS`, email...). Gitignored. `backend-tecApp/db/.env` se
+  conserva sólo por compatibilidad (`dotenv` en `sendMail.js`): el compose ya no lo
+  lee.
 - ⚠️ `env_file` **no** alimenta la interpolación `${...}` del compose (solo el
-  `.env` raíz y el entorno del shell). `MYSQL_ROOT_PASSWORD` debe coincidir con
-  volumen `db_data` (ver `MYSQL_ROOT_PASSWORD` en tu `.env`); si difiere,
-  si difiere, MySQL rechaza el login y el backend no arranca.
+  `.env` raíz y el entorno del shell). `MYSQL_ROOT_PASSWORD` debe coincidir con el
+  volumen `db_data` **y** con la password embebida en `DATABASE_URL` /
+  `DATABASE_PASSWORD`; si difieren, MySQL rechaza el login (`Access denied for user
+  'root'@...`) y el backend no arranca. Al cambiar la password, actualizá las tres
+  en la misma edición (o recreá el volumen con `docker compose down -v`, que
+  además borra `uploads_data`).
 - El SQL init **no se re-ejecuta** con volumen existente → cambios de esquema en
   DBs vivas van por `src/db/ensure*.js` (patrón `ensureCorreosTable`,
   `ensureLibretaDigital`) + actualización de `gestion_tecnica2.sql` para installs

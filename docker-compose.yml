@@ -19,10 +19,17 @@ services:
     - db_data:/var/lib/mysql
 
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD"]
+      # Se conecta por TCP (127.0.0.1) y no por socket: `mysqladmin ping -h localhost`
+      # usa el socket y da "healthy" durante la inicialización, cuando el servidor
+      # temporal está arriba pero todavía no existe el puerto 3306. Eso hacía que
+      # el backend arrancara antes de tiempo (ECONNREFUSED "...:3306").
+      test: ["CMD-SHELL", "mysql -h 127.0.0.1 -P 3306 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" -e 'SELECT 1' >/dev/null 2>&1"]
       interval: 5s
       timeout: 5s
       retries: 10
+      # La primera inicialización (crear data dir + importar dumps) puede tardar
+      # varios minutos; sin start_period compose aborta y marca el servicio unhealthy.
+      start_period: 240s
     networks:
       - app-network
 
