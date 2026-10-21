@@ -38,101 +38,108 @@
       </div>
 
 
-      <!-- Campanita de notificaciones (realtime + historial de la cuenta) -->
-      <CampanitaNotificaciones icono="fas fa-bell" class="campanita-preceptor" />
+      <!-- Campanita + perfil agrupados a la derecha del navbar: con el navbar
+           en `justify-content: space-between`, dejarlos como hermanos sueltos
+           centraba la campanita en el medio de la barra. -->
+      <div class="nav-derecha">
 
-      <!-- =================================================
-           PERFIL
-      ================================================== -->
+        <!-- Campanita de notificaciones (realtime + historial de la cuenta) -->
+        <CampanitaNotificaciones icono="fas fa-bell" class="campanita-preceptor" />
 
-      <div
-        class="profile-container"
-        ref="profileContainer"
-      >
-
-        <button
-          class="profile-trigger"
-          @click.stop="toggleProfileMenu"
-          :aria-expanded="profileMenuOpen"
-          aria-haspopup="true"
-        >
-
-          <img
-            :src="avatarUrl"
-            alt="Avatar"
-          >
-
-        </button>
-
+        <!-- =================================================
+             PERFIL
+        ================================================== -->
 
         <div
-          class="profile-menu"
-          :class="{ active: profileMenuOpen }"
+          class="profile-container"
+          ref="profileContainer"
         >
 
-          <div class="menu-header">
+          <button
+            class="profile-trigger"
+            @click.stop="toggleProfileMenu"
+            :aria-expanded="profileMenuOpen"
+            aria-haspopup="true"
+          >
 
             <img
               :src="avatarUrl"
-              class="large-avatar"
               alt="Avatar"
             >
 
-            <p class="user-name">
-              {{ userName }}
-            </p>
-
-            <p class="user-email">
-              {{ userEmail }}
-            </p>
-
-          </div>
+          </button>
 
 
-          <hr>
+          <div
+            class="profile-menu"
+            :class="{ active: profileMenuOpen }"
+          >
+
+            <div class="menu-header">
+
+              <img
+                :src="avatarUrl"
+                class="large-avatar"
+                alt="Avatar"
+              >
+
+              <p class="user-name">
+                {{ userName }}
+              </p>
+
+              <p class="user-email">
+                {{ userEmail }}
+              </p>
+
+            </div>
 
 
-          <div class="menu-body">
+            <hr>
 
-            <p class="user-role">
 
-              Rol:
+            <div class="menu-body">
 
-              <span class="role-badge">
-                Preceptor
-              </span>
+              <p class="user-role">
 
-            </p>
+                Rol:
+
+                <span class="role-badge">
+                  Preceptor
+                </span>
+
+              </p>
+
+
+              <button
+                type="button"
+                class="menu-item"
+                @click="openProfile = true"
+              >
+
+                <i class="fas fa-user"></i>
+
+                Mi Perfil
+
+              </button>
+
+            </div>
+
+
+            <hr>
 
 
             <button
-              type="button"
-              class="menu-item"
-              @click="openProfile = true"
+              class="sign-out-btn"
+              @click="cerrarSesion"
             >
 
-              <i class="fas fa-user"></i>
+              <i class="fas fa-right-from-bracket"></i>
 
-              Mi Perfil
+              Cerrar sesión
 
             </button>
 
           </div>
-
-
-          <hr>
-
-
-          <button
-            class="sign-out-btn"
-            @click="cerrarSesion"
-          >
-
-            <i class="fas fa-right-from-bracket"></i>
-
-            Cerrar sesión
-
-          </button>
 
         </div>
 
