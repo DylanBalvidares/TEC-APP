@@ -46,9 +46,10 @@ function crearFuente() {
     }
   };
   fuente.onmessage = repartir;
-  // Eventos con nombre (`event: notificacion`) NO pasan por onmessage:
-  // se registran aparte.
+  // Los eventos con nombre NO pasan por onmessage; registrar cada tipo
+  // enviado por el backend que consumen las vistas.
   fuente.addEventListener?.("notificacion", repartir);
+  fuente.addEventListener?.("confirmacion_lectura", repartir);
 }
 
 export function usarEventos({ alEvento } = {}) {

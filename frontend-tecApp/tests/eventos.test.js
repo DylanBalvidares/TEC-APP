@@ -104,11 +104,21 @@ describe("usarEventos", () => {
     expect(b.api.recibidos.length).toBe(1);
     expect(b.api.ultimoEvento.value.datos.titulo).toBe("Hola");
 
-    // Los eventos anónimos (onmessage) también pasan por el mismo reparto.
-    fuente.emitir("message", { tipo: "cola", datos: { pendientes: 3 } });
+    // Las confirmaciones de lectura también llegan como eventos nombrados.
+    fuente.emitir("confirmacion_lectura", {
+      tipo: "confirmacion_lectura",
+      datos: { id_comunicado: 42 },
+    });
     await flushPromises();
     expect(a.api.recibidos.length).toBe(2);
     expect(b.api.recibidos.length).toBe(2);
+    expect(b.api.ultimoEvento.value.datos.id_comunicado).toBe(42);
+
+    // Los eventos anónimos (onmessage) también pasan por el mismo reparto.
+    fuente.emitir("message", { tipo: "cola", datos: { pendientes: 3 } });
+    await flushPromises();
+    expect(a.api.recibidos.length).toBe(3);
+    expect(b.api.recibidos.length).toBe(3);
     expect(b.api.ultimoEvento.value.tipo).toBe("cola");
   });
 

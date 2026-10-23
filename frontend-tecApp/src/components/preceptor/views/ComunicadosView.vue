@@ -685,7 +685,8 @@ import {
 } from "@/services/academico-service.js";
 
 import {
-    obtenerResumenLecturas
+    obtenerResumenLecturas,
+    marcarComunicadoLeido
 } from "@/services/comunidad-service.js";
 
 import ConfirmacionesLectura from "../../ui/ConfirmacionesLectura.vue";
@@ -1513,7 +1514,16 @@ const formatearFecha = (fecha) => {
    MODAL DETALLE
 ========================================================= */
 
-const abrirDetalle = (elemento) => {
+const abrirDetalle = async (elemento) => {
+
+    if (elemento.tipo === "comunicado" && ["todos", "autoridades"].includes(elemento.destino)) {
+        const resultado = await marcarComunicadoLeido(elemento.id_comunicado);
+        if (!resultado?.success) {
+            console.error("No se pudo registrar la lectura del comunicado:", resultado?.message);
+        } else {
+            await cargarResumenLecturas();
+        }
+    }
 
     detalleAbierto.value =
         elemento;

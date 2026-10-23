@@ -90,6 +90,38 @@ test("marcarComunicadoLeido valida destinatario y es idempotente", async (t) => 
   await assert.rejects(marcarComunicadoLeido(7, 77), { status: 403 });
 });
 
+test("preceptor asignado puede confirmar lectura y se suma al resumen", async (t) => {
+  mockearComunicados(t);
+  t.mock.method(Curso, "findAll", async () => [
+    fila({ id_curso: 55, id_preceptor: 50, nombre_curso: "2do A" }),
+  ]);
+  t.mock.method(Alumno, "findAll", async () => [fila({ id_usuario: 31 })]);
+  t.mock.method(Personal, "findAll", async () => [fila({ id_usuario: PRECEPTOR })]);
+
+  let lecturas = [];
+  t.mock.method(ComunicadoLectura, "findOrCreate", async (opciones) => {
+    lecturas.push(Number(opciones.where.id_usuario));
+    return [fila({ ...opciones.where, leida_en: new Date() }), true];
+  });
+  await marcarComunicadoLeido(7, PRECEPTOR);
+  assert.deepEqual(lecturas, [PRECEPTOR]);
+
+  t.mock.method(Usuario, "findAll", async () => [
+    fila({ id_usuario: 31, nombre: "Tadeo", apellido: "Martínez", id_rol: ROLES.ALUMNO }),
+    fila({ id_usuario: PRECEPTOR, nombre: "Ana", apellido: "Pérez", id_rol: ROLES.PRECEPTOR }),
+  ]);
+  t.mock.method(ComunicadoLectura, "findAll", async () => [
+    fila({ id_usuario: 31, leida_en: "2026-10-19 10:00:00" }),
+    fila({ id_usuario: PRECEPTOR, leida_en: "2026-10-19 10:05:00" }),
+  ]);
+
+  const confirmaciones = await obtenerConfirmacionesLectura(7, 9001, ROLES.ADMINISTRATIVO);
+  assert.equal(confirmaciones.total, 2);
+  assert.equal(confirmaciones.leidos, 2);
+  assert.equal(confirmaciones.pendientes, 0);
+  assert.ok(confirmaciones.destinatarios.some((d) => d.id_usuario === PRECEPTOR && d.leida));
+});
+
 test("obtenerConfirmacionesLectura devuelve padrón, resumen y aviso sin cuenta", async (t) => {
   mockearComunicados(t);
   mockearPadronCurso(t);
@@ -181,7 +213,7 @@ test("preceptor: ve su curso y el padrón general, no el de otro preceptor", asy
   });
 });
 
-test("resumenLecturasComunicados calcula X/Y con padrón precargado", async (t) => {
+test("resumenLecturasComunicados incluye preceptor en padrón de curso", async (t) => {
   mockearComunicados(t);
 
   t.mock.method(Usuario, "findAll", async () => [
@@ -191,11 +223,13 @@ test("resumenLecturasComunicados calcula X/Y con padrón precargado", async (t) 
   t.mock.method(Alumno, "findAll", async () => [fila({ id_usuario: 31, id_curso: 55 })]);
   t.mock.method(Curso, "findAll", async (opciones) =>
     opciones.attributes && opciones.attributes.includes("nombre_curso")
-      ? [fila({ id_curso: 55, nombre_curso: "2do A" })]
+      ? [fila({ id_curso: 55, id_preceptor: 50, nombre_curso: "2do A" })]
       : [],
   );
+  t.mock.method(Personal, "findAll", async () => [fila({ id_personal: 50, id_usuario: PRECEPTOR })]);
   t.mock.method(ComunicadoLectura, "findAll", async () => [
     fila({ id_comunicado: 7, id_usuario: 31 }),
+    fila({ id_comunicado: 7, id_usuario: PRECEPTOR }),
   ]);
 
   // Administrativo (7): ve ambos resúmenes.
@@ -203,8 +237,8 @@ test("resumenLecturasComunicados calcula X/Y con padrón precargado", async (t) 
   const r7 = resumen.find((r) => r.id_comunicado === 7);
   const r8 = resumen.find((r) => r.id_comunicado === 8);
   assert.equal(r7.visible, true);
-  assert.equal(r7.total, 1);
-  assert.equal(r7.leidos, 1);
+  assert.equal(r7.total, 2);
+  assert.equal(r7.leidos, 2);
   assert.equal(r7.pendientes, 0);
   // 'alumnos' → roles 1,2,6: solo el 31 existe en el padrón precargado.
   assert.equal(r8.visible, true);
@@ -220,6 +254,7 @@ test("resumenLecturasComunicados calcula X/Y con padrón precargado", async (t) 
 test("rutas HTTP de lecturas: registrar, ver y resumen", async (t) => {
   mockearComunicados(t);
   mockearPadronCurso(t);
+  t.mock.method(Personal, "findAll", async () => []);
   t.mock.method(ComunicadoLectura, "findOrCreate", async (opciones) => [
     fila({ id_lectura: 9, ...opciones.where, leida_en: new Date() }),
     true,

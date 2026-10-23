@@ -80,9 +80,10 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 
 import { obtenerConfirmacionesLectura } from "../../services/comunidad-service.js";
+import { usarEventos } from "../../composables/useEventos.js";
 
 const props = defineProps({
   idComunicado: { type: [Number, String], required: true },
@@ -144,6 +145,14 @@ async function cargar() {
   }
 }
 
+const { conectar } = usarEventos({
+  alEvento: (evento) => {
+    if (evento?.tipo !== "confirmacion_lectura") return;
+    if (Number(evento.datos?.id_comunicado) !== Number(props.idComunicado)) return;
+    cargar();
+  },
+});
+
 // Cambiando de comunicado en el detalle, se recarga el padrón.
 watch(
   () => props.idComunicado,
@@ -153,6 +162,8 @@ watch(
   },
   { immediate: true },
 );
+
+onMounted(conectar);
 </script>
 
 <style scoped>

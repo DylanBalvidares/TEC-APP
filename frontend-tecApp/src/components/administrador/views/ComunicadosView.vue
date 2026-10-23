@@ -17,9 +17,15 @@
                     <i class="ti ti-speakerphone" aria-hidden="true"></i>
                     Gestión de Comunicados
                 </div>
-                <button @click="cambiarVista('crear')" class="tb-btn primary sm">
-                    <i class="ti ti-plus" aria-hidden="true"></i> Nuevo
-                </button>
+                <div class="card-header-actions">
+                    <button @click="cargarResumenLecturas" class="tb-btn outline sm" :disabled="actualizandoLecturas">
+                        <i class="ti ti-refresh" :class="{ 'animate-spin': actualizandoLecturas }" aria-hidden="true"></i>
+                        Actualizar lecturas
+                    </button>
+                    <button @click="cambiarVista('crear')" class="tb-btn primary sm">
+                        <i class="ti ti-plus" aria-hidden="true"></i> Nuevo
+                    </button>
+                </div>
             </div>
 
             <div class="table-responsive">
@@ -342,6 +348,7 @@ import {
     eliminarComunicado,
 } from "../../../services/comunidad-service.js";
 import { obtenerCursos } from "../../../services/academico-service.js";
+import { usarEventos } from "../../../composables/useEventos.js";
 import { useTableControls } from "../../../composables/useTableControls.js";
 import DataTable from "../../ui/DataTable.vue";
 import ConfirmacionesLectura from "../../ui/ConfirmacionesLectura.vue";
@@ -477,13 +484,16 @@ const cambiarVista = (nuevaVista, comunicado = null) => {
 // Resumen X/Y de confirmaciones de lectura para los badges de la lista. Un
 // fallo aquí no rompe el listado: los badges simplemente no aparecen.
 const resumenLecturas = ref({});
+const actualizandoLecturas = ref(false);
 const cargarResumenLecturas = async () => {
+    actualizandoLecturas.value = true;
     try {
         const ids = comunicados.value
             .map((c) => c.id_comunicado)
             .filter(Boolean)
             .slice(0, 100);
         const res = await obtenerResumenLecturas(ids);
+        if (!res?.success) throw new Error(res?.message || "No se pudo actualizar el resumen.");
         const filas = res?.data || [];
         resumenLecturas.value = Object.fromEntries(
             filas
@@ -491,9 +501,17 @@ const cargarResumenLecturas = async () => {
                 .map((r) => [r.id_comunicado, r]),
         );
     } catch (error) {
-        resumenLecturas.value = {};
+        toast.error(error?.message || "No se pudo actualizar el resumen de lecturas.");
+    } finally {
+        actualizandoLecturas.value = false;
     }
 };
+
+const { conectar: conectarEventosLectura } = usarEventos({
+    alEvento: (evento) => {
+        if (evento?.tipo === "confirmacion_lectura") cargarResumenLecturas();
+    },
+});
 
 const fetchComunicados = async () => {
     cargando.value = true;
@@ -502,7 +520,7 @@ const fetchComunicados = async () => {
         const res = await obtenerTodosComunicados();
         const data = res?.data || res;
         comunicados.value = Array.isArray(data) ? data : [];
-        cargarResumenLecturas();
+        await cargarResumenLecturas();
     } catch (error) {
         errorCarga.value =
             error?.response?.data?.message ||
@@ -609,6 +627,7 @@ onMounted(() => {
     fetchComunicados();
     fetchCursos();
     fetchAutores();
+    conectarEventosLectura();
 });
 </script>
 

@@ -4,6 +4,7 @@ import ComunicadoLectura from "../../db/models/comunicado-lectura-model.js";
 import { Alumno, Curso, Personal } from "../../db/models/index.js";
 import Usuario from "../../db/models/user-model.js";
 import { crearNotificacionMasiva } from "./notificaciones-controller.js";
+import { emitir } from "../../utils/eventos.js";
 
 import { Op } from "sequelize";
 
@@ -413,10 +414,16 @@ export async function marcarComunicadoLeido(idComunicado, idUsuario) {
       throw new ErrorHandler(403, "No sos destinatario de este comunicado");
     }
 
-    await ComunicadoLectura.findOrCreate({
+    const [, creada] = await ComunicadoLectura.findOrCreate({
       where: { id_comunicado: idC, id_usuario: idU },
       defaults: { leida_en: new Date() },
     });
+
+    if (creada) {
+      // Administración mantiene abierto el padrón de lecturas y necesita
+      // actualizarlo cuando otro destinatario confirma.
+      emitir("confirmacion_lectura", { id_comunicado: idC });
+    }
 
     return { ok: true, mensaje: "Lectura registrada" };
   } catch (error) {
@@ -527,11 +534,12 @@ export async function resumenLecturasComunicados(idsComunicados, idUsuario, idRo
       leidosPorComunicado.get(clave).add(Number(lectura.id_usuario));
     }
 
-    // Padrón precargado: usuarios por rol y cuentas de alumnos por curso.
-    const [usuariosTodas, alumnosTodas, cursosTodas] = await Promise.all([
+    // Padrón precargado: usuarios por rol, alumnos y cuentas de preceptores.
+    const [usuariosTodas, alumnosTodas, cursosTodas, personalTodo] = await Promise.all([
       Usuario.findAll({ attributes: ["id_usuario", "id_rol"], raw: true }),
       Alumno.findAll({ attributes: ["id_usuario", "id_curso"], raw: true }),
-      Curso.findAll({ attributes: ["id_curso", "nombre_curso"], raw: true }),
+      Curso.findAll({ attributes: ["id_curso", "nombre_curso", "id_preceptor"], raw: true }),
+      Personal.findAll({ attributes: ["id_personal", "id_usuario"], raw: true }),
     ]);
     const cuentasPorRol = new Map();
     for (const u of usuariosTodas) {
@@ -546,8 +554,19 @@ export async function resumenLecturasComunicados(idsComunicados, idUsuario, idRo
       if (!cuentasPorCurso.has(curso)) cuentasPorCurso.set(curso, new Set());
       cuentasPorCurso.get(curso).add(Number(a.id_usuario));
     }
-    const idCursoPorNombre = new Map(
-      cursosTodas.map((c) => [c.nombre_curso, Number(c.id_curso)]),
+    const idsCursosPorNombre = new Map();
+    const cursoPorId = new Map();
+    for (const curso of cursosTodas) {
+      cursoPorId.set(Number(curso.id_curso), curso);
+      if (!idsCursosPorNombre.has(curso.nombre_curso)) {
+        idsCursosPorNombre.set(curso.nombre_curso, new Set());
+      }
+      idsCursosPorNombre.get(curso.nombre_curso).add(Number(curso.id_curso));
+    }
+    const usuarioPorIdPersonal = new Map(
+      personalTodo
+        .filter((personal) => personal.id_usuario)
+        .map((personal) => [Number(personal.id_personal), Number(personal.id_usuario)]),
     );
 
     let cursosPreceptor = null;
@@ -560,8 +579,13 @@ export async function resumenLecturasComunicados(idsComunicados, idUsuario, idRo
 
       if (visible) {
         if (comunicado.destino === "curso") {
-          const idCurso = idCursoPorNombre.get(comunicado.curso_destino);
-          padron = cuentasPorCurso.get(idCurso) || new Set();
+          const idsCursos = idsCursosPorNombre.get(comunicado.curso_destino) || new Set();
+          for (const idCurso of idsCursos) {
+            for (const id of cuentasPorCurso.get(idCurso) || []) padron.add(id);
+            const idPreceptor = cursoPorId.get(idCurso)?.id_preceptor;
+            const idUsuarioPreceptor = usuarioPorIdPersonal.get(Number(idPreceptor));
+            if (idUsuarioPreceptor) padron.add(idUsuarioPreceptor);
+          }
         } else {
           for (const rol of ROLES_POR_DESTINO[comunicado.destino] || []) {
             for (const id of cuentasPorRol.get(Number(rol)) || []) {

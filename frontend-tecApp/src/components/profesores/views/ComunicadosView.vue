@@ -143,7 +143,7 @@ import { ref, reactive, computed, onMounted } from "vue";
 import { useAuthStore } from "@/stores/auth.js";
 import { resolverIdProfesor } from "@/composables/useProfesor.js";
 import { obtenerAsignacionesProfesor } from "@/services/academico-service.js";
-import { obtenerTodosComunicados, crearComunicado } from "@/services/comunidad-service.js";
+import { obtenerTodosComunicados, crearComunicado, marcarComunicadoLeido } from "@/services/comunidad-service.js";
 import { validarRequerido, validarLongitudMinima } from "@/utils/validators.js";
 import {
   claseImportancia,
@@ -245,6 +245,16 @@ const cargarComunicados = async () => {
     }
     errorCarga.value = "";
     comunicados.value = extraerComunicados(respuesta);
+    // Los comunicados aparecen desplegados en esta vista, por lo que ya se
+    // consideran leídos. Solo registrar los destinos que incluyen profesores.
+    await Promise.all(comunicados.value
+      .filter((comunicado) => ["todos", "profesores"].includes(comunicado.destino))
+      .map(async (comunicado) => {
+        const resultado = await marcarComunicadoLeido(comunicado.id_comunicado);
+        if (!resultado?.success) {
+          console.error("No se pudo registrar la lectura del comunicado:", resultado?.message);
+        }
+      }));
   } catch (error) {
     console.error("Error al cargar comunicados:", error);
     errorCarga.value = "No se pudieron cargar los comunicados.";
