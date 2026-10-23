@@ -3,6 +3,7 @@ import { mount, flushPromises } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 import CampanitaNotificaciones from "../src/components/ui/CampanitaNotificaciones.vue";
 import * as notificacionesService from "../src/services/notificaciones-service.js";
+import * as comunidadService from "../src/services/comunidad-service.js";
 import { toast } from "../src/services/toast-service.js";
 import { reiniciarEventos } from "../src/composables/useEventos.js";
 import { useAuthStore } from "../src/stores/auth.js";
@@ -11,6 +12,10 @@ vi.mock("../src/services/notificaciones-service.js", () => ({
   obtenerMisNotificaciones: vi.fn(),
   marcarNotificacionLeida: vi.fn(),
   marcarTodasLeidas: vi.fn(),
+}));
+
+vi.mock("../src/services/comunidad-service.js", () => ({
+  marcarComunicadoLeido: vi.fn(),
 }));
 
 vi.mock("../src/services/toast-service.js", () => ({
@@ -43,7 +48,7 @@ const montados = [];
 beforeEach(() => {
   vi.clearAllMocks();
   lista = [
-    { id_notificacion: 1, tipo: "comunicado", titulo: "Comunicado nuevo", cuerpo: "Detalle", leida: false, fecha: "2026-10-01T10:00:00.000Z" },
+    { id_notificacion: 1, id_comunicado: 42, tipo: "comunicado", titulo: "Comunicado nuevo", cuerpo: "Detalle", leida: false, fecha: "2026-10-01T10:00:00.000Z" },
     { id_notificacion: 2, tipo: "nota", titulo: "Nota cargada", cuerpo: null, leida: true, fecha: "2026-09-30T10:00:00.000Z" },
   ];
   vi.stubGlobal("EventSource", FuenteFalsa);
@@ -59,6 +64,7 @@ beforeEach(() => {
   }));
   notificacionesService.marcarNotificacionLeida.mockResolvedValue({ success: true, data: {} });
   notificacionesService.marcarTodasLeidas.mockResolvedValue({ success: true, data: {} });
+  comunidadService.marcarComunicadoLeido.mockResolvedValue({ success: true, data: {} });
 
   reiniciarEventos();
 });
@@ -123,6 +129,7 @@ describe("CampanitaNotificaciones", () => {
     await flushPromises();
 
     expect(notificacionesService.marcarNotificacionLeida).toHaveBeenCalledWith(1);
+    expect(comunidadService.marcarComunicadoLeido).toHaveBeenCalledWith(42);
     expect(wrapper.find(".campanita-badge").exists()).toBe(false);
   });
 

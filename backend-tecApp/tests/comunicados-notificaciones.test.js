@@ -4,11 +4,12 @@ import assert from "node:assert/strict";
 import { obtenerServidor, cerrarServidor } from "./helpers/http.js";
 import { fila } from "./helpers/crud.js";
 import Comunicado from "../src/db/models/comunicados-model.js";
-import { Alumno, Curso, Usuario } from "../src/db/models/index.js";
+import { Alumno, Curso, Personal, Usuario } from "../src/db/models/index.js";
 import Notificacion from "../src/db/models/notificacion-model.js";
 import { crearComunicado } from "../src/modules/comunidad/comunicados-controller.js";
 import { invalidarCachePermisos } from "../src/middlewares/comprobarPermisos.js";
 import { suscribir, limpiarSuscriptores } from "../src/utils/eventos.js";
+import { ROLES, token, mockearPermisosDeRol } from "./helpers/auth.js";
 
 after(cerrarServidor);
 beforeEach(() => invalidarCachePermisos());
@@ -55,17 +56,22 @@ test("comunicado a 'alumnos' notifica al perfil estudiantil", async (t) => {
   assert.deepEqual([...whereRol[claveOperador]].sort(), [1, 2, 6]);
 });
 
-test("comunicado a 'curso' notifica solo a los alumnos con cuenta", async (t) => {
+test("comunicado a 'curso' notifica a alumnos y preceptor con cuenta", async (t) => {
   const creadas = mockearFanout(t);
   t.mock.method(Curso, "findAll", async (opciones) => {
     assert.equal(opciones.where.nombre_curso, "2do 3ra"); // match por nombre
-    return [fila({ id_curso: 55 })];
+    return [fila({ id_curso: 55, id_preceptor: 8 })];
   });
   t.mock.method(Alumno, "findAll", async () => [
     fila({ id_usuario: 31 }),
     fila({ id_usuario: 32 }),
     fila({ id_usuario: null }),
   ]);
+  t.mock.method(Personal, "findAll", async (opciones) => {
+    const ids = opciones.where.id_personal[Reflect.ownKeys(opciones.where.id_personal)[0]];
+    assert.deepEqual(ids, [8]);
+    return [fila({ id_usuario: 33 })];
+  });
 
   const comunicado = await crearComunicado({
     titulo: "Trabajo práctico",
@@ -78,13 +84,62 @@ test("comunicado a 'curso' notifica solo a los alumnos con cuenta", async (t) =>
   assert.equal(comunicado.destino, "curso");
   assert.deepEqual(
     new Set(creadas.map((n) => Number(n.id_usuario))),
-    new Set([31, 32]),
+    new Set([31, 32, 33]),
   );
+  assert.ok(creadas.every((n) => Number(n.id_comunicado) === Number(comunicado.id_comunicado)));
   // La consulta de alumnos filtra por los cursos resueltos y exige cuenta.
   const whereAlumno = Alumno.findAll.mock.calls[0].arguments[0].where;
   const claveIn = Reflect.ownKeys(whereAlumno.id_curso)[0];
   assert.deepEqual(whereAlumno.id_curso[claveIn], [55]);
   assert.notEqual(whereAlumno.id_usuario, null);
+});
+
+test("preceptor publica a su curso y los alumnos reciben el aviso en sus notificaciones", async (t) => {
+  const creadas = mockearFanout(t);
+  mockearPermisosDeRol(t, { [ROLES.PRECEPTOR]: ["comunicado_crear"] });
+  t.mock.method(Curso, "findAll", async (opciones) => {
+    assert.equal(opciones.where.nombre_curso, "2do 3ra");
+    return [fila({ id_curso: 55, id_preceptor: 8 })];
+  });
+  t.mock.method(Alumno, "findAll", async (opciones) => {
+    const ids = opciones.where.id_curso[Reflect.ownKeys(opciones.where.id_curso)[0]];
+    assert.deepEqual(ids, [55]);
+    return [fila({ id_usuario: 31 }), fila({ id_usuario: 32 })];
+  });
+  t.mock.method(Personal, "findAll", async () => [fila({ id_usuario: 44 })]);
+  t.mock.method(Notificacion, "findAndCountAll", async ({ where }) => {
+    const lista = creadas
+      .filter((notificacion) => Number(notificacion.id_usuario) === Number(where.id_usuario))
+      .map((notificacion, index) => fila({ id_notificacion: 200 + index, leida: false, ...notificacion }));
+    return { count: lista.length, rows: lista };
+  });
+
+  const srv = await obtenerServidor();
+  const publicado = await srv.request("POST", "/api/comunidad/comunicados", {
+    token: token({ id: 44, id_rol: ROLES.PRECEPTOR }),
+    body: {
+      titulo: "Reunión de curso",
+      mensaje: "El viernes a las 10 hs",
+      destino: "curso",
+      curso_destino: "2do 3ra",
+    },
+  });
+
+  assert.equal(publicado.status, 201);
+  assert.equal(publicado.data.autor_id, 44);
+  const idComunicado = Number(publicado.data.id_comunicado);
+  assert.deepEqual(
+    new Set(creadas.map((notificacion) => Number(notificacion.id_usuario))),
+    new Set([31, 32, 44]),
+  );
+  assert.ok(creadas.every((notificacion) => Number(notificacion.id_comunicado) === idComunicado));
+
+  const notificacionesAlumno = await srv.request("GET", "/api/comunidad/notificaciones/mias", {
+    token: token({ id: 31, id_rol: ROLES.ALUMNO }),
+  });
+  assert.equal(notificacionesAlumno.status, 200);
+  assert.equal(notificacionesAlumno.data.lista.length, 1);
+  assert.equal(Number(notificacionesAlumno.data.lista[0].id_comunicado), idComunicado);
 });
 
 test("destinos de personal y 'todos' mapean a sus roles", async (t) => {

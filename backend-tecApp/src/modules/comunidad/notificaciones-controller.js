@@ -4,13 +4,14 @@ import NotificacionPreferencia from "../../db/models/notificacion-preferencia-mo
 import { seleccionarCanal, CANALES } from "../../utils/notificaciones.js";
 import { emitir } from "../../utils/eventos.js";
 
-export async function crearNotificacion({ id_usuario, tipo, titulo, cuerpo = null }) {
+export async function crearNotificacion({ id_usuario, tipo, titulo, cuerpo = null, id_comunicado = null }) {
   if (!id_usuario) throw new ErrorHandler(400, "El destinatario es obligatorio");
   if (!tipo) throw new ErrorHandler(400, "El tipo es obligatorio");
   if (!titulo || !String(titulo).trim()) throw new ErrorHandler(400, "El título es obligatorio");
   const notificacion = await Notificacion.create({
     id_usuario: Number(id_usuario),
     tipo: String(tipo),
+    id_comunicado: id_comunicado ? Number(id_comunicado) : null,
     titulo: String(titulo).trim().slice(0, 200),
     cuerpo: cuerpo ? String(cuerpo).slice(0, 2000) : null,
   });
@@ -25,7 +26,9 @@ export async function crearNotificacion({ id_usuario, tipo, titulo, cuerpo = nul
       id_usuario: Number(id_usuario),
       id_notificacion: plano.id_notificacion ?? plano.id ?? null,
       tipo: String(tipo),
+      id_comunicado: plano.id_comunicado ?? null,
       titulo: plano.titulo ?? String(titulo),
+      cuerpo: plano.cuerpo ?? cuerpo ?? null,
     },
     { id_usuario: Number(id_usuario) },
   );
@@ -40,7 +43,7 @@ export async function crearNotificacion({ id_usuario, tipo, titulo, cuerpo = nul
  * comunicado) y emite un evento SSE dirigido por cada una. No lanza por IDs
  * vacíos: en ese caso no hay destinatarios y devuelve 0 creadas.
  */
-export async function crearNotificacionMasiva(idsUsuarios, { tipo, titulo, cuerpo = null }) {
+export async function crearNotificacionMasiva(idsUsuarios, { tipo, titulo, cuerpo = null, id_comunicado = null }) {
   const idsUnicos = [...new Set((idsUsuarios || []).map(Number).filter(Boolean))];
   if (idsUnicos.length === 0) {
     return { creadas: 0 };
@@ -52,6 +55,7 @@ export async function crearNotificacionMasiva(idsUsuarios, { tipo, titulo, cuerp
     idsUnicos.map((id) => ({
       id_usuario: id,
       tipo: String(tipo),
+      id_comunicado: id_comunicado ? Number(id_comunicado) : null,
       titulo: String(titulo).trim().slice(0, 200),
       cuerpo: cuerpo ? String(cuerpo).slice(0, 2000) : null,
     })),
@@ -65,7 +69,9 @@ export async function crearNotificacionMasiva(idsUsuarios, { tipo, titulo, cuerp
         id_usuario: plano.id_usuario,
         id_notificacion: plano.id_notificacion ?? plano.id ?? null,
         tipo: String(tipo),
+        id_comunicado: plano.id_comunicado ?? null,
         titulo: plano.titulo ?? String(titulo),
+        cuerpo: plano.cuerpo ?? cuerpo ?? null,
       },
       { id_usuario: Number(plano.id_usuario) },
     );

@@ -17,6 +17,10 @@ const Notificacion = sequelize.define(
       type: DataTypes.STRING(50),
       allowNull: false,
     },
+    id_comunicado: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
     titulo: {
       type: DataTypes.STRING(200),
       allowNull: false,

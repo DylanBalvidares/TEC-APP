@@ -99,9 +99,9 @@ import {
     obtenerPreferencias,
     guardarPreferencias,
 } from "../../../services/notificaciones-service.js";
+import { marcarComunicadoLeido } from "../../../services/comunidad-service.js";
 import { toast } from "../../../services/toast-service.js";
 import { usarEventos } from "../../../composables/useEventos.js";
-import { useAuthStore } from "../../../stores/auth.js";
 
 const TIPOS = ["inasistencia", "reunion", "sancion", "nota", "comunicado", "sistema"];
 const CANALES = ["panel", "email", "whatsapp"];
@@ -168,6 +168,14 @@ async function cargar() {
 }
 
 async function marcarLeida(id) {
+    const notificacion = notificaciones.value.find((n) => Number(n.id_notificacion) === Number(id));
+    if (notificacion?.tipo === "comunicado" && notificacion.id_comunicado) {
+        const lectura = await marcarComunicadoLeido(notificacion.id_comunicado);
+        if (!lectura.success) {
+            toast.error(lectura.message || "No se pudo confirmar la lectura del comunicado.");
+            return;
+        }
+    }
     const res = await marcarNotificacionLeida(id);
     if (!res.success) {
         toast.error(res.message || "No se pudo marcar.");
@@ -189,16 +197,12 @@ async function guardar() {
     }
 }
 
-const authStore = useAuthStore();
 // Tiempo real (E13): si llega una notificación para este usuario se recarga
-// la lista; el aviso con toast lo hace la campanita del topbar (única fuente)
-// y las de otros usuarios se filtran (el backend además ya envía dirigido).
+// la lista; el aviso con toast lo hace la campanita del topbar (única fuente).
 const { conectar } = usarEventos({
     alEvento: (evento) => {
         if (evento?.tipo !== "notificacion") return;
-        const mio = Number(evento.datos?.id_usuario);
-        const yo = Number(authStore.usuario?.id_usuario ?? authStore.usuario?.id);
-        if (Number.isFinite(mio) && Number.isFinite(yo) && mio !== yo) return;
+        // El backend dirige el evento al dueño de la notificación.
         cargar();
     },
 });

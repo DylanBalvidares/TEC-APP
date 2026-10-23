@@ -73,6 +73,7 @@ test("crearNotificacionMasiva deduplica y emite por fila", async (t) => {
   try {
     const r = await crearNotificacionMasiva([10, 20, 10, null], {
       tipo: "comunicado",
+      id_comunicado: 77,
       titulo: "Comunicado general",
       cuerpo: "texto",
     });
@@ -81,9 +82,12 @@ test("crearNotificacionMasiva deduplica y emite por fila", async (t) => {
     assert.deepEqual(creados.map((n) => n.id_usuario).sort(), [10, 20]);
     assert.equal(creados[0].titulo, "Comunicado general");
     assert.equal(creados[0].tipo, "comunicado");
+    assert.equal(creados[0].id_comunicado, 77);
+    assert.equal(creados[1].id_comunicado, 77);
     assert.equal((buzones.get(10) || []).length, 1);
     assert.equal((buzones.get(20) || []).length, 1);
     assert.equal(buzones.get(10)[0].datos.id_notificacion, 100);
+    assert.equal(buzones.get(10)[0].datos.id_comunicado, 77);
     assert.equal(buzones.get(20)[0].datos.id_notificacion, 101);
   } finally {
     fueraDiez();

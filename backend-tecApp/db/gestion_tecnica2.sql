@@ -696,6 +696,7 @@ CREATE TABLE `notificaciones` (
     `id_notificacion` int(11)      NOT NULL AUTO_INCREMENT,
     `id_usuario`      int(11)      NOT NULL,
     `tipo`            varchar(50)  NOT NULL,
+    `id_comunicado`  int(11)      DEFAULT NULL,
     `titulo`          varchar(200) NOT NULL,
     `cuerpo`          text         DEFAULT NULL,
     `leida`           tinyint(1)   NOT NULL DEFAULT 0,

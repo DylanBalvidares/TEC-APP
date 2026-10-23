@@ -78,12 +78,14 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from "vue";
+import { useRouter } from "vue-router";
 
 import {
   obtenerMisNotificaciones,
   marcarNotificacionLeida,
   marcarTodasLeidas,
 } from "../../services/notificaciones-service.js";
+import { marcarComunicadoLeido } from "../../services/comunidad-service.js";
 import { toast } from "../../services/toast-service.js";
 import { usarEventos } from "../../composables/useEventos.js";
 import { useAuthStore } from "../../stores/auth.js";
@@ -93,6 +95,8 @@ import { useAuthStore } from "../../stores/auth.js";
 const props = defineProps({
   icono: { type: String, default: "fas fa-bell" },
 });
+const authStore = useAuthStore();
+const router = useRouter();
 
 const noLeidas = ref(0);
 const notificaciones = ref([]);
@@ -148,13 +152,31 @@ function alternar() {
 
 // Click en una notificación: la marca como leída sin cerrar el panel.
 async function abrir(notificacion) {
-  if (notificacion.leida) return;
-  const resultado = await marcarNotificacionLeida(notificacion.id_notificacion);
-  if (!resultado.success) {
-    toast.error(resultado.message || "No se pudo marcar como leída.");
-    return;
+  // La notificación del panel y la confirmación del comunicado son marcas
+  // distintas. Abrir un aviso de comunicado registra ambas.
+  if (notificacion.tipo === "comunicado" && notificacion.id_comunicado) {
+    const lectura = await marcarComunicadoLeido(notificacion.id_comunicado);
+    if (!lectura.success) {
+      toast.error(lectura.message || "No se pudo confirmar la lectura del comunicado.");
+      return;
+    }
+  }
+  if (!notificacion.leida) {
+    const resultado = await marcarNotificacionLeida(notificacion.id_notificacion);
+    if (!resultado.success) {
+      toast.error(resultado.message || "No se pudo marcar como leída.");
+      return;
+    }
   }
   await cargar();
+  abierto.value = false;
+  if (authStore.rol === "alumno") {
+    if (notificacion.tipo === "comunicado" && notificacion.id_comunicado) {
+      await router.push({ path: "/alumno/cursos", query: { comunicado: notificacion.id_comunicado } });
+    } else if (notificacion.tipo === "noticia") {
+      await router.push("/alumno/noticias");
+    }
+  }
 }
 
 async function marcarTodas() {
@@ -182,15 +204,17 @@ onUnmounted(() => document.removeEventListener("click", cerrarSiClickAfuera));
 // Tiempo real: con el backend ahora, los eventos de notificación viajan solo
 // al dueño; el filtro por id queda como red de seguridad (y cubre la
 // conexión única compartida con otras pantallas del panel).
-const authStore = useAuthStore();
 const { conectar } = usarEventos({
-  alEvento: (evento) => {
+  alEvento: async (evento) => {
     if (evento?.tipo !== "notificacion") return;
-    const mio = Number(evento.datos?.id_usuario);
-    const yo = Number(authStore.usuario?.id_usuario ?? authStore.usuario?.id);
-    if (Number.isFinite(mio) && Number.isFinite(yo) && mio !== yo) return;
-    toast.info(evento.datos?.titulo || "Nueva notificación.");
-    cargar();
+    const idPropio = Number(authStore.usuario?.id_usuario ?? authStore.usuario?.id);
+    const idDestinatario = Number(evento.datos?.id_usuario);
+    if (idPropio && idDestinatario && idPropio !== idDestinatario) return;
+    // El backend dirige el evento al dueño de la notificación.
+    const titulo = evento.datos?.titulo || "Nueva notificación.";
+    const cuerpo = evento.datos?.cuerpo;
+    toast.info(cuerpo ? `${titulo}: ${cuerpo}` : titulo);
+    await cargar();
   },
 });
 

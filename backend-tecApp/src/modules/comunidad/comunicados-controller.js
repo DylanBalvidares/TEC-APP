@@ -164,7 +164,7 @@ export async function obtenerDestinatarios(comunicado) {
   if (comunicado.destino === "curso") {
     const cursos = await Curso.findAll({
       where: { nombre_curso: comunicado.curso_destino },
-      attributes: ["id_curso"],
+      attributes: ["id_curso", "id_preceptor"],
       raw: true,
     });
     const idsCursos = cursos.map((c) => Number(c.id_curso)).filter(Boolean);
@@ -172,13 +172,14 @@ export async function obtenerDestinatarios(comunicado) {
       return { idsUsuarios: [], sinCuenta: 0 };
     }
 
+    const idsUsuarios = new Set();
+    let sinCuenta = 0;
+
     const alumnos = await Alumno.findAll({
       where: { id_curso: { [Op.in]: idsCursos } },
       attributes: ["id_usuario"],
       raw: true,
     });
-    const idsUsuarios = new Set();
-    let sinCuenta = 0;
     for (const alumno of alumnos) {
       if (alumno.id_usuario) {
         idsUsuarios.add(Number(alumno.id_usuario));
@@ -186,6 +187,23 @@ export async function obtenerDestinatarios(comunicado) {
         sinCuenta += 1;
       }
     }
+
+    // El curso asigna al preceptor por id_personal; las notificaciones y
+    // confirmaciones se dirigen a su cuenta de usuario, si ya existe.
+    const idsPreceptores = [...new Set(
+      cursos.map((curso) => Number(curso.id_preceptor)).filter(Boolean),
+    )];
+    if (idsPreceptores.length > 0) {
+      const preceptores = await Personal.findAll({
+        where: { id_personal: { [Op.in]: idsPreceptores } },
+        attributes: ["id_usuario"],
+        raw: true,
+      });
+      for (const preceptor of preceptores) {
+        if (preceptor.id_usuario) idsUsuarios.add(Number(preceptor.id_usuario));
+      }
+    }
+
     return { idsUsuarios: [...idsUsuarios], sinCuenta };
   }
 
@@ -223,6 +241,7 @@ async function notificarComunicado(comunicado) {
 
     return await crearNotificacionMasiva(idsUsuarios, {
       tipo: "comunicado",
+      id_comunicado: comunicado.id_comunicado,
       titulo: comunicado.titulo,
       cuerpo: comunicado.mensaje ? String(comunicado.mensaje).slice(0, 300) : null,
     });
