@@ -2,8 +2,8 @@
   <main class="content">
     <header class="page-header">
       <div class="page-header-text">
-        <h1><i class="fas fa-graduation-cap header-icon"></i> Mis Materias</h1>
-        <p>Revisá tus materias, los materiales subidos por tus profesores y los comunicados del curso.</p>
+        <h1><i class="fas fa-graduation-cap header-icon"></i> Mi curso</h1>
+        <p>Consultá tus materias, comunicados y las personas que forman parte de tu curso.</p>
       </div>
     </header>
 
@@ -28,8 +28,11 @@
       <button class="tab-btn" :class="{ active: tabActivo === 'materias' }" @click="tabActivo = 'materias'">
         <i class="fas fa-table"></i> Mis Materias
       </button>
-      <button class="tab-btn" :class="{ active: tabActivo === 'comunicados' }" @click="tabActivo = 'comunicados'">
+      <button id="tab-comunicados" class="tab-btn" role="tab" aria-controls="panel-comunicados" :aria-selected="tabActivo === 'comunicados'" :tabindex="tabActivo === 'comunicados' ? 0 : -1" :class="{ active: tabActivo === 'comunicados' }" @click="seleccionarTab('comunicados')">
         <i class="fas fa-bullhorn"></i> Comunicados
+      </button>
+      <button id="tab-participantes" class="tab-btn" role="tab" aria-controls="panel-participantes" :aria-selected="tabActivo === 'participantes'" :tabindex="tabActivo === 'participantes' ? 0 : -1" :class="{ active: tabActivo === 'participantes' }" @click="seleccionarTab('participantes')">
+        <i class="fas fa-users"></i> Participantes
       </button>
     </div>
 
@@ -88,12 +91,47 @@
         </div>
       </div>
     </section>
+
+    <section v-show="tabActivo === 'participantes'" id="panel-participantes" class="tab-content participantes-section" role="tabpanel" aria-labelledby="tab-participantes" tabindex="0">
+      <p v-if="cargandoParticipantes" class="participantes-mensaje" role="status">Cargando participantes del curso…</p>
+      <div v-else-if="errorParticipantes" class="participantes-mensaje participantes-error" role="alert">
+        <span>{{ errorParticipantes }}</span>
+        <button type="button" class="reintentar-btn" @click="cargarParticipantes">Reintentar</button>
+      </div>
+      <p v-else-if="!participantes.curso" class="participantes-mensaje">No tenés un curso asignado actualmente.</p>
+      <template v-else>
+        <h2 class="participantes-curso">{{ participantes.curso.nombre_curso }}</h2>
+        <div class="participantes-columnas">
+          <section class="participantes-grupo" aria-labelledby="titulo-companeros">
+            <h3 id="titulo-companeros"><i class="fas fa-user-friends"></i> Compañeros</h3>
+            <p v-if="participantes.companeros.length === 0" class="participantes-vacio">Todavía no hay compañeros para mostrar.</p>
+            <ul v-else>
+              <li v-for="(companero, index) in participantes.companeros" :key="`${companero.apellido}-${index}`">
+                {{ companero.apellido }}, {{ companero.nombre }}
+              </li>
+            </ul>
+          </section>
+          <section class="participantes-grupo" aria-labelledby="titulo-docentes">
+            <h3 id="titulo-docentes"><i class="fas fa-chalkboard-teacher"></i> Profesores</h3>
+            <p v-if="participantes.profesores.length === 0" class="participantes-vacio">Todavía no hay profesores asignados.</p>
+            <ul v-else>
+              <li v-for="(profesor, index) in participantes.profesores" :key="`${profesor.apellido}-${index}`">
+                <strong>{{ profesor.apellido }}, {{ profesor.nombre }}</strong>
+                <span v-if="profesor.es_titular" class="participantes-etiqueta">Profesor titular</span>
+                <span v-if="profesor.materias.length" class="participantes-materias">{{ profesor.materias.join(' · ') }}</span>
+              </li>
+            </ul>
+          </section>
+        </div>
+      </template>
+    </section>
   </main>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
-import { obtenerMisMaterias } from "@/services/academico-service.js";
+import { ref, onMounted, nextTick, watch } from "vue";
+import { useRoute } from "vue-router";
+import { obtenerMisMaterias, obtenerMisParticipantes } from "@/services/academico-service.js";
 import { obtenerTodosComunicados, marcarComunicadoLeido } from "@/services/comunidad-service.js";
 import {
   claseImportancia,
@@ -107,9 +145,34 @@ import {
 const tabActivo = ref("materias");
 const materias = ref([]);
 const comunicados = ref([]);
+const participantes = ref({ curso: null, companeros: [], profesores: [] });
+const cargandoMaterias = ref(true);
+const cargandoComunicados = ref(true);
+const cargandoParticipantes = ref(false);
+const errorMaterias = ref("");
+const errorComunicados = ref("");
+const errorParticipantes = ref("");
+const materiasCargadas = ref(false);
+const comunicadosCargados = ref(false);
+const participantesCargados = ref(false);
+const route = useRoute();
 
 const formatearFecha = formatearFechaComunicado;
 
+const cargarParticipantes = async () => {
+  cargandoParticipantes.value = true;
+  errorParticipantes.value = "";
+  const respuesta = await obtenerMisParticipantes();
+  participantes.value = respuesta?.data || { curso: null, companeros: [], profesores: [] };
+  errorParticipantes.value = respuesta?.success ? "" : (respuesta?.message || "No se pudieron cargar los participantes del curso.");
+  participantesCargados.value = Boolean(respuesta?.success);
+  cargandoParticipantes.value = false;
+};
+
+const seleccionarTab = async (tab) => {
+  tabActivo.value = tab;
+  if (tab === "participantes" && !participantesCargados.value) await cargarParticipantes();
+};
 const cargarDatos = async () => {
   try {
     const dataMaterias = await obtenerMisMaterias();
@@ -470,10 +533,26 @@ tbody tr:last-child td { border-bottom: none; }
   overflow-wrap: break-word;
 }
 
+.participantes-section { gap: 18px; }
+.participantes-mensaje, .participantes-vacio { color: #64748b; margin: 0; }
+.participantes-error { color: #b91c1c; }
+.participantes-curso { margin: 0; color: #0f172a; font-size: 1.1rem; }
+.participantes-columnas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.participantes-grupo { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; }
+.participantes-grupo h3 { margin: 0 0 12px; color: #0f172a; font-size: 1rem; }
+.participantes-grupo h3 i { color: #c0152a; margin-right: 7px; }
+.participantes-grupo ul { list-style: none; margin: 0; padding: 0; }
+.participantes-grupo li { padding: 10px 0; border-top: 1px solid #f1f5f9; color: #334155; }
+.participantes-etiqueta { margin-left: 8px; padding: 3px 8px; border-radius: 999px; background: #fee2e2; color: #b91c1c; font-size: 0.72rem; font-weight: 700; }
+.participantes-materias { display: block; margin-top: 4px; color: #64748b; font-size: 0.82rem; }
+
 /* ── Responsive ───────────────────────────── */
 @media (max-width: 700px) {
   .content { padding: 16px; }
   .stats { flex-direction: column; }
   .page-header p { margin-left: 0; }
+  .participantes-columnas { grid-template-columns: 1fr; }
+  .tabs-bar { overflow-x: auto; }
+  .tab-btn { flex: 0 0 auto; padding: 10px 14px; }
 }
 </style>

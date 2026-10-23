@@ -974,7 +974,16 @@ export const obtenerMisMaterias = async () => {
     }));
   } catch (error) {
     console.error("Error al obtener mis materias:", error);
-    return [];
+    return manejarErrorApi(error, "No se pudieron cargar tus materias");
+  }
+};
+
+export const obtenerMisParticipantes = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/alumnos/mi-curso/participantes`, getConfig());
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "No se pudieron obtener los participantes del curso");
   }
 };
 

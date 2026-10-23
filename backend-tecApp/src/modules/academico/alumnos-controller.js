@@ -2,7 +2,15 @@ import { Op } from "sequelize";
 import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
 import ErrorHandler from "../../utils/ErrorHandler.js";
-import { Alumno, Curso, Asistencia, Usuario } from "../../db/models/index.js";
+import {
+  Alumno,
+  Curso,
+  Asistencia,
+  Usuario,
+  Asignacion,
+  Profesor,
+  Materia,
+} from "../../db/models/index.js";
 import sequelize from "../../db/conexionDB.js";
 import { validarTelefonoAR } from "../../utils/whatsappProvider.js";
 import { enviarCredencialesAcceso } from "../../utils/sendMail.js";
@@ -232,6 +240,108 @@ async function obtenerAlumnosCursoParaAlumno(id) {
     }
     console.error("\x1b[1m\x1b[31m[ERROR]\x1b[0m Error en obtenerAlumnosCurso:", error);
     throw new ErrorHandler(500, "Error interno al obtener alumnos");
+  }
+}
+
+async function obtenerParticipantesParaAlumno(idUsuario) {
+  try {
+    const id = Number(idUsuario);
+    if (!Number.isInteger(id) || id <= 0) {
+      throw new ErrorHandler(400, "Usuario inválido");
+    }
+
+    // El curso siempre se determina a partir de la sesión autenticada; nunca
+    // se acepta un id_curso enviado por el cliente para esta consulta.
+    const alumno = await Alumno.findOne({
+      where: { id_usuario: id },
+      attributes: ["id_alumno", "id_curso"],
+    });
+    if (!alumno) throw new ErrorHandler(404, "No se encontró el alumno");
+    if (!alumno.id_curso) {
+      return { curso: null, companeros: [], profesores: [] };
+    }
+
+    const idCurso = Number(alumno.id_curso);
+    const curso = await Curso.findByPk(idCurso, {
+      attributes: ["id_curso", "nombre_curso"],
+      include: [{
+        model: Profesor,
+        as: "profesorTitular",
+        attributes: ["id_profesor", "nombre", "apellido"],
+        required: false,
+      }],
+    });
+    if (!curso) throw new ErrorHandler(404, "No se encontró el curso del alumno");
+
+    const alumnosCurso = await Alumno.findAll({
+      where: {
+        id_curso: idCurso,
+        estado: { [Op.in]: ["activo", "condicional"] },
+      },
+      attributes: ["id_alumno", "nombre", "apellido"],
+      order: [["apellido", "ASC"], ["nombre", "ASC"]],
+    });
+    const companeros = alumnosCurso
+      .filter((otro) => Number(otro.id_alumno) !== Number(alumno.id_alumno))
+      .map((otro) => ({
+        nombre: otro.nombre,
+        apellido: otro.apellido,
+      }));
+
+    const asignaciones = await Asignacion.findAll({
+      where: { id_curso: idCurso },
+      attributes: ["id_profesor"],
+      include: [
+        {
+          model: Profesor,
+          as: "profesorAsignacion",
+          attributes: ["id_profesor", "nombre", "apellido"],
+          required: false,
+        },
+        {
+          model: Materia,
+          as: "materiaAsignacion",
+          attributes: ["id_materia", "nombre_materia"],
+          required: false,
+        },
+      ],
+    });
+
+    const profesoresPorId = new Map();
+    const agregarProfesor = (profesor, materia = null, esTitular = false) => {
+      if (!profesor?.id_profesor) return;
+      const key = Number(profesor.id_profesor);
+      if (!profesoresPorId.has(key)) {
+        profesoresPorId.set(key, {
+          nombre: profesor.nombre,
+          apellido: profesor.apellido,
+          es_titular: false,
+          materias: [],
+        });
+      }
+      const registro = profesoresPorId.get(key);
+      if (esTitular) registro.es_titular = true;
+      if (materia?.nombre_materia && !registro.materias.includes(materia.nombre_materia)) {
+        registro.materias.push(materia.nombre_materia);
+      }
+    };
+
+    agregarProfesor(curso.profesorTitular, null, true);
+    asignaciones.forEach((asignacion) => {
+      agregarProfesor(asignacion.profesorAsignacion, asignacion.materiaAsignacion);
+    });
+
+    return {
+      curso: { id_curso: curso.id_curso, nombre_curso: curso.nombre_curso },
+      companeros,
+      profesores: [...profesoresPorId.values()].sort((a, b) =>
+        `${a.apellido} ${a.nombre}`.localeCompare(`${b.apellido} ${b.nombre}`, "es"),
+      ),
+    };
+  } catch (error) {
+    if (error instanceof ErrorHandler) throw error;
+    console.error("[ERROR] Error en obtenerParticipantesParaAlumno:", error);
+    throw new ErrorHandler(500, "Error interno al obtener participantes del curso");
   }
 }
 
@@ -850,6 +960,7 @@ export {
   validarIdentidadAlumno,
   obtenerInfoParaAlumno,
   obtenerAlumnosCursoParaAlumno,
+  obtenerParticipantesParaAlumno,
   obtenerAlumno,
   crearAlumno,
   crearAlumnosEnLote,
