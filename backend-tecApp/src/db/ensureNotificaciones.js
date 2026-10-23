@@ -28,6 +28,27 @@ async function ensureNotificaciones(intentos = 6) {
       for (const sql of tablas) {
         await sequelize.query(sql);
       }
+      const [columnas] = await sequelize.query(
+        "SHOW COLUMNS FROM `notificaciones` LIKE 'id_comunicado'",
+      );
+      if (columnas.length === 0) {
+        await sequelize.query(
+          "ALTER TABLE `notificaciones` ADD COLUMN `id_comunicado` int(11) DEFAULT NULL AFTER `tipo`",
+        );
+      }
+      // Vincula avisos existentes cuando su título y extracto identifican de
+      // forma exacta un comunicado publicado cerca de la fecha del aviso.
+      await sequelize.query(
+        `UPDATE \`notificaciones\` n
+         INNER JOIN \`comunicados\` c
+           ON n.\`tipo\` = 'comunicado'
+          AND n.\`titulo\` = LEFT(c.\`titulo\`, 200)
+          AND n.\`cuerpo\` <=> LEFT(c.\`mensaje\`, 300)
+          AND n.\`fecha\` BETWEEN c.\`fecha_publicacion\` - INTERVAL 2 MINUTE
+                               AND c.\`fecha_publicacion\` + INTERVAL 2 MINUTE
+         SET n.\`id_comunicado\` = c.\`id_comunicado\`
+         WHERE n.\`id_comunicado\` IS NULL`,
+      );
       console.log("[SUCCESS] Notificaciones verificadas (tablas + preferencias)");
       return;
     } catch (error) {
