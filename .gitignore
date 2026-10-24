@@ -19,5 +19,8 @@ token*.txt
 # Caché local de build de Vite
 frontend-tecApp/.vite/
 
+# Artefactos compilados del frontend (se regeneran con npm run build)
+frontend-tecApp/dist/
+
 # Material fuente de integración (copia plana no versionable)
 cambios-pendientes/
