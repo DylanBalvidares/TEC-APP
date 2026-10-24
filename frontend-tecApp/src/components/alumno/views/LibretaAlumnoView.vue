@@ -14,11 +14,14 @@
         </div>
       </div>
 
-      <div class="promedio-general-card" v-if="promedioGeneral !== null">
+      <div class="promedio-general-card" v-if="!cargando && !errorMsg && promedioGeneralVisible !== null">
         <span class="prom-label">PROMEDIO GENERAL</span>
-        <span class="prom-val">{{ promedioGeneral }}</span>
+        <span class="prom-val">{{ promedioGeneralVisible }}</span>
       </div>
     </div>
+    <p class="promedio-ayuda">
+      El promedio general es el promedio simple de las materias con calificaciones en el año seleccionado.
+    </p>
 
     <!-- ── Estado de Carga ── -->
     <div v-if="cargando" class="state-card">
@@ -29,10 +32,20 @@
     <div v-else-if="errorMsg" class="state-card error">
       <i class="fas fa-circle-exclamation state-icon"></i>
       <p>{{ errorMsg }}</p>
+      <button type="button" class="btn-reintentar-libro" @click="cargarNotasAlumno">Reintentar</button>
     </div>
 
     <!-- ── Tarjetas / Tabla de Materias ── -->
-    <div v-else class="materias-grid">
+    <div v-else class="libreta-resultados">
+      <div class="filtro-periodo">
+        <label for="filtro-anio-notas">Filtrar calificaciones por año de carga</label>
+        <select id="filtro-anio-notas" v-model="anioNotasSeleccionado">
+          <option value="todos">Todos los años</option>
+          <option v-for="anio in aniosNotas" :key="anio" :value="String(anio)">{{ anio }}</option>
+        </select>
+      </div>
+      <p v-if="promedioGeneralVisible === null" class="sin-promedio">Todavía no hay calificaciones cargadas para este período.</p>
+      <div class="materias-grid">
       <div
         v-for="asig in asignaciones"
         :key="asig.id_asignacion"
@@ -72,6 +85,7 @@
             {{ getPromedioMateriaFormatted(asig.id_asignacion) }}
           </span>
         </div>
+      </div>
       </div>
     </div>
 
@@ -126,8 +140,7 @@ import {
 const infoAlumno = ref(null);
 const asignaciones = ref([]);
 const notas = ref([]);
-const promediosMaterias = ref({});
-const promedioGeneral = ref(null);
+const anioNotasSeleccionado = ref("todos");
 
 const cargando = ref(true);
 const errorMsg = ref("");
@@ -146,8 +159,6 @@ const cargarNotasAlumno = async () => {
       infoAlumno.value = res.data.alumno;
       asignaciones.value = res.data.asignaciones || [];
       notas.value = res.data.notas || [];
-      promediosMaterias.value = res.data.promedios?.por_materia || {};
-      promedioGeneral.value = res.data.promedios?.general ?? null;
     } else {
       errorMsg.value = res.message || "No se pudieron obtener tus calificaciones.";
     }
@@ -158,13 +169,32 @@ const cargarNotasAlumno = async () => {
   }
 };
 
+const aniosNotas = computed(() => [...new Set(
+  notas.value.map((nota) => String(nota.fecha_carga || "").slice(0, 4)).filter((anio) => /^\d{4}$/.test(anio)),
+)].sort((a, b) => Number(b) - Number(a)));
+
+const notasDelPeriodo = computed(() => anioNotasSeleccionado.value === "todos"
+  ? notas.value
+  : notas.value.filter((nota) => String(nota.fecha_carga || "").startsWith(`${anioNotasSeleccionado.value}-`)));
+
 const getNotasDeAsignacion = (idAsig) => {
-  return notas.value.filter((n) => n.id_asignacion === idAsig);
+  return notasDelPeriodo.value.filter((n) => Number(n.id_asignacion) === Number(idAsig));
 };
 
 const getPromedioMateria = (idAsig) => {
-  return promediosMaterias.value[idAsig] ?? null;
+  const registros = getNotasDeAsignacion(idAsig);
+  if (!registros.length) return null;
+  const promedio = registros.reduce((suma, nota) => suma + Number(nota.calificacion), 0) / registros.length;
+  return Math.round(promedio * 10) / 10;
 };
+
+const promedioGeneralVisible = computed(() => {
+  const promedios = asignaciones.value
+    .map((asignacion) => getPromedioMateria(asignacion.id_asignacion))
+    .filter((promedio) => promedio !== null);
+  if (!promedios.length) return null;
+  return Math.round((promedios.reduce((suma, promedio) => suma + promedio, 0) / promedios.length) * 10) / 10;
+});
 
 const getPromedioMateriaFormatted = (idAsig) => {
   const prom = getPromedioMateria(idAsig);
@@ -220,6 +250,12 @@ onMounted(() => {
   max-width: 1200px;
   margin: 0 auto;
 }
+
+.promedio-ayuda { margin: -12px 0 18px; color: #64748b; font-size: .84rem; line-height: 1.5; }
+.filtro-periodo { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-bottom: 14px; color: #475569; font-size: .85rem; }
+.filtro-periodo select { min-width: 145px; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 9px; background: white; color: #0f172a; font: inherit; }
+.sin-promedio { margin: 0 0 14px; padding: 12px 14px; border-radius: 10px; background: #f8fafc; color: #64748b; font-size: .88rem; }
+.libreta-resultados { min-width: 0; }
 
 .libreta-header-card {
   background: linear-gradient(135deg, #b01020 0%, #7a0a18 100%);
@@ -301,6 +337,9 @@ onMounted(() => {
 .state-card.error {
   color: #c0152a;
 }
+
+.btn-reintentar-libro { margin-top: 8px; padding: 9px 14px; border: 1px solid #fecaca; border-radius: 9px; background: #fff; color: #b42318; font: inherit; font-weight: 700; cursor: pointer; }
+.btn-reintentar-libro:hover { background: #fff5f5; }
 
 .materias-grid {
   display: grid;
