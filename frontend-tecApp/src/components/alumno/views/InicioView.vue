@@ -4,10 +4,9 @@
     <section class="hero">
       <div class="hero-text">
         <span class="hero-badge"> <i class="fas fa-sparkles"></i> Panel del Alumno </span>
-        <h1>¡Bienvenido a<br />Gestión Escolar!</h1>
+        <h1>¡Hola, {{ nombreAlumno }}!</h1>
         <p>
-          Nos alegra tenerte aquí. Este es tu espacio para enterarte de las nuevas noticias, revisar tus horarios, recuperar objetos
-          perdidos y más, de la comunidad Técnica 2.
+          Este es tu espacio escolar. Desde acá podés revisar avisos, materias, calificaciones y objetos perdidos.
         </p>
         <div class="hero-accent"></div>
       </div>
@@ -23,14 +22,42 @@
           <i class="fa-solid fa-shield-heart"></i>
         </div>
         <div>
-          <h3>Estamos aquí para ayudarte</h3>
-          <p>Usa las herramientas del menú para explorar categorías. Ante cualquier duda consultale a Pixelina.</p>
+          <h3>¿Necesitás una mano?</h3>
+          <p>Encontrá la sección adecuada o consultá dónde pedir ayuda en la escuela.</p>
         </div>
       </div>
-      <button class="btn btn-primary" id="btn-consultar-inicio">
+      <button class="btn btn-primary" id="btn-consultar-inicio" type="button" @click="ayudaAbierta = true">
         <i class="fas fa-comment-dots"></i>
-        Consultar ahora
+        Ver opciones de ayuda
       </button>
+    </section>
+
+    <section class="resumen-alumno" aria-label="Tu resumen escolar">
+      <div class="resumen-heading">
+        <div><span class="resumen-kicker">TU RESUMEN</span><h2>Lo importante para hoy</h2></div>
+        <button type="button" class="resumen-refresh" :disabled="cargandoResumen" @click="cargarResumen">
+          <i class="fas fa-rotate" :class="{ girando: cargandoResumen }" aria-hidden="true"></i>
+          Actualizar
+        </button>
+      </div>
+      <p v-if="errorResumen" class="resumen-error" role="alert">{{ errorResumen }}</p>
+      <div class="resumen-cards" :aria-busy="cargandoResumen">
+        <RouterLink to="/alumno/noticias" class="resumen-card">
+          <span class="resumen-icono avisos"><i class="fas fa-bell" aria-hidden="true"></i></span>
+          <span class="resumen-dato"><small>Avisos sin leer</small><strong>{{ cargandoResumen ? '…' : errorAvisos ? 'No disponible' : avisosPendientes }}</strong></span>
+          <i class="fas fa-arrow-right resumen-flecha" aria-hidden="true"></i>
+        </RouterLink>
+        <RouterLink to="/alumno/libreta" class="resumen-card">
+          <span class="resumen-icono notas"><i class="fas fa-chart-line" aria-hidden="true"></i></span>
+          <span class="resumen-dato"><small>Promedio general</small><strong>{{ cargandoResumen ? '…' : errorLibreta ? 'No disponible' : promedioGeneral ?? 'Sin notas' }}</strong></span>
+          <i class="fas fa-arrow-right resumen-flecha" aria-hidden="true"></i>
+        </RouterLink>
+        <RouterLink to="/alumno/cursos" class="resumen-card">
+          <span class="resumen-icono curso"><i class="fas fa-graduation-cap" aria-hidden="true"></i></span>
+          <span class="resumen-dato"><small>Tu curso</small><strong>Materias y participantes</strong></span>
+          <i class="fas fa-arrow-right resumen-flecha" aria-hidden="true"></i>
+        </RouterLink>
+      </div>
     </section>
 
     <!-- Quick Action Cards -->
@@ -53,8 +80,8 @@
           <span class="card-emoji">🔔</span>
         </div>
         <div class="card-body">
-          <h3>Mantente informado</h3>
-          <p>Consulta las últimas noticias y avisos importantes.</p>
+          <h3>Mantenete informado</h3>
+          <p>Consultá noticias y comunicados de la escuela y tu curso.</p>
         </div>
         <RouterLink to="/alumno/noticias" class="card-link card-link-blue"> Ver noticias <i class="fas fa-arrow-right"></i> </RouterLink>
       </div>
@@ -95,8 +122,54 @@
       </div>
       <div class="footer-text">¡Juntos hacemos la T2!</div>
     </section>
+    <AyudaAlumnoDialog v-model="ayudaAbierta" />
   </main>
 </template>
+
+<script setup>
+import { computed, onMounted, ref } from "vue";
+import { useAuthStore } from "@/stores/auth.js";
+import { obtenerMisNotasAlumno } from "@/services/academico-service.js";
+import { obtenerMisNotificaciones } from "@/services/notificaciones-service.js";
+import AyudaAlumnoDialog from "./AyudaAlumnoDialog.vue";
+
+const authStore = useAuthStore();
+const ayudaAbierta = ref(false);
+const avisosPendientes = ref(0);
+const promedioGeneral = ref(null);
+const errorAvisos = ref(false);
+const errorLibreta = ref(false);
+const cargandoResumen = ref(true);
+const errorResumen = ref("");
+const nombreAlumno = computed(() => authStore.usuario?.nombre?.trim().split(/\s+/)[0] || "estudiante");
+
+const cargarResumen = async () => {
+  cargandoResumen.value = true;
+  errorResumen.value = "";
+  errorAvisos.value = false;
+  errorLibreta.value = false;
+  const [avisos, libreta] = await Promise.allSettled([
+    obtenerMisNotificaciones(true),
+    obtenerMisNotasAlumno(),
+  ]);
+  if (avisos.status === "fulfilled" && avisos.value?.success) {
+    avisosPendientes.value = avisos.value.total ?? avisos.value.data?.length ?? 0;
+  } else {
+    errorAvisos.value = true;
+  }
+  if (libreta.status === "fulfilled" && libreta.value?.success) {
+    promedioGeneral.value = libreta.value.data?.promedios?.general ?? null;
+  } else {
+    errorLibreta.value = true;
+  }
+  if (errorAvisos.value || errorLibreta.value) {
+    errorResumen.value = "Algunos datos no se pudieron actualizar. Podés intentarlo de nuevo.";
+  }
+  cargandoResumen.value = false;
+};
+
+onMounted(cargarResumen);
+</script>
 
 <style scoped>
 .main-content {
@@ -199,6 +272,27 @@
   gap: 20px;
   box-shadow: 0 4px 14px rgba(192, 21, 42, 0.06);
 }
+
+.resumen-alumno { padding: 22px; border: 1px solid #e2e8f0; border-radius: 20px; background: #fff; box-shadow: 0 3px 14px rgb(15 23 42 / 4%); }
+.resumen-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 16px; }
+.resumen-kicker { color: #b01020; font-size: .68rem; font-weight: 800; letter-spacing: .08em; }
+.resumen-heading h2 { margin: 4px 0 0; color: #0f172a; font-size: 1.15rem; }
+.resumen-refresh { display: flex; align-items: center; gap: 7px; padding: 8px 11px; border: 1px solid #e2e8f0; border-radius: 9px; background: white; color: #475569; cursor: pointer; }
+.resumen-refresh:disabled { opacity: .55; cursor: wait; }
+.resumen-refresh .girando { animation: giro 1s linear infinite; }
+.resumen-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.resumen-card { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 14px; border: 1px solid #e8edf2; border-radius: 14px; color: inherit; text-decoration: none; transition: border-color .2s, transform .2s, box-shadow .2s; }
+.resumen-card:hover, .resumen-card:focus-visible { border-color: #f1b9bf; box-shadow: 0 5px 16px rgb(176 16 32 / 8%); transform: translateY(-2px); outline: none; }
+.resumen-icono { display: grid; place-items: center; width: 40px; height: 40px; flex: none; border-radius: 12px; }
+.resumen-icono.avisos { background: #fff1f2; color: #be123c; }
+.resumen-icono.notas { background: #eff6ff; color: #2563eb; }
+.resumen-icono.curso { background: #f0fdf4; color: #16a34a; }
+.resumen-dato { display: grid; flex: 1; min-width: 0; gap: 3px; }
+.resumen-dato small { color: #64748b; font-size: .75rem; }
+.resumen-dato strong { overflow: hidden; color: #0f172a; font-size: .95rem; text-overflow: ellipsis; white-space: nowrap; }
+.resumen-flecha { color: #94a3b8; font-size: .75rem; }
+.resumen-error { margin: -4px 0 12px; color: #b42318; font-size: .85rem; }
+@keyframes giro { to { transform: rotate(360deg); } }
 
 .info-left {
   display: flex;
@@ -450,6 +544,7 @@
   .info-left { flex-direction: column; }
   .footer-box { flex-direction: column; text-align: center; }
   .footer-left { flex-direction: column; }
+  .resumen-cards { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 700px) {

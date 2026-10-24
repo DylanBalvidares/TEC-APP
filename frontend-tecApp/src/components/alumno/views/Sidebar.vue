@@ -42,21 +42,27 @@
       </nav>
 
       <div class="sidebar-footer">
-        <div class="sidebar-help" id="sidebar-help-btn">
+        <button class="sidebar-help" id="sidebar-help-btn" type="button" @click="ayudaAbierta = true">
           <div class="help-icon">
             <i class="fas fa-question-circle"></i>
           </div>
           <div class="help-text">
             <p class="help-title">¿Necesitás ayuda?</p>
-            <p class="help-sub">Pixelina resolverá tu consulta.</p>
+            <p class="help-sub">Guía de secciones y ayuda.</p>
           </div>
-        </div>
+        </button>
       </div>
     </div>
+    <AyudaAlumnoDialog v-model="ayudaAbierta" @navigate="$emit('close')" />
   </aside>
 </template>
 
 <script setup>
+import { ref } from "vue";
+import AyudaAlumnoDialog from "./AyudaAlumnoDialog.vue";
+
+const ayudaAbierta = ref(false);
+
 defineProps({
   abierto: {
     type: Boolean,
@@ -208,6 +214,11 @@ defineEmits(["close"]);
 }
 
 .sidebar-help {
+  width: 100%;
+  border: 0;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 12px;
