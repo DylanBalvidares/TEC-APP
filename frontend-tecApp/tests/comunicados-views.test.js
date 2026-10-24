@@ -49,6 +49,7 @@ describe("utils/comunicados", () => {
 describe("CursosView (alumno) - comunicados", () => {
   let obtenerTodosComunicados;
   let obtenerMisMaterias;
+  let obtenerMisParticipantes;
 
   beforeEach(async () => {
     vi.resetModules();
@@ -58,8 +59,14 @@ describe("CursosView (alumno) - comunicados", () => {
     const comunidad = await import("../src/services/comunidad-service.js");
     const academico = await import("../src/services/academico-service.js");
     obtenerTodosComunicados = vi.spyOn(comunidad, "obtenerTodosComunicados");
+    vi.spyOn(comunidad, "marcarComunicadoLeido").mockResolvedValue({ success: true });
     obtenerMisMaterias = vi.spyOn(academico, "obtenerMisMaterias");
     obtenerMisMaterias.mockResolvedValue([]);
+    obtenerMisParticipantes = vi.spyOn(academico, "obtenerMisParticipantes");
+    obtenerMisParticipantes.mockResolvedValue({
+      success: true,
+      data: { curso: null, companeros: [], profesores: [] },
+    });
     obtenerTodosComunicados.mockResolvedValue({ success: true, data: [COMUNICADO] });
 
     localStorage.setItem("alumno", JSON.stringify({ curso: { nombre_curso: "1º Año" } }));
@@ -112,6 +119,64 @@ describe("CursosView (alumno) - comunicados", () => {
     const wrapper = await montar();
     expect(wrapper.find(".comunicados-vacio").exists()).toBe(true);
     expect(wrapper.find(".comunicado-card").exists()).toBe(false);
+  });
+
+  it("muestra compañeros y docentes del curso en la pestaña de participantes", async () => {
+    obtenerMisParticipantes.mockResolvedValue({
+      success: true,
+      data: {
+        curso: { id_curso: 4, nombre_curso: "2º Año A" },
+        companeros: [{ nombre: "Ana", apellido: "Pérez" }],
+        profesores: [{
+          nombre: "Laura",
+          apellido: "Gómez",
+          es_titular: true,
+          materias: ["Matemática", "Física"],
+        }],
+      },
+    });
+    const wrapper = await montar();
+
+    await wrapper.findAll(".tab-btn")[2].trigger("click");
+    expect(wrapper.find(".participantes-section").text()).toContain("2º Año A");
+    expect(wrapper.find(".participantes-section").text()).toContain("Pérez, Ana");
+    expect(wrapper.find(".participantes-section").text()).toContain("Gómez, Laura");
+    expect(wrapper.find(".participantes-section").text()).toContain("Profesor titular");
+    expect(wrapper.find(".participantes-section").text()).toContain("Matemática · Física");
+    expect(obtenerMisParticipantes).toHaveBeenCalledOnce();
+  });
+});
+
+describe("NoticiaView (alumno) - confirmación de lectura", () => {
+  let marcarComunicadoLeido;
+
+  beforeEach(async () => {
+    vi.resetModules();
+    vi.clearAllMocks();
+    setActivePinia(createPinia());
+
+    const comunidad = await import("../src/services/comunidad-service.js");
+    vi.spyOn(comunidad, "obtenerNoticias").mockResolvedValue([]);
+    vi.spyOn(comunidad, "obtenerTodosComunicados").mockResolvedValue({
+      success: true,
+      data: [{ ...COMUNICADO, destino: "todos" }],
+    });
+    marcarComunicadoLeido = vi.spyOn(comunidad, "marcarComunicadoLeido");
+    marcarComunicadoLeido.mockResolvedValue({ success: true });
+  });
+
+  it("marca un comunicado corto que se muestra completo, aunque no tenga Ver más", async () => {
+    const { default: NoticiaView } = await import(
+      "../src/components/alumno/views/NoticiaView.vue"
+    );
+    const wrapper = mount(NoticiaView, {
+      global: { plugins: [createPinia()] },
+    });
+    await flushPromises();
+
+    expect(wrapper.text()).toContain(COMUNICADO.mensaje);
+    expect(wrapper.find(".ver-mas-btn").exists()).toBe(false);
+    expect(marcarComunicadoLeido).toHaveBeenCalledWith(COMUNICADO.id_comunicado);
   });
 });
 
@@ -225,5 +290,71 @@ describe("ComunicadosView (profesor) - creación", () => {
     expect(texto).toContain("Comunicado de aviso sobre la evaluacion final");
     expect(texto).toContain("Profesor Demo");
     expect(texto).toContain("Publicaste vos");
+  });
+});
+
+describe("ComunicadosView (preceptor) - destino curso", () => {
+  let crearComunicado;
+
+  beforeEach(async () => {
+    vi.resetModules();
+    vi.clearAllMocks();
+    setActivePinia(createPinia());
+    localStorage.setItem("token", "token-preceptor");
+    localStorage.setItem("usuario", JSON.stringify({ id_usuario: 44, nombre_rol: "preceptor" }));
+
+    const academico = await import("../src/services/academico-service.js");
+    const comunidad = await import("../src/services/comunidad-service.js");
+    vi.spyOn(academico, "obtenerCursos").mockResolvedValue({
+      success: true,
+      data: [{ id_curso: 55, nombre_curso: "2do 3ra" }],
+    });
+    vi.spyOn(academico, "obtenerAlumnosCurso").mockResolvedValue({ success: true, data: [] });
+    vi.spyOn(academico, "obtenerComunicados").mockResolvedValue({ success: true, data: [] });
+    vi.spyOn(academico, "obtenerCorreosEnviados").mockResolvedValue({ success: true, data: [] });
+    crearComunicado = vi.spyOn(academico, "crearComunicado").mockResolvedValue({
+      success: true,
+      data: { id_comunicado: 77 },
+    });
+    vi.spyOn(academico, "modificarComunicado").mockResolvedValue({ success: true, data: {} });
+    vi.spyOn(comunidad, "obtenerResumenLecturas").mockResolvedValue({ success: true, data: [] });
+    vi.spyOn(comunidad, "marcarComunicadoLeido").mockResolvedValue({ success: true });
+    vi.spyOn(comunidad, "obtenerTodosComunicados").mockResolvedValue({ success: true, data: [] });
+  });
+
+  it("envía el nombre exacto del curso seleccionado al crear el comunicado", async () => {
+    const { default: ComunicadosView } = await import(
+      "../src/components/preceptor/views/ComunicadosView.vue"
+    );
+    const wrapper = mount(ComunicadosView, { global: { plugins: [createPinia()] } });
+    await flushPromises();
+
+    await wrapper.find("button.primary-btn").trigger("click");
+    await flushPromises();
+
+    const setValue = (selector, value, eventName) => {
+      const elemento = document.body.querySelector(selector);
+      elemento.value = value;
+      elemento.dispatchEvent(new Event(eventName, { bubbles: true }));
+    };
+    setValue("#titulo", "Reunión de curso", "input");
+    setValue("#mensaje", "El viernes a las 10 hs", "input");
+    setValue("#destino", "curso", "change");
+    await flushPromises();
+    setValue("#curso", "2do 3ra", "change");
+    document.body.querySelector("form").dispatchEvent(
+      new Event("submit", { bubbles: true, cancelable: true }),
+    );
+    await flushPromises();
+
+    expect(crearComunicado).toHaveBeenCalledWith({
+      titulo: "Reunión de curso",
+      mensaje: "El viernes a las 10 hs",
+      importancia: "media",
+      destino: "curso",
+      curso_destino: "2do 3ra",
+      autor_id: 44,
+    });
+    wrapper.unmount();
   });
 });

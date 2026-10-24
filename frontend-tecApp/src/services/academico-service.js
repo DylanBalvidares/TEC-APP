@@ -960,18 +960,17 @@ export const obtenerMisMaterias = async () => {
   try {
     const idCurso = await obtenerIdCursoAlumno();
     if (!idCurso) {
-      console.warn("No se pudo determinar el curso del alumno");
-      return [];
+      return { success: false, message: "No se pudo determinar el curso del alumno." };
     }
 
     const response = await axios.get(`${API_URL}/asignaciones/curso/${idCurso}`, getConfig());
-    return response.data.map((asig) => ({
+    return { success: true, data: response.data.map((asig) => ({
       id: asig.id_asignacion,
       materia: asig.materiaAsignacion?.nombre_materia || "Materia",
       horario: "08:00 - 09:30",
       dias: "Lun / Mié",
       profesor: asig.profesorAsignacion ? `Prof. ${asig.profesorAsignacion.apellido}, ${asig.profesorAsignacion.nombre}` : "Sin profesor",
-    }));
+    })) };
   } catch (error) {
     console.error("Error al obtener mis materias:", error);
     return manejarErrorApi(error, "No se pudieron cargar tus materias");

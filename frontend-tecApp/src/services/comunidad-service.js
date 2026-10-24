@@ -61,6 +61,15 @@ export const obtenerNoticias = async () => {
   }
 };
 
+export const obtenerNoticiasConEstado = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/comunidad/noticias`, getConfig());
+    return { success: true, data: response.data.noticias || [] };
+  } catch (error) {
+    return manejarErrorApi(error, "Error al obtener las noticias");
+  }
+};
+
 export const crearNoticia = async (formDataArmado) => {
   try {
     const response = await axios.post(

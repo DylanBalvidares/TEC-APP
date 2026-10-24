@@ -58,11 +58,13 @@
             <button
               type="button"
               class="campanita-item-btn"
+              :aria-label="`${n.leida ? 'Leída' : 'Sin leer'}: ${n.titulo}. ${n.cuerpo || ''}`"
               @click="abrir(n)"
             >
               <span class="campanita-item-titulo">
                 {{ n.titulo }}
                 <span class="campanita-tipo">{{ n.tipo }}</span>
+                <span class="campanita-estado" :class="{ nueva: !n.leida }">{{ n.leida ? "Leída" : "Nueva" }}</span>
               </span>
               <span class="campanita-item-meta">
                 {{ n.cuerpo || "" }}
@@ -420,7 +422,7 @@ onMounted(() => {
 }
 
 .campanita-item.leida {
-  opacity: 0.62;
+  background: #f8fafc;
 }
 
 .campanita-item-titulo {
@@ -443,6 +445,10 @@ onMounted(() => {
   border-radius: 999px;
   flex: none;
 }
+
+.campanita-estado { flex: none; padding: 1px 6px; border: 1px solid #e2e8f0; border-radius: 999px; color: #475569; font-size: 9px; font-weight: 700; }
+.campanita-estado.nueva { border-color: #fecaca; background: #fff1f2; color: #b42318; }
+.campanita-item-btn:focus-visible { border-radius: 7px; outline: 2px solid #cd322c; outline-offset: 1px; }
 
 .campanita-item-meta {
   font-size: 11.5px;

@@ -49,8 +49,18 @@
       </button>
     </div>
 
+    <div v-if="cargandoNoticias" class="news-feedback" role="status">
+      <i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Cargando noticias y comunicados…
+    </div>
+    <div v-else-if="errorNoticias" class="news-feedback news-feedback-error" role="alert">
+      <span>{{ errorNoticias }}</span><button type="button" @click="cargarNoticias">Reintentar</button>
+    </div>
+    <div v-if="errorComunicados" class="news-feedback news-feedback-warning" role="status">
+      <span>{{ errorComunicados }}</span><button type="button" @click="cargarSoloComunicados">Reintentar comunicados</button>
+    </div>
+
     <!-- Lista de noticias -->
-    <div class="news-list" v-if="noticiasPaginadas.length > 0">
+    <div class="news-list" v-if="!cargandoNoticias && !errorNoticias && noticiasPaginadas.length > 0">
       <article v-for="(noticia, index) in noticiasPaginadas" :key="index" class="news-card">
         <div class="news-card-content">
           <span class="badge" :class="'badge-' + noticia.categoria.toLowerCase()">
@@ -88,7 +98,7 @@
     </div>
 
     <!-- Estado vacío -->
-    <div class="empty-state" v-else>
+    <div class="empty-state" v-else-if="!cargandoNoticias && !errorNoticias && !errorComunicados">
       <i class="fas fa-newspaper"></i>
       <p>No hay noticias disponibles en esta categoría.</p>
     </div>
@@ -149,9 +159,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useAuthStore } from "@/stores/auth.js";
-import { obtenerNoticias, crearNoticia as crearNoticiaApi, actualizarNoticia, eliminarNoticia as eliminarNoticiaApi, obtenerTodosComunicados, marcarComunicadoLeido } from "@/services/comunidad-service.js";
+import { obtenerNoticiasConEstado, crearNoticia as crearNoticiaApi, actualizarNoticia, eliminarNoticia as eliminarNoticiaApi, obtenerTodosComunicados, marcarComunicadoLeido } from "@/services/comunidad-service.js";
 import { extraerComunicados, nombreAutor, textoDestino, textoImportancia } from "@/utils/comunicados.js";
 import Modal from "@/components/ui/Modal.vue";
 
@@ -173,18 +183,23 @@ const nuevaNoticia = ref({
 });
 
 const noticias = ref([]);
+const cargandoNoticias = ref(true);
+const errorNoticias = ref("");
+const errorComunicados = ref("");
 
 // Mensajes largos: se muestran recortados hasta que el alumno pide ver más.
 const expandidas = ref({});
-const toggleExpandida = (clave) => {
+const toggleExpandida = async (clave) => {
   const abriendo = !expandidas.value[clave];
   expandidas.value = { ...expandidas.value, [clave]: abriendo };
-  // Abrir un comunicado confirma la lectura: marca silenciosa e idempotente
-  // (el backend valida que seas destinatario real; fallar no interrumpe).
+  // Abrir un comunicado registra la lectura de forma idempotente.
   if (abriendo) {
     const item = noticias.value.find((n) => n.clave === clave);
     if (item?.esComunicado && item.id) {
-      marcarComunicadoLeido(item.id).catch(() => {});
+      const resultado = await marcarComunicadoLeido(item.id);
+      if (!resultado?.success) {
+        console.error("No se pudo registrar la lectura del comunicado:", resultado?.message);
+      }
     }
   }
 };
@@ -204,8 +219,13 @@ const errorEliminar = ref("");
 const exitoNoticia = ref("");
 
 const cargarNoticias = async () => {
+  cargandoNoticias.value = true;
+  errorNoticias.value = "";
+  errorComunicados.value = "";
   try {
-    const dataNoticias = await obtenerNoticias();
+    const respuestaNoticias = await obtenerNoticiasConEstado();
+    if (!respuestaNoticias?.success) throw new Error(respuestaNoticias?.message || "No se pudieron cargar las noticias.");
+    const dataNoticias = respuestaNoticias.data;
     let combinadas = [];
     if (Array.isArray(dataNoticias) && dataNoticias.length > 0) {
       combinadas = dataNoticias.map((n) => ({
@@ -220,43 +240,51 @@ const cargarNoticias = async () => {
       }));
     }
 
-    try {
-      let cursoAlumno = null;
-      try {
-        const alumnoRaw = localStorage.getItem("alumno");
-        if (alumnoRaw) {
-          const alumno = JSON.parse(alumnoRaw);
-          cursoAlumno = alumno.curso?.nombre_curso || alumno.data?.curso?.nombre_curso;
-        }
-      } catch (e) {}
-
-      const respuesta = await obtenerTodosComunicados({ rol: "alumno", curso: cursoAlumno || "" });
-      const comunicados = extraerComunicados(respuesta);
-      if (comunicados.length > 0) {
-        combinadas = combinadas.concat(
-          comunicados.map((c) => ({
-            clave: `comunicado-${c.id_comunicado}`,
-            id: c.id_comunicado,
-            titulo: c.titulo,
-            descripcion: c.mensaje,
-            categoria: "Comunicados",
-            autor: nombreAutor(c),
-            fecha: new Date(c.fecha_publicacion),
-            esComunicado: true,
-            importancia: c.importancia,
-            destino: c.destino,
-            curso_destino: c.curso_destino,
-          })),
-        );
-      }
-    } catch (e) {
-      console.error("Error al cargar comunicados:", e);
-    }
-
+    const comunicados = await cargarSoloComunicados(false);
+    if (comunicados?.length) combinadas = combinadas.concat(comunicados);
     noticias.value = combinadas;
   } catch (error) {
     console.error("Error al cargar noticias:", error);
-    noticias.value = [];
+    errorNoticias.value = error?.message || "No se pudieron cargar las noticias.";
+  } finally {
+    cargandoNoticias.value = false;
+  }
+};
+
+const cargarSoloComunicados = async (agregar = true) => {
+  errorComunicados.value = "";
+  try {
+    let cursoAlumno = null;
+    try {
+      const alumnoRaw = localStorage.getItem("alumno");
+      if (alumnoRaw) {
+        const alumno = JSON.parse(alumnoRaw);
+        cursoAlumno = alumno.curso?.nombre_curso || alumno.data?.curso?.nombre_curso;
+      }
+    } catch (e) {}
+    const respuesta = await obtenerTodosComunicados({ rol: "alumno", curso: cursoAlumno || "" });
+    if (!respuesta?.success) throw new Error(respuesta?.message || "No se pudieron cargar los comunicados.");
+    const comunicados = extraerComunicados(respuesta).map((c) => ({
+      clave: `comunicado-${c.id_comunicado}`,
+      id: c.id_comunicado,
+      titulo: c.titulo,
+      descripcion: c.mensaje,
+      categoria: "Comunicados",
+      autor: nombreAutor(c),
+      fecha: new Date(c.fecha_publicacion),
+      esComunicado: true,
+      importancia: c.importancia,
+      destino: c.destino,
+      curso_destino: c.curso_destino,
+    }));
+    if (agregar) {
+      noticias.value = [...noticias.value.filter((n) => !n.esComunicado), ...comunicados];
+    }
+    return comunicados;
+  } catch (error) {
+    console.error("Error al cargar comunicados:", error);
+    errorComunicados.value = error?.message || "No se pudieron cargar los comunicados.";
+    return [];
   }
 };
 
@@ -359,6 +387,28 @@ const noticiasFiltradasYOrdenadas = computed(() => {
 const noticiasPaginadas = computed(() =>
   noticiasFiltradasYOrdenadas.value.slice((paginaActual.value - 1) * noticiasPorPagina, paginaActual.value * noticiasPorPagina),
 );
+
+// Los mensajes cortos se muestran completos en la tarjeta y no tienen botón
+// "Ver más". Registramos como leídos los comunicados de esa página visible;
+// los largos siguen marcándose al expandirlos explícitamente.
+const lecturasRegistradas = new Set();
+const registrarLecturasVisibles = async (items) => {
+  const visibles = items.filter(
+    (item) => item.esComunicado && !esLargo(item.descripcion) && item.id,
+  );
+  await Promise.all(visibles.map(async (item) => {
+    if (lecturasRegistradas.has(item.id)) return;
+    lecturasRegistradas.add(item.id);
+    const resultado = await marcarComunicadoLeido(item.id);
+    if (!resultado?.success) {
+      lecturasRegistradas.delete(item.id);
+      console.error("No se pudo registrar la lectura del comunicado:", resultado?.message);
+    }
+  }));
+};
+
+watch(noticiasPaginadas, registrarLecturasVisibles, { flush: "post" });
+
 const totalPaginas = computed(() => Math.ceil(noticiasFiltradasYOrdenadas.value.length / noticiasPorPagina));
 
 const cambiarFiltro = (cat) => {
@@ -800,6 +850,10 @@ const formatearFecha = (fecha) =>
 
 .empty-state i { font-size: 2.5rem; opacity: 0.5; }
 .empty-state p { font-size: 1rem; margin: 0; }
+.news-feedback { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 90px; padding: 18px; border: 1px solid #e2e8f0; border-radius: 14px; background: white; color: #64748b; }
+.news-feedback button { padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: white; color: #b01020; font: inherit; font-weight: 700; cursor: pointer; }
+.news-feedback-error { border-color: #fecaca; background: #fffafa; color: #b42318; }
+.news-feedback-warning { min-height: 0; justify-content: space-between; background: #fffbeb; border-color: #fde68a; color: #92400e; }
 
 /* ── Pagination ───────────────────────────── */
 .pagination-container {

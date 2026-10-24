@@ -24,8 +24,8 @@
       </div>
     </section>
 
-    <div class="tabs-bar">
-      <button class="tab-btn" :class="{ active: tabActivo === 'materias' }" @click="tabActivo = 'materias'">
+    <div class="tabs-bar" role="tablist" aria-label="Secciones de mi curso" @keydown="manejarTecladoTabs">
+      <button id="tab-materias" class="tab-btn" role="tab" aria-controls="panel-materias" :aria-selected="tabActivo === 'materias'" :tabindex="tabActivo === 'materias' ? 0 : -1" :class="{ active: tabActivo === 'materias' }" @click="seleccionarTab('materias')">
         <i class="fas fa-table"></i> Mis Materias
       </button>
       <button id="tab-comunicados" class="tab-btn" role="tab" aria-controls="panel-comunicados" :aria-selected="tabActivo === 'comunicados'" :tabindex="tabActivo === 'comunicados' ? 0 : -1" :class="{ active: tabActivo === 'comunicados' }" @click="seleccionarTab('comunicados')">
@@ -36,8 +36,17 @@
       </button>
     </div>
 
-    <section v-show="tabActivo === 'materias'" class="tab-content">
-      <div class="table-container">
+    <section v-show="tabActivo === 'materias'" id="panel-materias" class="tab-content" role="tabpanel" aria-labelledby="tab-materias" tabindex="0">
+      <p v-if="cargandoMaterias" class="seccion-mensaje" role="status">Cargando tus materias…</p>
+      <div v-else-if="errorMaterias" class="seccion-mensaje seccion-error" role="alert">
+        <span>{{ errorMaterias }}</span>
+        <button type="button" class="reintentar-btn" @click="cargarMaterias">Reintentar</button>
+      </div>
+      <div v-else-if="materias.length === 0" class="seccion-vacia">
+        <i class="fas fa-book-open" aria-hidden="true"></i><strong>Todavía no hay materias asignadas.</strong>
+        <span>Si creés que es un error, consultá en preceptoría.</span>
+      </div>
+      <div v-else class="table-container">
         <table>
           <thead>
             <tr>
@@ -61,13 +70,18 @@
       </div>
     </section>
 
-    <section v-show="tabActivo === 'comunicados'" class="tab-content">
-      <div v-if="comunicados.length === 0" class="comunicados-vacio">
+    <section v-show="tabActivo === 'comunicados'" id="panel-comunicados" class="tab-content" role="tabpanel" aria-labelledby="tab-comunicados" tabindex="0">
+      <p v-if="cargandoComunicados" class="seccion-mensaje" role="status">Cargando comunicados…</p>
+      <div v-else-if="errorComunicados" class="seccion-mensaje seccion-error" role="alert">
+        <span>{{ errorComunicados }}</span>
+        <button type="button" class="reintentar-btn" @click="cargarComunicados">Reintentar</button>
+      </div>
+      <div v-else-if="comunicados.length === 0" class="comunicados-vacio">
         <i class="fas fa-bullhorn"></i>
         <p>Todavía no hay comunicados para tu curso.</p>
       </div>
 
-      <div v-for="(c, index) in comunicados" :key="c.id_comunicado || index" class="comunicado-card" :class="{ abierto: c.abierto }">
+      <div v-for="(c, index) in comunicados" :key="c.id_comunicado || index" class="comunicado-card" :class="{ abierto: c.abierto }" :data-comunicado-id="c.id_comunicado">
         <button type="button" class="comunicado-header" @click="alternarComunicadoCurso(c)" :aria-expanded="!!c.abierto">
           <div class="comunicado-header-left">
             <div class="comunicado-icono">
@@ -159,25 +173,33 @@ const route = useRoute();
 
 const formatearFecha = formatearFechaComunicado;
 
-const cargarParticipantes = async () => {
-  cargandoParticipantes.value = true;
-  errorParticipantes.value = "";
-  const respuesta = await obtenerMisParticipantes();
-  participantes.value = respuesta?.data || { curso: null, companeros: [], profesores: [] };
-  errorParticipantes.value = respuesta?.success ? "" : (respuesta?.message || "No se pudieron cargar los participantes del curso.");
-  participantesCargados.value = Boolean(respuesta?.success);
-  cargandoParticipantes.value = false;
-};
-
-const seleccionarTab = async (tab) => {
-  tabActivo.value = tab;
-  if (tab === "participantes" && !participantesCargados.value) await cargarParticipantes();
-};
-const cargarDatos = async () => {
+const cargarMaterias = async () => {
+  cargandoMaterias.value = true;
+  errorMaterias.value = "";
   try {
-    const dataMaterias = await obtenerMisMaterias();
-    materias.value = Array.isArray(dataMaterias) ? dataMaterias : [];
+    const resultado = await obtenerMisMaterias();
+    // Array compatibility keeps existing consumers/mocks working while the
+    // service returns a structured result for reliable error states.
+    if (Array.isArray(resultado)) {
+      materias.value = resultado;
+    } else if (!resultado?.success) {
+      throw new Error(resultado?.message || "No se pudieron cargar tus materias.");
+    } else {
+      materias.value = Array.isArray(resultado.data) ? resultado.data : [];
+    }
+    materiasCargadas.value = true;
+  } catch (error) {
+    console.error("Error al cargar materias:", error);
+    errorMaterias.value = error?.message || "No se pudieron cargar tus materias.";
+  } finally {
+    cargandoMaterias.value = false;
+  }
+};
 
+const cargarComunicados = async () => {
+  cargandoComunicados.value = true;
+  errorComunicados.value = "";
+  try {
     // El nombre del curso del alumno refina el filtro `curso` del backend.
     let cursoAlumno = null;
     try {
@@ -189,24 +211,92 @@ const cargarDatos = async () => {
     } catch (e) {}
 
     const respuesta = await obtenerTodosComunicados({ rol: "alumno", curso: cursoAlumno || "" });
+    if (respuesta?.success === false) {
+      throw new Error(respuesta.message || "No se pudieron cargar los comunicados.");
+    }
     comunicados.value = extraerComunicados(respuesta).map((c) => ({ ...c, abierto: false }));
+    comunicadosCargados.value = true;
   } catch (error) {
-    console.error("Error al cargar datos del servicio:", error);
-    materias.value = [];
-    comunicados.value = [];
+    console.error("Error al cargar comunicados:", error);
+    errorComunicados.value = error?.message || "No se pudieron cargar los comunicados.";
+  } finally {
+    cargandoComunicados.value = false;
   }
 };
 
-// Abrir el acordeón confirma la lectura: marca silenciosa e idempotente
-// (el backend valida destinatario; fallar no interrumpe la vista).
-const alternarComunicadoCurso = (comunicado) => {
+const cargarParticipantes = async () => {
+  cargandoParticipantes.value = true;
+  errorParticipantes.value = "";
+  try {
+    const respuesta = await obtenerMisParticipantes();
+    if (!respuesta?.success) {
+      errorParticipantes.value = respuesta?.message || "No se pudieron cargar los participantes del curso.";
+      return;
+    }
+    participantes.value = {
+      curso: respuesta.data?.curso || null,
+      companeros: Array.isArray(respuesta.data?.companeros) ? respuesta.data.companeros : [],
+      profesores: Array.isArray(respuesta.data?.profesores) ? respuesta.data.profesores : [],
+    };
+    participantesCargados.value = true;
+  } catch (error) {
+    console.error("Error al cargar participantes del curso:", error);
+    errorParticipantes.value = "No se pudieron cargar los participantes del curso.";
+  } finally {
+    cargandoParticipantes.value = false;
+  }
+};
+
+const seleccionarTab = async (tab) => {
+  tabActivo.value = tab;
+  if (tab === "participantes" && !participantesCargados.value) await cargarParticipantes();
+  if (tab === "materias" && !materiasCargadas.value && !errorMaterias.value) await cargarMaterias();
+  if (tab === "comunicados" && !comunicadosCargados.value && !errorComunicados.value) await cargarComunicados();
+};
+
+const manejarTecladoTabs = (evento) => {
+  if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(evento.key)) return;
+  const tabs = [...evento.currentTarget.querySelectorAll('[role="tab"]')];
+  const actual = tabs.indexOf(document.activeElement);
+  if (actual < 0) return;
+  evento.preventDefault();
+  const indice = evento.key === "Home" ? 0 : evento.key === "End" ? tabs.length - 1
+    : (actual + (evento.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length;
+  tabs[indice].focus();
+  tabs[indice].click();
+};
+
+const abrirComunicadoDestacado = async (id) => {
+  if (!id) return;
+  tabActivo.value = "comunicados";
+  if (!comunicadosCargados.value) await cargarComunicados();
+  const comunicado = comunicados.value.find((item) => String(item.id_comunicado) === String(id));
+  if (!comunicado) return;
+  if (!comunicado.abierto) await alternarComunicadoCurso(comunicado);
+  await nextTick();
+  document.querySelector(`[data-comunicado-id="${String(id).replace(/[^\d]/g, "")}"]`)?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+};
+
+// Abrir el acordeón registra la lectura; el backend valida destinatario y
+// garantiza que las marcas repetidas sean idempotentes.
+const alternarComunicadoCurso = async (comunicado) => {
   comunicado.abierto = !comunicado.abierto;
   if (comunicado.abierto && comunicado.id_comunicado) {
-    marcarComunicadoLeido(comunicado.id_comunicado).catch(() => {});
+    const resultado = await marcarComunicadoLeido(comunicado.id_comunicado);
+    if (!resultado?.success) {
+      console.error("No se pudo registrar la lectura del comunicado:", resultado?.message);
+    }
   }
 };
 
-onMounted(cargarDatos);
+watch(() => route.query.comunicado, (id) => {
+  if (id) abrirComunicadoDestacado(id);
+});
+
+onMounted(async () => {
+  await Promise.all([cargarMaterias(), cargarComunicados()]);
+  if (route.query.comunicado) await abrirComunicadoDestacado(route.query.comunicado);
+});
 </script>
 <style scoped>
 .content {
@@ -331,6 +421,7 @@ onMounted(cargarDatos);
 }
 
 .tab-btn:hover { background: #f1f5f9; color: #64748b; }
+.tab-btn:focus-visible { outline: 3px solid #fca5a5; outline-offset: 2px; }
 
 .tab-btn.active {
   background: #c0152a;
@@ -343,6 +434,15 @@ onMounted(cargarDatos);
   width: 100%;
   max-width: 1000px;
 }
+
+.seccion-mensaje, .seccion-vacia { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 120px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 14px; background: #fff; color: #64748b; text-align: center; }
+.seccion-error { flex-wrap: wrap; color: #b42318; }
+.seccion-vacia { flex-direction: column; }
+.seccion-vacia i { color: #b01020; font-size: 1.5rem; }
+.seccion-vacia strong { color: #334155; }
+.seccion-vacia span { font-size: .85rem; }
+.reintentar-btn { padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; color: #b01020; font: inherit; font-weight: 700; cursor: pointer; }
+.reintentar-btn:hover { background: #fff5f5; border-color: #e7a6ad; }
 
 /* ── Tabla ────────────────────────────────── */
 .table-container {
