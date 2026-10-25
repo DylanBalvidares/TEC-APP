@@ -31,7 +31,7 @@
 
       <main class="main-content">
 
-        <router-view />
+        <AnimatedRouterView :depth="1" />
 
       </main>
 
@@ -57,6 +57,7 @@ import {
 } from "vue";
 
 import AppTopbar from "../ui/AppTopbar.vue";
+import AnimatedRouterView from "../ui/AnimatedRouterView.vue";
 import RoleSidebar from "../ui/RoleSidebar.vue";
 import { navigationByRole } from "../../config/role-navigation.js";
 import UserProfileDialog from "../ui/UserProfileDialog.vue";

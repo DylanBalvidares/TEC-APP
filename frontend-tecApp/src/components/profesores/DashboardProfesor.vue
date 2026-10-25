@@ -29,20 +29,20 @@
                             <p class="prof-sub">{{ profSubtitulo }}</p>
                         </div>
                     </div>
-                    <div class="prof-header-stats">
+                    <div class="prof-header-stats" :aria-busy="cargandoStatsHeader">
                         <div class="hs-item">
-                            <span class="hs-num">{{ statsCursos }}</span>
+                            <span class="hs-num">{{ cargandoStatsHeader ? "…" : statsCursos }}</span>
                             <span class="hs-label">Cursos</span>
                         </div>
                         <div class="hs-divider"></div>
                         <div class="hs-item">
-                            <span class="hs-num">{{ statsMaterias }}</span>
+                            <span class="hs-num">{{ cargandoStatsHeader ? "…" : statsMaterias }}</span>
                             <span class="hs-label">Materias</span>
                         </div>
                     </div>
                 </header>
 
-                <router-view></router-view>
+                <AnimatedRouterView :depth="1" />
             </main>
         </div>
         <UserProfileDialog v-model="openProfile" :edit="editingProfile" />
@@ -52,6 +52,7 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import AppTopbar from "../ui/AppTopbar.vue";
+import AnimatedRouterView from "../ui/AnimatedRouterView.vue";
 import RoleSidebar from "../ui/RoleSidebar.vue";
 import { navigationByRole } from "../../config/role-navigation.js";
 import UserProfileDialog from "../ui/UserProfileDialog.vue";
@@ -72,6 +73,7 @@ const avatarUrl = computed(() => `https://ui-avatars.com/api/?name=${userName.va
 
 // Stats del header
 const asignacionesHeader = ref([]);
+const cargandoStatsHeader = ref(true);
 const statsCursos = computed(() => {
     const map = new Map();
     asignacionesHeader.value.forEach(a => {
@@ -97,6 +99,8 @@ const cargarStatsHeader = async () => {
         }
     } catch (e) {
         console.warn('DashboardProfesor: no se pudieron cargar stats', e);
+    } finally {
+        cargandoStatsHeader.value = false;
     }
 };
 

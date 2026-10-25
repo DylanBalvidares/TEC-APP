@@ -80,6 +80,36 @@ describe("Toma de asistencia", () => {
     wrapper.unmount();
   });
 
+  it("muestra progreso y bloquea acciones duplicadas durante la carga y el guardado docente", async () => {
+    const { useAuthStore } = await import("../src/stores/auth.js");
+    useAuthStore().usuario = { id: 91 };
+    const { default: AsistenciasView } = await import(
+      "../src/components/profesores/views/AsistenciasView.vue"
+    );
+    let resolverAlumnos;
+    api.obtenerAlumnosCurso.mockReturnValueOnce(new Promise((resolve) => { resolverAlumnos = resolve; }));
+    const wrapper = mount(AsistenciasView);
+    await flushPromises();
+    await wrapper.find(".filter-group select").setValue("10");
+    const botonTomar = wrapper.find(".btn-add-subject");
+    await botonTomar.trigger("click");
+    await flushPromises();
+    expect(botonTomar.text()).toContain("Cargando alumnos");
+    expect(botonTomar.attributes("disabled")).toBeDefined();
+    resolverAlumnos({ success: true, data: [{ id_alumno: 21, apellido: "Pérez", nombre: "Ana" }] });
+    await flushPromises();
+
+    let resolverGuardado;
+    api.guardarAsistenciasLote.mockReturnValueOnce(new Promise((resolve) => { resolverGuardado = resolve; }));
+    await wrapper.find(".btn-guardar-asist").trigger("click");
+    await flushPromises();
+    expect(wrapper.find(".btn-guardar-asist").text()).toContain("Guardando");
+    expect(wrapper.find(".btn-guardar-asist").attributes("disabled")).toBeDefined();
+    resolverGuardado({ success: true, data: [] });
+    await flushPromises();
+    wrapper.unmount();
+  });
+
   it("preceptor aplica el estado masivo y guarda registros con su identidad", async () => {
     const { useAuthStore } = await import("../src/stores/auth.js");
     useAuthStore().usuario = { id_usuario: 92 };
