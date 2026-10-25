@@ -167,7 +167,7 @@
       <div class="modal-card">
         <div class="modal-header">
           <h3>
-            <i class="fas fa-history"></i> Historial de Calificaciones
+            <i class="fas fa-clock-rotate-left" aria-hidden="true"></i> Historial de Calificaciones
           </h3>
           <button class="modal-close-btn" @click="modalHistorialOpen = false">&times;</button>
         </div>
