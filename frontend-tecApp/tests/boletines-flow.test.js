@@ -19,6 +19,7 @@ const boletines = vi.hoisted(() => ({
 
 const academico = vi.hoisted(() => ({
   obtenerCursos: vi.fn(),
+  obtenerCursosPreceptor: vi.fn(),
   obtenerPlanes: vi.fn(),
 }));
 
@@ -65,6 +66,7 @@ beforeEach(() => {
   boletines.obtenerCargaProfesorBoletin.mockResolvedValue(planillaDocente(false));
   boletines.obtenerReaperturasBoletin.mockResolvedValue({ success: true, data: [] });
   academico.obtenerCursos.mockResolvedValue({ success: true, data: [{ id_curso: 4, nombre_curso: "2º A" }] });
+  academico.obtenerCursosPreceptor.mockResolvedValue({ success: true, data: [{ id_curso: 4, nombre_curso: "2º A" }] });
   academico.obtenerPlanes.mockResolvedValue({ success: true, data: [] });
 });
 

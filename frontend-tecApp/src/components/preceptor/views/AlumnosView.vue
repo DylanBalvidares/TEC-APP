@@ -850,7 +850,7 @@ import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import {
-  obtenerCursos,
+  obtenerCursosPreceptor,
   obtenerAlumnosCurso,
   crearAlumno,
   modificarAlumno,
@@ -1018,7 +1018,7 @@ const formularioComunicado = ref({
 
 const cargarCurso = async () => {
 
-  const resultado = await obtenerCursos();
+  const resultado = await obtenerCursosPreceptor();
 
   if (!resultado.success) {
     errorAlumnos.value = resultado.message;

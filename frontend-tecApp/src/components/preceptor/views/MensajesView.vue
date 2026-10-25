@@ -73,7 +73,7 @@ import HistorialMensajes from "@/components/whatsapp/HistorialMensajes.vue";
 import DetalleMensajeModal from "@/components/whatsapp/DetalleMensajeModal.vue";
 import { useTableControls } from "@/composables/useTableControls.js";
 import { toast } from "@/services/toast-service.js";
-import { obtenerCursos, obtenerAlumnosCurso } from "@/services/academico-service.js";
+import { obtenerCursosPreceptor, obtenerAlumnosCurso } from "@/services/academico-service.js";
 import {
   enviarWhatsappAAlumno,
   obtenerMisMensajes,
@@ -110,7 +110,7 @@ const {
 
 const cargarCursos = async () => {
   cargandoCursos.value = true;
-  const res = await obtenerCursos();
+  const res = await obtenerCursosPreceptor();
   cargandoCursos.value = false;
   if (res.success) {
     cursos.value = Array.isArray(res.data) ? res.data : res.data?.cursos || [];

@@ -57,6 +57,20 @@ export const obtenerCursos = async () => {
   }
 };
 
+/**
+ * Lista únicamente los cursos asignados al preceptor autenticado.
+ * GET /api/academico/preceptor/mis-cursos
+ * El servidor debe resolver la identidad desde el token y filtrar por asignación.
+ */
+export const obtenerCursosPreceptor = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/preceptor/mis-cursos`, getConfig());
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "No se pudieron obtener los cursos asignados al preceptor");
+  }
+};
+
 export const crearCurso = async (cursoData) => {
   try {
     const payload = {

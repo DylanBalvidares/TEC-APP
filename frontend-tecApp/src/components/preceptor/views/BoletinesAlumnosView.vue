@@ -619,7 +619,7 @@ import {
 
 
 import {
-  obtenerCursos,
+  obtenerCursosPreceptor,
   obtenerPeriodosBoletines,
   obtenerPlanillaBoletinCurso
 } from "@/services/academico-service.js";
@@ -707,7 +707,7 @@ const cargarBoletines = async () => {
     // --------------------------------------
 
     const resultadoCursos =
-      await obtenerCursos();
+      await obtenerCursosPreceptor();
 
 
     if (resultadoCursos.success) {

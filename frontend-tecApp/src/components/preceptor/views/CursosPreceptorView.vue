@@ -136,7 +136,7 @@ import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 
 import {
-  obtenerCursos
+  obtenerCursosPreceptor
 } from "@/services/academico-service.js";
 
 
@@ -164,7 +164,7 @@ const cargarCursos = async () => {
 
   errorCursos.value = "";
 
-  const resultado = await obtenerCursos();
+  const resultado = await obtenerCursosPreceptor();
 
   if (resultado.success) {
 
