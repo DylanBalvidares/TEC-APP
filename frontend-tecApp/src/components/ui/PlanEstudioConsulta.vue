@@ -57,21 +57,34 @@ const planId = ref(null);
 const anioFiltro = ref(null);
 const cargando = ref(false);
 const error = ref("");
+let solicitudVigentes = 0;
 
 const planActual = computed(() => planes.value.find((p) => p.id_plan === planId.value) || null);
 
 const fetchVigentes = async () => {
+    const version = ++solicitudVigentes;
     cargando.value = true;
     error.value = "";
     try {
         const res = await obtenerPlanesVigentes();
+        if (version !== solicitudVigentes) return;
+        if (!res?.success) {
+            planes.value = [];
+            planId.value = null;
+            error.value = res?.message || "No se pudieron cargar los planes vigentes.";
+            return;
+        }
+
         planes.value = Array.isArray(res.data) ? res.data : [];
-        if (planes.value.length && !planActual.value) planId.value = planes.value[0].id_plan;
+        if (!planes.value.some((plan) => plan.id_plan === planId.value)) {
+            planId.value = planes.value[0]?.id_plan ?? null;
+        }
     } catch (e) {
+        if (version !== solicitudVigentes) return;
         console.error("Error al obtener planes vigentes:", e);
         error.value = "No se pudieron cargar los planes vigentes.";
     } finally {
-        cargando.value = false;
+        if (version === solicitudVigentes) cargando.value = false;
     }
 };
 

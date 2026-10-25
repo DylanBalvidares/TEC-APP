@@ -497,12 +497,19 @@ const fetchPlanes = async () => {
     errorCarga.value = "";
     try {
         const [resPlanes, resMat] = await Promise.all([obtenerPlanes(), obtenerMaterias()]);
+        if (!resPlanes?.success) {
+            throw new Error(resPlanes?.message || "No se pudieron obtener los planes de estudio.");
+        }
+        if (!resMat?.success) {
+            throw new Error(resMat?.message || "No se pudo cargar el catálogo de materias.");
+        }
         planes.value = Array.isArray(resPlanes.data) ? resPlanes.data : [];
         materiasCatalogo.value = Array.isArray(resMat.data) ? resMat.data : [];
+        errorCarga.value = "";
         if (planSeleccionado.value) await refrescarSeleccionado();
     } catch (error) {
         console.error("Error al obtener planes:", error);
-        errorCarga.value = "Error al cargar los planes de estudio del servidor.";
+        errorCarga.value = error?.message || "Error al cargar los planes de estudio del servidor.";
     } finally {
         cargando.value = false;
     }
@@ -512,9 +519,12 @@ const refrescarSeleccionado = async () => {
     if (!planSeleccionado.value) return;
     const res = await obtenerPlan(planSeleccionado.value.id_plan);
     if (res.success) {
+        errorContenido.value = "";
         planSeleccionado.value = res.data;
         const idx = planes.value.findIndex((p) => p.id_plan === res.data.id_plan);
         if (idx >= 0) planes.value[idx] = res.data;
+    } else {
+        errorContenido.value = res.message || "No se pudo actualizar el detalle del plan.";
     }
 };
 
