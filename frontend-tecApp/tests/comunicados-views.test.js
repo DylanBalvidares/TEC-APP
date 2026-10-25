@@ -409,8 +409,8 @@ describe("ComunicadosView (preceptor) - destino curso", () => {
     const wrapper = mount(ComunicadosView, { global: { plugins: [createPinia()] } });
     await flushPromises();
 
-    expect(wrapper.findAll(".delete-course-announcement")).toHaveLength(1);
-    await wrapper.find(".delete-course-announcement").trigger("click");
+    expect(wrapper.findAll(".delete-announcement")).toHaveLength(1);
+    await wrapper.find(".delete-announcement").trigger("click");
     const confirm = document.body.querySelector('[role="dialog"]');
     expect(confirm.textContent).toContain("Reunión de curso");
     confirm.querySelector(".btn-danger").click();
@@ -418,6 +418,36 @@ describe("ComunicadosView (preceptor) - destino curso", () => {
 
     expect(eliminarComunicado).toHaveBeenCalledWith(77);
     expect(obtenerComunicados).toHaveBeenCalledTimes(2);
+    expect(wrapper.text()).toContain("Comunicado eliminado correctamente.");
+    wrapper.unmount();
+  });
+
+  it("permite eliminar un comunicado general propio desde el historial", async () => {
+    obtenerComunicados.mockResolvedValueOnce({
+      success: true,
+      data: [{
+        id_comunicado: 79,
+        titulo: "Aviso general del preceptor",
+        mensaje: "Recordatorio para toda la comunidad",
+        destino: "todos",
+        curso_destino: null,
+        autor_id: 44,
+        importancia: "media",
+        fecha_publicacion: "2026-10-20T10:00:00.000Z",
+      }],
+    });
+    const { default: ComunicadosView } = await import(
+      "../src/components/preceptor/views/ComunicadosView.vue"
+    );
+    const wrapper = mount(ComunicadosView, { global: { plugins: [createPinia()] } });
+    await flushPromises();
+
+    expect(wrapper.findAll(".delete-announcement")).toHaveLength(1);
+    await wrapper.find(".delete-announcement").trigger("click");
+    document.body.querySelector('[role="dialog"] .btn-danger').click();
+    await flushPromises();
+
+    expect(eliminarComunicado).toHaveBeenCalledWith(79);
     expect(wrapper.text()).toContain("Comunicado eliminado correctamente.");
     wrapper.unmount();
   });
@@ -442,12 +472,12 @@ describe("ComunicadosView (preceptor) - destino curso", () => {
     const wrapper = mount(ComunicadosView, { global: { plugins: [createPinia()] } });
     await flushPromises();
 
-    await wrapper.find(".delete-course-announcement").trigger("click");
+    await wrapper.find(".delete-announcement").trigger("click");
     document.body.querySelector('[role="dialog"] .btn-secondary').click();
     await flushPromises();
     expect(eliminarComunicado).not.toHaveBeenCalled();
 
-    await wrapper.find(".delete-course-announcement").trigger("click");
+    await wrapper.find(".delete-announcement").trigger("click");
     document.body.querySelector('[role="dialog"] .btn-danger').click();
     await flushPromises();
     expect(eliminarComunicado).toHaveBeenCalledWith(78);

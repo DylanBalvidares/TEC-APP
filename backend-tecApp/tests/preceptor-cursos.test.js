@@ -67,7 +67,7 @@ test("GET mis-cursos requiere permiso y sólo permite el rol preceptor", async (
 });
 
 test("el preceptor sólo elimina comunicados de cursos a su cargo", async (t) => {
-  const comunicado = { id_comunicado: 9, destino: "todos", curso_destino: null };
+  const comunicado = { id_comunicado: 9, autor_id: 77, destino: "todos", curso_destino: null };
   let whereCurso;
   let eliminaciones = 0;
   t.mock.method(Comunicado, "findByPk", async () => comunicado);
@@ -83,20 +83,25 @@ test("el preceptor sólo elimina comunicados de cursos a su cargo", async (t) =>
 
   await assert.rejects(
     eliminarComunicado(9, { idUsuario: 44, idRol: ROLES.PRECEPTOR }),
-    /sólo puede eliminar comunicados de sus cursos/i,
+    /sólo puede eliminar sus comunicados o los de sus cursos/i,
   );
   assert.equal(eliminaciones, 0);
 
+  comunicado.autor_id = 44;
+  assert.equal(await eliminarComunicado(9, { idUsuario: 44, idRol: ROLES.PRECEPTOR }), 1);
+  assert.equal(eliminaciones, 1);
+
+  comunicado.autor_id = 77;
   comunicado.destino = "curso";
   comunicado.curso_destino = "2do A";
   assert.equal(await eliminarComunicado(9, { idUsuario: 44, idRol: ROLES.PRECEPTOR }), 1);
   assert.deepEqual(whereCurso, { id_preceptor: 18, nombre_curso: "2do A" });
-  assert.equal(eliminaciones, 1);
+  assert.equal(eliminaciones, 2);
 });
 
 test("DELETE /comunicados autoriza al preceptor sólo en sus cursos", async (t) => {
   await permisos(t, { [ROLES.PRECEPTOR]: ["comunicado_eliminar"] });
-  const comunicado = { id_comunicado: 9, destino: "todos", curso_destino: null };
+  const comunicado = { id_comunicado: 9, autor_id: 44, destino: "todos", curso_destino: null };
   let eliminaciones = 0;
   t.mock.method(Comunicado, "findByPk", async () => comunicado);
   t.mock.method(Personal, "findOne", async () => ({ id_personal: 18 }));
@@ -105,13 +110,18 @@ test("DELETE /comunicados autoriza al preceptor sólo en sus cursos", async (t) 
   const srv = await obtenerServidor();
   const auth = { token: token({ id: 44, id_rol: ROLES.PRECEPTOR }) };
 
-  const general = await srv.request("DELETE", "/api/comunidad/comunicados/9", auth);
-  assert.equal(general.status, 403);
-  assert.equal(eliminaciones, 0);
+  const propioGeneral = await srv.request("DELETE", "/api/comunidad/comunicados/9", auth);
+  assert.equal(propioGeneral.status, 200);
+  assert.equal(eliminaciones, 1);
+
+  comunicado.autor_id = 77;
+  const generalAjeno = await srv.request("DELETE", "/api/comunidad/comunicados/9", auth);
+  assert.equal(generalAjeno.status, 403);
+  assert.equal(eliminaciones, 1);
 
   comunicado.destino = "curso";
   comunicado.curso_destino = "2do A";
   const asignado = await srv.request("DELETE", "/api/comunidad/comunicados/9", auth);
   assert.equal(asignado.status, 200);
-  assert.equal(eliminaciones, 1);
+  assert.equal(eliminaciones, 2);
 });

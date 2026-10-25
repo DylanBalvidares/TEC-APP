@@ -1235,11 +1235,11 @@
 
     color: #16794a;
 }
-.delete-course-announcement {
+.delete-announcement {
     color: #b42318;
 }
 
-.delete-course-announcement:disabled,
+.delete-announcement:disabled,
 .btn-danger:disabled {
     opacity: .6;
     cursor: wait;

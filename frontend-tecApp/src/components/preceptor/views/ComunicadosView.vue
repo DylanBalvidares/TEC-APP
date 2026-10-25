@@ -228,9 +228,9 @@
                         </button>
 
                         <button
-                            v-if="elemento.tipo === 'comunicado' && elemento.destino === 'curso'"
+                            v-if="puedeEliminarComunicado(elemento)"
                             type="button"
-                            class="view-btn delete-course-announcement"
+                            class="view-btn delete-announcement"
                             :disabled="eliminandoId === elemento.id_comunicado"
                             @click="solicitarEliminacion(elemento)"
                         >
@@ -270,7 +270,7 @@
 
 <Modal
     v-model="confirmacionEliminacionAbierta"
-    title="Eliminar comunicado de curso"
+    title="Eliminar comunicado"
     variante="danger"
     :bloquear-cierre="eliminandoId !== null"
 >
@@ -721,6 +721,12 @@ import {
 ========================================================= */
 
 const authStore = useAuthStore();
+const idUsuarioActual = computed(() => Number(authStore.usuario?.id_usuario ?? authStore.usuario?.id ?? 0));
+const puedeEliminarComunicado = (elemento) => {
+    if (elemento?.tipo !== "comunicado") return false;
+    return elemento.destino === "curso"
+        || (idUsuarioActual.value > 0 && Number(elemento.autor_id) === idUsuarioActual.value);
+};
 
 
 /* =========================================================
@@ -1208,6 +1214,9 @@ const mapearComunicado = (comunicado) => {
         curso_destino:
             comunicado.curso_destino,
 
+        autor_id:
+            comunicado.autor_id ?? comunicado.autor?.id_usuario,
+
         destinatario:
             comunicado.destino === "curso"
                 ? nombreCurso(
@@ -1562,7 +1571,7 @@ const cerrarDetalle = () => {
 };
 
 const solicitarEliminacion = (elemento) => {
-    if (elemento?.tipo !== "comunicado" || elemento.destino !== "curso") return;
+    if (!puedeEliminarComunicado(elemento)) return;
     comunicadoAEliminar.value = elemento;
     confirmacionEliminacionAbierta.value = true;
 };
@@ -1575,7 +1584,7 @@ const cancelarEliminacion = () => {
 
 const confirmarEliminacion = async () => {
     const comunicado = comunicadoAEliminar.value;
-    if (!comunicado || comunicado.tipo !== "comunicado" || comunicado.destino !== "curso" || eliminandoId.value !== null) return;
+    if (!puedeEliminarComunicado(comunicado) || eliminandoId.value !== null) return;
 
     eliminandoId.value = comunicado.id_comunicado;
     try {
