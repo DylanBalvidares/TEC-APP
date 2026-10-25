@@ -286,14 +286,40 @@ export async function crearComunicado(datos) {
   }
 }
 
-export async function eliminarComunicado(id) {
+export async function eliminarComunicado(id, contexto = null) {
   try {
-    if (!id || id < 0) {
+    const idComunicado = Number(id);
+    if (!idComunicado || idComunicado < 0) {
       throw new ErrorHandler(400, "ID de comunicado inválido");
     }
 
+    if (Number(contexto?.idRol) === 4) {
+      const comunicado = await Comunicado.findByPk(idComunicado);
+      if (!comunicado) throw new ErrorHandler(404, "Comunicado no encontrado");
+      if (comunicado.destino !== "curso" || !comunicado.curso_destino) {
+        throw new ErrorHandler(403, "El preceptor sólo puede eliminar comunicados de sus cursos");
+      }
+
+      const personal = await Personal.findOne({
+        where: { id_usuario: Number(contexto.idUsuario) },
+        attributes: ["id_personal"],
+        raw: true,
+      });
+      if (!personal) throw new ErrorHandler(403, "No hay un legajo de preceptor asociado a esta cuenta");
+
+      const cursoAsignado = await Curso.findOne({
+        where: {
+          id_preceptor: personal.id_personal,
+          nombre_curso: comunicado.curso_destino,
+        },
+        attributes: ["id_curso"],
+        raw: true,
+      });
+      if (!cursoAsignado) throw new ErrorHandler(403, "El comunicado no pertenece a un curso a tu cargo");
+    }
+
     const filasEliminadas = await Comunicado.destroy({
-      where: { id_comunicado: id },
+      where: { id_comunicado: idComunicado },
     });
 
     if (filasEliminadas === 0) {

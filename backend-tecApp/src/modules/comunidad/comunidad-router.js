@@ -207,7 +207,10 @@ router.put("/comunicados/:id", comprobarPermisos("comunicado_editar"), async (re
 
 router.delete("/comunicados/:id", comprobarPermisos("comunicado_eliminar"), async (req, res) => {
   try {
-    const resultado = await comunicadosCtrl.eliminarComunicado(req.params.id);
+    const resultado = await comunicadosCtrl.eliminarComunicado(req.params.id, {
+      idUsuario: Number(req.headers["id_usuario"]),
+      idRol: Number(req.headers["id_rol"]),
+    });
     return res.status(200).json({ mensaje: "Comunicado eliminado", resultado });
   } catch (error) {
     return res.status(error.statusCode || 500).json({ message: error.message });
