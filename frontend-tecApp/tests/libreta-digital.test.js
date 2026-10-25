@@ -78,7 +78,8 @@ describe("Libreta Digital del Preceptor", () => {
     const wrapper = await montar("../src/components/preceptor/views/LibretaPreceptorView.vue");
 
     expect(wrapper.findAll(".planilla-table tbody tr")).toHaveLength(2);
-    expect(wrapper.find(".btn-history-icon i").classes()).toContain("fa-clock-rotate-left");
+    expect(wrapper.find('.btn-history-icon [data-icon="history"]').exists()).toBe(true);
+    expect(wrapper.find('.btn-request-edit [data-icon="key"]').exists()).toBe(true);
     await wrapper.find("#buscarAlumnoLibreta").setValue("zoe");
     expect(wrapper.findAll(".planilla-table tbody tr")).toHaveLength(1);
     expect(wrapper.text()).toContain("Gómez");
@@ -98,6 +99,7 @@ describe("Libreta Digital del Preceptor", () => {
     const wrapper = await montar("../src/components/preceptor/views/LibretaPreceptorView.vue");
 
     expect(wrapper.findAll(".grade-editor input")).toHaveLength(2);
+    expect(wrapper.find('.btn-save-grade-preceptor [data-icon="save"]').exists()).toBe(true);
     const primeraNota = wrapper.find(".grade-editor input");
     await primeraNota.setValue("8.5");
     await wrapper.find(".btn-save-grade-preceptor").trigger("click");
@@ -140,7 +142,7 @@ describe("Libreta Digital del Profesor", () => {
 
   it("busca alumnos por nombre o apellido en la planilla docente", async () => {
     const wrapper = await montar("../src/components/profesores/views/LibretaDigitalView.vue");
-    expect(wrapper.find(".btn-history i").classes()).toContain("fa-clock-rotate-left");
+    expect(wrapper.find('.btn-history [data-icon="history"]').exists()).toBe(true);
     await wrapper.find("#buscarAlumnoProfesor").setValue("zoe");
 
     expect(wrapper.findAll(".notas-table tbody tr")).toHaveLength(1);

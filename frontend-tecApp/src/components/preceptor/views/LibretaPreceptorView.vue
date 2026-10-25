@@ -73,7 +73,7 @@
               <th v-for="asig in asignaciones" :key="asig.id_asignacion" class="materia-heading">
                 <span>{{ asig.materiaAsignacion?.nombre_materia || 'Materia' }}</span>
                 <span v-if="permisoActivo(asig.id_asignacion)" class="status-chip status-approved">
-                  <i class="fas fa-unlock" aria-hidden="true"></i> Hasta {{ fechaCorta(solicitudDe(asig.id_asignacion)?.fecha_expiracion) }}
+                  <InlineIcon name="lock-open" :size="13" /> Hasta {{ fechaCorta(solicitudDe(asig.id_asignacion)?.fecha_expiracion) }}
                 </span>
                 <button
                   v-else
@@ -82,7 +82,7 @@
                   :disabled="solicitandoId === asig.id_asignacion || solicitudDe(asig.id_asignacion)?.estado === 'pendiente'"
                   @click="solicitarEdicion(asig)"
                 >
-                  <i :class="solicitudDe(asig.id_asignacion)?.estado === 'pendiente' ? 'fas fa-clock' : 'fas fa-key'" aria-hidden="true"></i>
+                  <InlineIcon :name="solicitudDe(asig.id_asignacion)?.estado === 'pendiente' ? 'clock' : 'key'" :size="13" />
                   {{ textoSolicitud(asig.id_asignacion) }}
                 </button>
               </th>
@@ -112,7 +112,7 @@
                     :aria-label="`Guardar calificación de ${alumno.nombre} ${alumno.apellido}`"
                     @click="guardarNotaPreceptor(alumno, asig)"
                   >
-                    <i :class="guardandoClave === claveNota(alumno.id_alumno, asig.id_asignacion) ? 'fas fa-spinner fa-spin' : 'fas fa-floppy-disk'" aria-hidden="true"></i>
+                    <InlineIcon :name="guardandoClave === claveNota(alumno.id_alumno, asig.id_asignacion) ? 'spinner' : 'save'" :size="16" />
                   </button>
                 </div>
                 <span v-else :class="['grade-badge', getGradeClass(getNotaAlumnoMateria(alumno.id_alumno, asig.id_asignacion))]">
@@ -126,7 +126,7 @@
               </td>
               <td class="text-center">
                 <button class="btn-history-icon" @click="abrirHistorialModal(alumno)" title="Consultar historial">
-                  <i class="fas fa-clock-rotate-left"></i>
+                  <InlineIcon name="history" />
                 </button>
               </td>
             </tr>
@@ -144,7 +144,7 @@
     <div v-if="modalHistorialOpen" class="modal-backdrop" @click.self="modalHistorialOpen = false">
       <div class="modal-card">
         <div class="modal-header">
-          <h3><i class="fas fa-clock-rotate-left" aria-hidden="true"></i> Historial de Calificaciones</h3>
+          <h3><InlineIcon name="history" /> Historial de Calificaciones</h3>
           <button class="modal-close-btn" @click="modalHistorialOpen = false">&times;</button>
         </div>
         <div class="modal-body">
@@ -189,6 +189,7 @@
 
 <script setup>
 import { ref, computed, reactive, onMounted } from "vue";
+import InlineIcon from "@/components/ui/InlineIcon.vue";
 import {
   obtenerCursosPreceptor,
   obtenerNotasPreceptorCurso,
