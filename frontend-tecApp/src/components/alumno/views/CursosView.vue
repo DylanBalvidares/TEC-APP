@@ -159,6 +159,7 @@
 <script setup>
 import { ref, onMounted, nextTick, watch } from "vue";
 import { useRoute } from "vue-router";
+import HelpPopover from "@/components/ui/HelpPopover.vue";
 import { obtenerMisMaterias, obtenerMisParticipantes } from "@/services/academico-service.js";
 import { obtenerTodosComunicados, marcarComunicadoLeido } from "@/services/comunidad-service.js";
 import {

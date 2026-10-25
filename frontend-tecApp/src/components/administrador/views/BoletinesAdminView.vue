@@ -233,6 +233,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
+import HelpPopover from "@/components/ui/HelpPopover.vue";
 import {
   obtenerPeriodosBoletin,
   crearPeriodoBoletin,

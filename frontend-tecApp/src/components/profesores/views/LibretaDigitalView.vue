@@ -231,6 +231,7 @@
 <script setup>
 import { ref, computed, reactive, onMounted } from "vue";
 import InlineIcon from "@/components/ui/InlineIcon.vue";
+import HelpPopover from "@/components/ui/HelpPopover.vue";
 import {
   obtenerNotasProfesor,
   guardarNota,

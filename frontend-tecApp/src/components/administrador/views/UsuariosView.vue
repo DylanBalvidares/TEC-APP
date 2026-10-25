@@ -359,6 +359,7 @@
 <script setup>
 import { ref, onMounted, nextTick } from "vue";
 import Modal from "../../ui/Modal.vue";
+import HelpPopover from "@/components/ui/HelpPopover.vue";
 import { toast } from "../../../services/toast-service.js";
 import { exportarCsv } from "../../../utils/exportCsv.js";
 

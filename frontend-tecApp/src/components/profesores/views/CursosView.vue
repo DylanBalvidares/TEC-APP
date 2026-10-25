@@ -107,6 +107,7 @@
 <script setup>
 import EmptyState from "../EmptyState.vue";
 import { ref, onMounted } from "vue";
+import HelpPopover from "@/components/ui/HelpPopover.vue";
 import { obtenerAsignacionesProfesor, obtenerAlumnosCurso } from "@/services/academico-service.js";
 import { resolverIdProfesor } from "@/composables/useProfesor.js";
 
