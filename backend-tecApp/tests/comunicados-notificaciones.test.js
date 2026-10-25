@@ -6,7 +6,7 @@ import { fila } from "./helpers/crud.js";
 import Comunicado from "../src/db/models/comunicados-model.js";
 import { Alumno, Curso, Personal, Usuario } from "../src/db/models/index.js";
 import Notificacion from "../src/db/models/notificacion-model.js";
-import { crearComunicado } from "../src/modules/comunidad/comunicados-controller.js";
+import { crearComunicado, obtenerDestinatarios } from "../src/modules/comunidad/comunicados-controller.js";
 import { invalidarCachePermisos } from "../src/middlewares/comprobarPermisos.js";
 import { suscribir, limpiarSuscriptores } from "../src/utils/eventos.js";
 import { ROLES, token, mockearPermisosDeRol } from "./helpers/auth.js";
@@ -261,4 +261,32 @@ test("el evento SSE del fan-out llega solo al destinatario", async (t) => {
   assert.equal(buzon10[0].datos.id_usuario, 10);
   assert.equal(buzon20[0].datos.id_usuario, 20);
   assert.equal(buzon10[0].datos.titulo, "Clase extra");
+});
+
+test("obtenerDestinatarios reúne cuentas de alumnos y preceptor de un curso", async (t) => {
+  t.mock.method(Curso, "findAll", async () => [{ id_curso: 55, id_preceptor: 18 }]);
+  t.mock.method(Alumno, "findAll", async () => [
+    { id_usuario: 31 },
+    { id_usuario: null },
+  ]);
+  t.mock.method(Personal, "findAll", async () => [{ id_usuario: 44 }]);
+
+  const resultado = await obtenerDestinatarios({ destino: "curso", curso_destino: "2do A" });
+
+  assert.deepEqual([...resultado.idsUsuarios].sort((a, b) => a - b), [31, 44]);
+  assert.equal(resultado.sinCuenta, 1);
+});
+
+test("obtenerDestinatarios informa legajos sin cuenta para destino alumnos", async (t) => {
+  t.mock.method(Alumno, "count", async () => 2);
+  t.mock.method(Usuario, "findAll", async () => [
+    { id_usuario: 10 },
+    { id_usuario: null },
+    { id_usuario: 12 },
+  ]);
+
+  const resultado = await obtenerDestinatarios({ destino: "alumnos" });
+
+  assert.deepEqual([...resultado.idsUsuarios].sort((a, b) => a - b), [10, 12]);
+  assert.equal(resultado.sinCuenta, 2);
 });

@@ -247,3 +247,19 @@ test("rutas /correos y /enviar-email con permisos", async (t) => {
   });
   assert.equal(enviar.status, 200);
 });
+
+test("GET correos/enviados devuelve el historial del remitente autenticado", async (t) => {
+  await permisos(t, { [ROLES.PRECEPTOR]: ["preceptor_enviar_email_alumno"] });
+  t.mock.method(Correo, "findAll", async (opciones) => {
+    assert.deepEqual(opciones.where, { id_remitente: 4 });
+    return filas([{ id_correo: 9, id_remitente: 4, asunto: "Nota" }]);
+  });
+
+  const srv = await obtenerServidor();
+  const res = await srv.request("GET", "/api/academico/correos/enviados", {
+    token: token({ id: 4, id_rol: ROLES.PRECEPTOR }),
+  });
+
+  assert.equal(res.status, 200);
+  assert.deepEqual(res.data, [{ id_correo: 9, id_remitente: 4, asunto: "Nota" }]);
+});
