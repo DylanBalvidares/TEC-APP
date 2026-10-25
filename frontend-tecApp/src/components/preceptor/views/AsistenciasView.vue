@@ -4,7 +4,20 @@
     <!-- Encabezado de la página -->
     <header class="as-head">
       <div>
-        <h1>Asistencias <span class="as-title-icon">✓</span></h1>
+        <h1>
+          Asistencias <span class="as-title-icon">✓</span>
+          <HelpPopover
+            tipo="popover"
+            titulo="Gestión de Presentismo"
+            icono="fas fa-circle-question"
+            icono-titulo="fas fa-calendar-check"
+            posicion="bottom"
+            aria-label="Ayuda sobre asistencias"
+          >
+            <p>Podés registrar asistencia en lote mediante <strong>+ Tomar asistencia</strong> o ajustar alumnos desde la grilla.</p>
+            <p style="margin-top: 6px;">Las inasistencias computan para el índice de regularidad general del estudiante.</p>
+          </HelpPopover>
+        </h1>
         <p>Registrá y gestioná las asistencias diarias y por materia de los alumnos a tu cargo.</p>
       </div>
 
@@ -24,14 +37,6 @@
         </button>
       </div>
     </header>
-
-    <!-- Banner informativo de Asistencias -->
-    <div class="preceptor-info-banner">
-      <i class="fas fa-circle-info"></i>
-      <div>
-        <strong>Gestión de Presentismo:</strong> Podés registrar asistencia en lote mediante <em>+ Tomar asistencia</em>, ajustar estados de alumnos puntuales desde la tabla inferior o revisar el historial por fecha. Las ausencias computan para el seguimiento de regularidad.
-      </div>
-    </div>
 
     <!-- Estadísticas -->
     <section class="as-stats">
@@ -296,25 +301,22 @@
         <div class="as-modal-head">
           <div style="display: flex; align-items: center; gap: 8px;">
             <h2>Tomar asistencia</h2>
-            <span class="preceptor-help-wrapper">
-              <button type="button" class="preceptor-help-btn" aria-label="Guía de estados de asistencia">
-                <i class="fas fa-circle-info"></i>
-              </button>
-              <div class="preceptor-popover" role="dialog">
-                <div class="preceptor-popover-title">
-                  <i class="fas fa-check-double"></i> Carga rápida y estados
-                </div>
-                <div class="preceptor-popover-body">
-                  <p>Presioná <em>Todos presentes</em> y modificá únicamente las inasistencias.</p>
-                  <ul style="margin: 6px 0 0 16px; padding: 0;">
-                    <li><strong>Presente (P):</strong> En horario.</li>
-                    <li><strong>Ausente (A):</strong> Sin concurrencia.</li>
-                    <li><strong>Tarde (T):</strong> Ingreso posterior.</li>
-                    <li><strong>Justificada (J):</strong> Certificado presentado.</li>
-                  </ul>
-                </div>
-              </div>
-            </span>
+            <HelpPopover
+              tipo="popover"
+              titulo="Carga Rápida y Estados"
+              icono="fas fa-circle-question"
+              icono-titulo="fas fa-check-double"
+              posicion="bottom"
+              aria-label="Ayuda sobre toma de asistencia"
+            >
+              <p>Presioná <strong>Todos presentes</strong> y modificá únicamente las inasistencias.</p>
+              <ul style="margin: 6px 0 0 16px; padding: 0;">
+                <li><strong>Presente (P):</strong> En horario.</li>
+                <li><strong>Ausente (A):</strong> Sin concurrencia.</li>
+                <li><strong>Tarde (T):</strong> Ingreso posterior.</li>
+                <li><strong>Justificada (J):</strong> Certificado presentado.</li>
+              </ul>
+            </HelpPopover>
           </div>
           <button class="as-close" @click="modalTomar = false">×</button>
         </div>
@@ -425,6 +427,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
+import HelpPopover from "@/components/ui/HelpPopover.vue";
 
 import {
   obtenerCursos,

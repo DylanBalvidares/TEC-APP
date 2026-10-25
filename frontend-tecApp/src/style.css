@@ -129,7 +129,6 @@ button {
 ::selection {
   background: var(--color-primary-light);
   color: var(--color-primary);
-}    color: #94a3b8;
 }
 
 /* =========================================================

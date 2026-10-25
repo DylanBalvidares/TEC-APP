@@ -1,16 +1,21 @@
 <template>
   <div class="preceptor-view">
     <div class="boletines-header">
-      <h1><i class="fas fa-file-invoice"></i> Libreta Digital (Vista Preceptor)</h1>
+      <h1>
+        <i class="fas fa-file-invoice"></i> Libreta Digital (Vista Preceptor)
+        <HelpPopover
+          tipo="popover"
+          titulo="Planilla de Calificaciones"
+          icono="fas fa-circle-question"
+          icono-titulo="fas fa-graduation-cap"
+          posicion="bottom"
+          aria-label="Ayuda sobre libreta digital"
+        >
+          <p>Como preceptor tenés acceso de supervisión y seguimiento pedagógico (solo lectura).</p>
+          <p style="margin-top: 6px;">Las notas son cargadas periódicamente por los docentes. Podés hacer clic en el reloj <i class="fas fa-clock-rotate-left"></i> para inspeccionar el historial de cada estudiante.</p>
+        </HelpPopover>
+      </h1>
       <p>Consultá las calificaciones y promedios de los alumnos de tus cursos a cargo.</p>
-    </div>
-
-    <!-- Banner informativo de Libreta Digital -->
-    <div class="preceptor-info-banner">
-      <i class="fas fa-circle-info"></i>
-      <div>
-        <strong>Planilla de Calificaciones en Tiempo Real:</strong> Como preceptor tenés acceso de supervisión y seguimiento pedagógico (solo lectura). Las notas son cargadas periódicamente por el equipo docente de cada materia. Podés hacer clic en el reloj <i class="fas fa-clock-rotate-left"></i> para inspeccionar el historial detallado de notas por estudiante.
-      </div>
     </div>
 
     <!-- ── Selector de Curso ── -->
@@ -142,6 +147,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
+import HelpPopover from "@/components/ui/HelpPopover.vue";
 import {
   obtenerCursos,
   obtenerNotasPreceptorCurso,

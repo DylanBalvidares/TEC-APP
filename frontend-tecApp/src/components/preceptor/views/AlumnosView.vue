@@ -13,7 +13,20 @@
       <!-- HEADER -->
       <div class="alumnos-header">
         <div>
-          <h1>Alumnos</h1>
+          <h1>
+            Alumnos
+            <HelpPopover
+              tipo="popover"
+              titulo="Gestión de Alumnos"
+              icono="fa-solid fa-circle-question"
+              icono-titulo="fa-solid fa-users"
+              posicion="bottom"
+              aria-label="Ayuda sobre nómina de alumnos"
+            >
+              <p>Podés buscar por <strong>nombre, apellido, DNI o tutor</strong>.</p>
+              <p style="margin-top: 6px;">Usá <strong>Agregar alumno</strong> para matricular un nuevo estudiante en el curso o <strong>Comunicar al curso</strong> para enviar un aviso general.</p>
+            </HelpPopover>
+          </h1>
 
           <p v-if="cursoSeleccionado">
             Alumnos de {{ cursoSeleccionado.nombre_curso || cursoSeleccionado.nombre }}
@@ -22,14 +35,6 @@
           <p v-else>
             Cargando información del curso...
           </p>
-        </div>
-      </div>
-
-      <!-- BANNER INFORMATIVO -->
-      <div class="preceptor-info-banner subtle">
-        <i class="fa-solid fa-circle-info"></i>
-        <div>
-          Podés buscar alumnos por <strong>nombre, apellido, DNI o tutor</strong>. Usá <em>Agregar alumno</em> para matricular un nuevo estudiante en este curso o <em>Comunicar al curso</em> para enviar un aviso general a todas las familias de la división.
         </div>
       </div>
 
@@ -371,12 +376,11 @@
             <div class="form-grupo">
               <label>
                 DNI *
-                <span class="preceptor-help-wrapper">
-                  <button type="button" class="preceptor-help-btn" aria-label="Ayuda sobre DNI">
-                    <i class="fa-solid fa-question"></i>
-                  </button>
-                  <span class="preceptor-tooltip" role="tooltip">Ingresá 7 u 8 números sin puntos ni espacios.</span>
-                </span>
+                <HelpPopover
+                  tipo="tooltip"
+                  texto="Ingresá 7 u 8 números sin puntos ni espacios."
+                  aria-label="Ayuda sobre DNI"
+                />
               </label>
 
               <input
@@ -390,12 +394,11 @@
             <div class="form-grupo">
               <label>
                 Fecha de nacimiento *
-                <span class="preceptor-help-wrapper">
-                  <button type="button" class="preceptor-help-btn" aria-label="Ayuda sobre fecha de nacimiento">
-                    <i class="fa-solid fa-question"></i>
-                  </button>
-                  <span class="preceptor-tooltip" role="tooltip">Requerida para la ficha de matriculación y legajo.</span>
-                </span>
+                <HelpPopover
+                  tipo="tooltip"
+                  texto="Requerida para la ficha de matriculación y legajo oficial."
+                  aria-label="Ayuda sobre fecha de nacimiento"
+                />
               </label>
 
               <input
@@ -408,12 +411,11 @@
             <div class="form-grupo">
               <label>
                 Gmail *
-                <span class="preceptor-help-wrapper">
-                  <button type="button" class="preceptor-help-btn" aria-label="Ayuda sobre correo">
-                    <i class="fa-solid fa-question"></i>
-                  </button>
-                  <span class="preceptor-tooltip" role="tooltip">Correo institucional o de contacto del estudiante.</span>
-                </span>
+                <HelpPopover
+                  tipo="tooltip"
+                  texto="Correo institucional o de contacto del estudiante."
+                  aria-label="Ayuda sobre correo"
+                />
               </label>
 
               <input
@@ -452,12 +454,11 @@
             <div class="form-grupo">
               <label>
                 Teléfono *
-                <span class="preceptor-help-wrapper">
-                  <button type="button" class="preceptor-help-btn" aria-label="Ayuda sobre teléfono">
-                    <i class="fa-solid fa-question"></i>
-                  </button>
-                  <span class="preceptor-tooltip" role="tooltip">Código de área sin 0 y número sin 15. Usado para WhatsApp.</span>
-                </span>
+                <HelpPopover
+                  tipo="tooltip"
+                  texto="Código de área sin 0 y número sin 15. Usado para WhatsApp."
+                  aria-label="Ayuda sobre teléfono"
+                />
               </label>
 
               <TelefonoInput
@@ -472,12 +473,11 @@
             <div class="form-grupo">
               <label>
                 Domicilio *
-                <span class="preceptor-help-wrapper">
-                  <button type="button" class="preceptor-help-btn" aria-label="Ayuda sobre domicilio">
-                    <i class="fa-solid fa-question"></i>
-                  </button>
-                  <span class="preceptor-tooltip" role="tooltip">Calle, altura y localidad de residencia del alumno.</span>
-                </span>
+                <HelpPopover
+                  tipo="tooltip"
+                  texto="Calle, altura y localidad de residencia del alumno."
+                  aria-label="Ayuda sobre domicilio"
+                />
               </label>
 
               <input
@@ -515,21 +515,18 @@
             <div class="form-grupo">
               <label>
                 Estado
-                <span class="preceptor-help-wrapper">
-                  <button type="button" class="preceptor-help-btn" aria-label="Información detallada sobre estados">
-                    <i class="fa-solid fa-circle-info"></i>
-                  </button>
-                  <div class="preceptor-popover align-right" role="dialog">
-                    <div class="preceptor-popover-title">
-                      <i class="fa-solid fa-user-check"></i> Estados del Estudiante
-                    </div>
-                    <div class="preceptor-popover-body">
-                      <p><strong>Activo:</strong> Figura en listas de asistencia, calificaciones y libreta digital.</p>
-                      <p style="margin-top: 6px;"><strong>Condicional:</strong> Posee documentación pendiente o pase provisorio en trámite.</p>
-                      <p style="margin-top: 6px;"><strong>Inactivo:</strong> Baja o egreso; no computa para asistencia activa.</p>
-                    </div>
-                  </div>
-                </span>
+                <HelpPopover
+                  tipo="popover"
+                  titulo="Estados del Estudiante"
+                  icono="fa-solid fa-circle-info"
+                  icono-titulo="fa-solid fa-user-check"
+                  posicion="bottom-right"
+                  aria-label="Información de estados de alumno"
+                >
+                  <p><strong>Activo:</strong> Figura en listas de asistencia, calificaciones y libreta digital.</p>
+                  <p style="margin-top: 6px;"><strong>Condicional:</strong> Posee documentación pendiente o pase provisorio en trámite.</p>
+                  <p style="margin-top: 6px;"><strong>Inactivo:</strong> Baja o egreso; no computa para asistencia activa.</p>
+                </HelpPopover>
               </label>
 
               <select v-model="formulario.estado">
@@ -804,13 +801,13 @@
             </strong>
           </div>
 
-        </div>
+          <HelpPopover
+            tipo="tooltip"
+            texto="Llegará al panel institucional y notificaciones de alumnos y tutores de este curso."
+            posicion="bottom-right"
+            aria-label="Ayuda sobre destinatarios del curso"
+          />
 
-        <div class="preceptor-info-banner subtle" style="margin: 0 20px 16px 20px;">
-          <i class="fa-solid fa-circle-info"></i>
-          <div>
-            Este comunicado se publicará en el panel institucional y notificará por correo o aviso a las familias de los estudiantes de este curso.
-          </div>
         </div>
 
 
@@ -937,6 +934,7 @@ import {
 
 import TelefonoInput from "@/components/ui/TelefonoInput.vue";
 import UserAccessPanel from "@/components/ui/UserAccessPanel.vue";
+import HelpPopover from "@/components/ui/HelpPopover.vue";
 import { validarTelefonoAR, validarEmail } from "@/utils/validators.js";
 
 
