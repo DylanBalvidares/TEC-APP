@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { flushPromises, mount } from "@vue/test-utils";
 import { createPinia } from "pinia";
 import { createMemoryHistory, createRouter } from "vue-router";
@@ -14,6 +16,16 @@ afterEach(() => {
 });
 
 describe("Perfil del preceptor", () => {
+  it("usa un selector de menú que no hereda el display:none legado del preceptor", () => {
+    const topbar = readFileSync(
+      path.resolve(process.cwd(), "src/components/ui/AppTopbar.vue"),
+      "utf8",
+    );
+
+    expect(topbar).toContain('class="app-profile-menu"');
+    expect(topbar).toMatch(/\.app-profile-menu\s*\{\s*display:\s*block;/);
+  });
+
   it("abre Ver perfil desde el menú de usuario y muestra los datos de la sesión", async () => {
     const pinia = createPinia();
     const auth = useAuthStore(pinia);
@@ -29,13 +41,16 @@ describe("Perfil del preceptor", () => {
       routes: [{
         path: "/preceptor",
         component: DashboardPreceptor,
-        children: navigationByRole.preceptor.flatMap((group) => group.items).map(({ to }) => ({
-          path: to.replace("/preceptor/", ""),
-          component: UsuarioRuta,
-        })),
+        children: [
+          ...navigationByRole.preceptor.flatMap((group) => group.items).map(({ to }) => ({
+            path: to.replace("/preceptor/", ""),
+            component: UsuarioRuta,
+          })),
+          { path: "", redirect: "/preceptor/cursos" },
+        ],
       }],
     });
-    await router.push("/preceptor/inicio");
+    await router.push("/preceptor/");
     await router.isReady();
     const wrapper = mount(DashboardPreceptor, {
       global: {
@@ -46,6 +61,7 @@ describe("Perfil del preceptor", () => {
     await flushPromises();
 
     await wrapper.find('[aria-label="Menú de usuario"]').trigger("click");
+    expect(wrapper.find("#app-profile-menu.app-profile-menu").exists()).toBe(true);
     await wrapper.findAll(".menu-item").find((button) => button.text().includes("Ver perfil")).trigger("click");
     await flushPromises();
 
