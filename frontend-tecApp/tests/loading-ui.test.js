@@ -33,4 +33,25 @@ describe("Estados de carga y navegación", () => {
     expect(wrapper.text()).toContain("Segunda vista");
     wrapper.unmount();
   });
+
+  it("muestra rutas de componente con múltiples nodos raíz durante la transición real", async () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: "/preceptor/uno", component: { template: "<section>Asistencias</section><section>Resumen</section>" } },
+        { path: "/preceptor/dos", component: { template: "<section>Comunicados</section><section>Publicaciones</section>" } },
+      ],
+    });
+    await router.push("/preceptor/uno");
+    await router.isReady();
+    const wrapper = mount(AnimatedRouterView, {
+      global: { plugins: [router], stubs: { transition: false } },
+    });
+
+    expect(wrapper.text()).toContain("Asistencias");
+    await router.push("/preceptor/dos");
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    expect(wrapper.text()).toContain("Comunicados");
+    wrapper.unmount();
+  });
 });

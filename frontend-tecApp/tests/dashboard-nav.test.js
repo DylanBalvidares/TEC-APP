@@ -4,6 +4,7 @@ import { createRouter, createMemoryHistory } from "vue-router";
 import { createPinia } from "pinia";
 import DashboardAdministrador from "../src/components/administrador/DashboardAdministrador.vue";
 import Sidebar from "../src/components/administrador/views/Sidebar.vue";
+import { obtenerRoles } from "../src/services/usuarios-services.js";
 
 const flush = () => new Promise((r) => setTimeout(r, 0));
 
@@ -49,11 +50,14 @@ const router = createRouter({
   ],
 });
 
-const montarDashboard = async () => {
+const montarDashboard = async (transicionReal = false) => {
   await router.push("/dashboard-administrador");
   await router.isReady();
   const wrapper = mount(DashboardAdministrador, {
-    global: { plugins: [router, createPinia()] },
+    global: {
+      plugins: [router, createPinia()],
+      stubs: transicionReal ? { transition: false } : {},
+    },
   });
   await flush();
   return wrapper;
@@ -83,6 +87,16 @@ describe("DashboardAdministrador — navegación", () => {
     await flush();
 
     expect(wrapper.findComponent({ name: "Overview" }).exists()).toBe(true);
+    wrapper.unmount();
+  });
+
+  it("monta la sección elegida con la transición real y ejecuta su carga inicial", async () => {
+    const wrapper = await montarDashboard(true);
+    wrapper.findComponent(Sidebar).vm.$emit("cambiar-vista", "roles");
+    await new Promise((resolve) => setTimeout(resolve, 250));
+
+    expect(wrapper.findComponent({ name: "RolesView" }).exists()).toBe(true);
+    expect(obtenerRoles).toHaveBeenCalled();
     wrapper.unmount();
   });
 });
