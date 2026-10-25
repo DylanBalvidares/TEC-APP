@@ -21,7 +21,7 @@ const SolicitudEdicionNota = sequelize.define(
       references: { model: "asignaciones", key: "id_asignacion" },
     },
     estado: {
-      type: DataTypes.ENUM("pendiente", "aprobada", "rechazada"),
+      type: DataTypes.ENUM("pendiente", "aprobada", "rechazada", "revocada"),
       allowNull: false,
       defaultValue: "pendiente",
     },

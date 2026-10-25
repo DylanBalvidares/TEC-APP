@@ -80,6 +80,43 @@ test("no acepta solicitudes duplicadas mientras haya una pendiente o autorizaci�
   await assert.rejects(solicitarEdicionPlanilla(44, 2), /Ya tenés una solicitud/);
 });
 
+test("el profesor titular puede revocar un permiso vigente y queda auditado", async (t) => {
+  const permiso = {
+    id_solicitud: 11,
+    id_asignacion: 2,
+    estado: "aprobada",
+    fecha_expiracion: new Date(Date.now() + 60_000),
+    save: async function save() { return this; },
+  };
+  t.mock.method(SolicitudEdicionNota, "findByPk", async () => permiso);
+  t.mock.method(Asignacion, "findByPk", async () => fila({ id_asignacion: 2, id_profesor: 3 }));
+  t.mock.method(Profesor, "findOne", async ({ where }) =>
+    Number(where.id_usuario) === 77 ? fila({ id_profesor: 3 }) : fila({ id_profesor: 8 }),
+  );
+
+  await assert.rejects(decidirSolicitudEdicion(78, 11, "revocar"), /profesor titular/);
+  const revocada = await decidirSolicitudEdicion(77, 11, "revocar");
+
+  assert.equal(revocada.estado, "revocada");
+  assert.equal(revocada.id_usuario_decisor, 77);
+  assert.ok(new Date(revocada.fecha_expiracion).getTime() <= Date.now());
+  assert.ok(revocada.fecha_decision);
+});
+
+test("no permite revocar una autorización vencida", async (t) => {
+  const permiso = {
+    id_solicitud: 12,
+    id_asignacion: 2,
+    estado: "aprobada",
+    fecha_expiracion: new Date(Date.now() - 60_000),
+  };
+  t.mock.method(SolicitudEdicionNota, "findByPk", async () => permiso);
+  t.mock.method(Asignacion, "findByPk", async () => fila({ id_asignacion: 2, id_profesor: 3 }));
+  t.mock.method(Profesor, "findOne", async () => fila({ id_profesor: 3 }));
+
+  await assert.rejects(decidirSolicitudEdicion(77, 12, "revocar"), /ya venció/);
+});
+
 test("el preceptor solo crea calificaciones con una autorización temporal vigente", async (t) => {
   t.mock.method(Asignacion, "findByPk", async () => fila({
     id_asignacion: 2,
@@ -148,10 +185,23 @@ test("las rutas de solicitud de edición verifican los permisos y el profesor ti
 
   const pendientes = await srv.request("GET", "/api/academico/notas/solicitudes-edicion/pendientes", authProfesor);
   assert.equal(pendientes.status, 200);
+  const gestionables = await srv.request("GET", "/api/academico/notas/solicitudes-edicion/gestionables", authProfesor);
+  assert.equal(gestionables.status, 200);
+  const gestionablesPreceptor = await srv.request("GET", "/api/academico/notas/solicitudes-edicion/gestionables", authPreceptor);
+  assert.equal(gestionablesPreceptor.status, 403);
   const decision = await srv.request("PATCH", "/api/academico/notas/solicitudes-edicion/9/decision", {
     ...authProfesor,
     body: { decision: "aprobar" },
   });
   assert.equal(decision.status, 200);
   assert.equal(decision.data.estado, "aprobada");
+
+  pendiente.estado = "aprobada";
+  pendiente.fecha_expiracion = new Date(Date.now() + 60_000);
+  const revocada = await srv.request("PATCH", "/api/academico/notas/solicitudes-edicion/9/decision", {
+    ...authProfesor,
+    body: { decision: "revocar" },
+  });
+  assert.equal(revocada.status, 200);
+  assert.equal(revocada.data.estado, "revocada");
 });

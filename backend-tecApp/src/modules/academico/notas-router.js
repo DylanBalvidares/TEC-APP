@@ -14,6 +14,7 @@ import {
 import comprobarPermiso from "../../middlewares/comprobarPermisos.js";
 import {
   decidirSolicitudEdicion,
+  listarAccesosEdicionProfesor,
   listarSolicitudesPendientesProfesor,
   listarSolicitudesPreceptor,
   solicitarEdicionPlanilla,
@@ -122,6 +123,19 @@ notasRouter.get(
   async (req, res) => {
     try {
       const data = await listarSolicitudesPendientesProfesor(req.headers["id_usuario"]);
+      return res.status(200).json(data);
+    } catch (error) {
+      return res.status(error.status || 500).json({ message: error.message });
+    }
+  },
+);
+
+notasRouter.get(
+  "/notas/solicitudes-edicion/gestionables",
+  comprobarPermiso("profesor_ver_todos_notas"),
+  async (req, res) => {
+    try {
+      const data = await listarAccesosEdicionProfesor(req.headers["id_usuario"]);
       return res.status(200).json(data);
     } catch (error) {
       return res.status(error.status || 500).json({ message: error.message });

@@ -517,7 +517,7 @@ CREATE TABLE `solicitudes_edicion_notas` (
     `id_solicitud`          int(11) NOT NULL AUTO_INCREMENT,
     `id_personal_preceptor` int(11) NOT NULL,
     `id_asignacion`         int(11) NOT NULL,
-    `estado`                ENUM('pendiente','aprobada','rechazada') NOT NULL DEFAULT 'pendiente',
+    `estado`                ENUM('pendiente','aprobada','rechazada','revocada') NOT NULL DEFAULT 'pendiente',
     `fecha_solicitud`       datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `fecha_decision`        datetime DEFAULT NULL,
     `id_usuario_decisor`    int(11) DEFAULT NULL,

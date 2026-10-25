@@ -10,7 +10,7 @@ async function ensureLibretaDigital(intentos = 6) {
       \`id_solicitud\` int(11) NOT NULL AUTO_INCREMENT,
       \`id_personal_preceptor\` int(11) NOT NULL,
       \`id_asignacion\` int(11) NOT NULL,
-      \`estado\` ENUM('pendiente','aprobada','rechazada') NOT NULL DEFAULT 'pendiente',
+      \`estado\` ENUM('pendiente','aprobada','rechazada','revocada') NOT NULL DEFAULT 'pendiente',
       \`fecha_solicitud\` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
       \`fecha_decision\` datetime DEFAULT NULL,
       \`id_usuario_decisor\` int(11) DEFAULT NULL,
@@ -46,6 +46,7 @@ async function ensureLibretaDigital(intentos = 6) {
 
   const queries = [
     crearSolicitudesEdicion,
+    "ALTER TABLE `solicitudes_edicion_notas` MODIFY `estado` ENUM('pendiente','aprobada','rechazada','revocada') NOT NULL DEFAULT 'pendiente'",
     crearTabla,
     "INSERT IGNORE INTO `permisos` (`nombre_permiso`) VALUES ('preceptor_ver_notas')",
     `INSERT IGNORE INTO \`rol_permisos\` (\`id_rol\`, \`id_permiso\`)
