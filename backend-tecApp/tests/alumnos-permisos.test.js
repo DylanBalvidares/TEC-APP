@@ -1,12 +1,14 @@
-import { test, after } from "node:test";
+import { test, after, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 
 import { obtenerServidor, cerrarServidor } from "./helpers/http.js";
 import { ROLES, token, mockearPermisosDeRol } from "./helpers/auth.js";
-import { Alumno, Profesor, Usuario } from "../src/db/models/index.js";
+import { Alumno, Asignacion, Curso, Profesor, Usuario } from "../src/db/models/index.js";
 import { rutasSinPermisoExplicito } from "./helpers/rutas.js";
+import { invalidarCachePermisos } from "../src/middlewares/comprobarPermisos.js";
 
 after(cerrarServidor);
+beforeEach(() => invalidarCachePermisos());
 
 // S4: validar-identidad lo usan administrativo y preceptor; sincronizar sólo
 // administrativo. Root hereda todo vía permisos (no hay bypass por id).
@@ -136,4 +138,43 @@ test("S4: el guardrail ya no marca validar-identidad ni sincronizar", () => {
     (r) => r.includes("validar-identidad") || r.includes("sincronizar-usuario"),
   );
   assert.deepEqual(marcadas, []);
+});
+
+test("GET mi-curso/participantes responde con los datos del curso del alumno", async (t) => {
+  mockearPermisosDeRol(t, { [ROLES.ALUMNO]: ["alumno_ver_mi_curso"] });
+  t.mock.method(Alumno, "findOne", async () => ({ id_alumno: 3, id_curso: 55 }));
+  t.mock.method(Curso, "findByPk", async (id) => {
+    assert.equal(id, 55);
+    return {
+      id_curso: 55,
+      nombre_curso: "2º Año A",
+      profesorTitular: { id_profesor: 9, nombre: "Marta", apellido: "Titular" },
+    };
+  });
+  t.mock.method(Alumno, "findAll", async () => [
+    { id_alumno: 3, nombre: "Estudiante", apellido: "Actual" },
+    { id_alumno: 4, nombre: "Ana", apellido: "Pérez" },
+  ]);
+  t.mock.method(Asignacion, "findAll", async () => [
+    {
+      id_profesor: 9,
+      profesorAsignacion: { id_profesor: 9, nombre: "Marta", apellido: "Titular" },
+      materiaAsignacion: { id_materia: 1, nombre_materia: "Matemática" },
+    },
+  ]);
+
+  const srv = await obtenerServidor();
+  const res = await srv.request("GET", "/api/academico/alumnos/mi-curso/participantes", {
+    token: token({ id: 88, id_rol: ROLES.ALUMNO }),
+  });
+
+  assert.equal(res.status, 200);
+  assert.deepEqual(res.data.curso, { id_curso: 55, nombre_curso: "2º Año A" });
+  assert.deepEqual(res.data.companeros, [{ nombre: "Ana", apellido: "Pérez" }]);
+  assert.deepEqual(res.data.profesores, [{
+    nombre: "Marta",
+    apellido: "Titular",
+    es_titular: true,
+    materias: ["Matemática"],
+  }]);
 });
