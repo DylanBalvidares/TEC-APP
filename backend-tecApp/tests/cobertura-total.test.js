@@ -25,6 +25,8 @@ const DIR_TESTS = path.join(RAIZ, "tests");
 const TRANSITIVAS = {
   // mensajes-crud lo ejercita en modo stub (sin WHATSAPP_TOKEN no hay red).
   enviarWhatsapp: "tests/mensajes-crud.test.js (modo stub)",
+  // Se invoca desde alumnos-controller al crear/editar la cuenta con envío.
+  enviarCredencialesAcceso: "tests/alumnos-cuenta.test.js (transporter stub)",
 };
 
 function listarRelativo(dir, filtro) {
