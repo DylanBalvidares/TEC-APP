@@ -12,11 +12,7 @@
     <div class="dashboard-body">
       <Sidebar :abierto="sidebarAbierto" :colapsado="sidebarColapsado" @close="closeSidebar" />
       <main class="view-container">
-        <router-view v-slot="{ Component }">
-          <transition name="fade-slide" mode="out-in">
-            <component :is="Component" />
-          </transition>
-        </router-view>
+        <AnimatedRouterView :depth="1" />
       </main>
     </div>
   </div>
@@ -29,6 +25,7 @@ import AppTopbar from "../ui/AppTopbar.vue";
 import UserProfileDialog from "../ui/UserProfileDialog.vue";
 import { useResponsiveSidebar } from "../../composables/useResponsiveSidebar.js";
 import Sidebar from "./views/Sidebar.vue";
+import AnimatedRouterView from "../ui/AnimatedRouterView.vue";
 
 const { sidebarOpen: sidebarAbierto, desktopCollapsed: sidebarColapsado, toggleSidebar, closeSidebar } = useResponsiveSidebar();
 const perfilAbierto = ref(false);
@@ -68,21 +65,5 @@ const irInicio = () => router.push('/alumno/inicio');
 
 
 
-/* Transiciones de router-view */
-.fade-slide-enter-active,
-.fade-slide-leave-active {
-  transition:
-    opacity 0.2s ease,
-    transform 0.2s ease;
-}
-
-.fade-slide-enter-from {
-  opacity: 0;
-  transform: translateY(8px);
-}
-
-.fade-slide-leave-to {
-  opacity: 0;
-}
 </style>
 <style src="./alumno.css"></style>

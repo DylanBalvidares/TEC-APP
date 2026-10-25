@@ -29,12 +29,15 @@
 
             <main class="main" aria-label="Panel de administración">
                 <div class="content" ref="contentRef" tabindex="-1">
-                    <keep-alive>
-                      <component
-                        :is="componentesMap[currentView]"
-                        @cambiar-vista="setView"
-                      />
-                    </keep-alive>
+                    <Transition name="route-fade" mode="out-in">
+                      <KeepAlive>
+                        <component
+                          :is="componentesMap[currentView]"
+                          :key="currentView"
+                          @cambiar-vista="setView"
+                        />
+                      </KeepAlive>
+                    </Transition>
                 </div>
             </main>
         </div>

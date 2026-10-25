@@ -130,3 +130,24 @@ button {
   background: var(--color-primary-light);
   color: var(--color-primary);
 }
+
+.route-fade-enter-active,
+.route-fade-leave-active {
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+.route-fade-enter-from,
+.route-fade-leave-to {
+  opacity: 0;
+  transform: translateY(5px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .route-fade-enter-active,
+  .route-fade-leave-active {
+    transition: none;
+  }
+  .fa-spin { animation: none !important; }
+  .route-fade-enter-from,
+  .route-fade-leave-to {
+    transform: none;
+  }
+}

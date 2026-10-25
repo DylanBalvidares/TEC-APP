@@ -1,9 +1,6 @@
 <template>
     <div class="datatable" :class="`datatable-${densidad}`" :aria-busy="cargando">
-        <div v-if="cargando" class="empty-state" role="status">
-            <i class="ti ti-loader animate-spin" style="font-size: 24px; color: #cd322c"></i>
-            <p>{{ textoCarga }}</p>
-        </div>
+        <LoadingSkeleton v-if="cargando" :label="textoCarga" :rows="5" :columns="skeletonColumns" />
 
         <div v-else-if="error" class="error-banner" style="margin: 16px" role="alert">
             <i class="ti ti-alert-circle"></i> {{ error }}
@@ -99,6 +96,7 @@
 <script setup>
 import { computed } from "vue";
 import Pagination from "./Pagination.vue";
+import LoadingSkeleton from "./LoadingSkeleton.vue";
 
 const props = defineProps({
     columnas: { type: Array, required: true },
@@ -125,6 +123,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["ordenar", "pagina", "por-pagina", "reintentar", "update:seleccion"]);
+const skeletonColumns = computed(() => Math.max(1, Math.min(props.columnas.length, 4)));
 
 function claveDe(fila) {
     return typeof props.claveFila === "function" ? props.claveFila(fila) : fila?.[props.claveFila];

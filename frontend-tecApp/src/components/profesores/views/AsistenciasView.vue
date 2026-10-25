@@ -18,8 +18,9 @@
                     </select>
                 </div>
                 <input type="text" v-model="asistFecha" class="date-input" placeholder="DD/MM/AAAA" />
-                <button class="btn-add-subject" :disabled="!asistCursoId" @click="tomarAsistencia">
-                    <i class="fas fa-clipboard-check"></i> Tomar asistencia
+                <button class="btn-add-subject" :disabled="!asistCursoId || cargandoAlumnos" @click="tomarAsistencia">
+                    <i :class="cargandoAlumnos ? 'fas fa-spinner fa-spin' : 'fas fa-clipboard-check'" aria-hidden="true"></i>
+                    {{ cargandoAlumnos ? "Cargando alumnos…" : "Tomar asistencia" }}
                 </button>
             </div>
         </div>
@@ -69,7 +70,9 @@
                 </div>
             </div>
             <div class="asist-actions">
-                <button class="btn-guardar-asist" @click="guardarAsistencia">Guardar asistencia</button>
+                <button class="btn-guardar-asist" :disabled="guardandoAsistencia" @click="guardarAsistencia">
+                    {{ guardandoAsistencia ? "Guardando…" : "Guardar asistencia" }}
+                </button>
             </div>
         </div>
 
@@ -220,6 +223,8 @@ const listaAlumnos      = ref([]);
 const cargando          = ref(true);
 const asistFeedback     = ref("");
 const asistFeedbackTipo = ref(""); // "error" o "success"
+const cargandoAlumnos = ref(false);
+const guardandoAsistencia = ref(false);
 
 // ── Historial ────────────────────────────────────────────────────────────────
 const histCursoId       = ref("");
@@ -267,18 +272,18 @@ const onAsistCursoChange = () => {
 };
 
 const tomarAsistencia = async () => {
-    if (!asistCursoId.value) return;
-    
-    asistFeedback.value = "";
+    if (!asistCursoId.value || cargandoAlumnos.value) return;
 
+    asistFeedback.value = "";
     const errFechaAsist = validarFechaFormato(asistFecha.value);
     if (errFechaAsist) {
         asistFeedback.value = errFechaAsist;
         asistFeedbackTipo.value = "error";
         return;
     }
-    
+
     mostrarAsistencia.value = false;
+    cargandoAlumnos.value = true;
     try {
         const res = await obtenerAlumnosCurso(asistCursoId.value);
         if (res.success && res.data && res.data.length > 0) {
@@ -297,10 +302,13 @@ const tomarAsistencia = async () => {
         console.error("Error al obtener alumnos del curso:", error);
         asistFeedback.value = "Error al cargar la lista de alumnos.";
         asistFeedbackTipo.value = "error";
+    } finally {
+        cargandoAlumnos.value = false;
     }
 };
 
 const guardarAsistencia = async () => {
+    if (guardandoAsistencia.value) return;
     asistFeedback.value = "";
 
     if (!asistFecha.value) {
@@ -319,19 +327,18 @@ const guardarAsistencia = async () => {
         return;
     }
 
+    guardandoAsistencia.value = true;
     try {
         const registros = listaAlumnos.value.map((a) => ({
             id_alumno: a.id_alumno,
             estado: a.estado,
         }));
-
         const payload = {
-            id_curso: asistCursoId.value,
+            id_curso: Number(asistCursoId.value),
             fecha: parseDisplayDate(asistFecha.value),
             registrado_por: authStore.usuario?.id || null,
             registros,
         };
-
         const res = await guardarAsistenciasLote(payload);
         if (res.success) {
             asistFeedback.value = "Asistencias guardadas correctamente.";
@@ -347,6 +354,8 @@ const guardarAsistencia = async () => {
         console.error("Error al guardar asistencia:", error);
         asistFeedback.value = "Error de conexión al guardar las asistencias.";
         asistFeedbackTipo.value = "error";
+    } finally {
+        guardandoAsistencia.value = false;
     }
 };
 
