@@ -34,10 +34,11 @@ describe("ConfigView", () => {
   it("guardar envía los cambios y confirma", async () => {
     const wrapper = mount(ConfigView);
     await flushPromises();
+    await wrapper.find("input").setValue("Técnica 2 renovada");
     await wrapper.find(".tb-btn.primary").trigger("click");
     await flushPromises();
     expect(adminService.guardarConfiguracion).toHaveBeenCalledWith(
-      expect.objectContaining({ institucion_nombre: "Técnica 2" }),
+      expect.objectContaining({ institucion_nombre: "Técnica 2 renovada" }),
     );
     expect(wrapper.text()).toContain("guardada correctamente");
   });

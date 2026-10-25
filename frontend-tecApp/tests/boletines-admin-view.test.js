@@ -8,10 +8,12 @@ vi.mock("../src/services/boletines-service.js", () => ({
   prepararCursoBoletin: vi.fn(),
   obtenerReaperturasBoletin: vi.fn().mockResolvedValue({ success: true, data: [] }),
   decidirReaperturaBoletin: vi.fn(),
+  obtenerPlanillaBoletin: vi.fn(),
 }));
 
 vi.mock("../src/services/academico-service.js", () => ({
   obtenerCursos: vi.fn().mockResolvedValue({ success: true, data: [] }),
+  obtenerPlanes: vi.fn().mockResolvedValue({ success: true, data: [] }),
 }));
 
 vi.mock("../src/services/toast-service.js", () => ({

@@ -24,13 +24,13 @@ describe("CertificadosView", () => {
 
   it("busca alumnos y previsualiza la constancia", async () => {
     const wrapper = mount(CertificadosView);
-    await wrapper.find('input[placeholder="Ej: Perez o 12345678"]').setValue("perez");
+    await wrapper.find('input[placeholder="Ej: Pérez o 12345678"]').setValue("perez");
     await new Promise((r) => setTimeout(r, 400));
     await flushPromises();
     expect(academicoService.obtenerAlumnos).toHaveBeenCalledWith(
       expect.objectContaining({ q: "perez" }),
     );
-    await wrapper.find("tbody tr").trigger("click");
+    await wrapper.find(".cert-alumno-select").trigger("click");
     await flushPromises();
     expect(wrapper.find(".cert-hoja").text()).toContain("Perez, Juan");
     expect(wrapper.find(".cert-hoja").text()).toContain("Constancia de alumno regular");
@@ -39,10 +39,10 @@ describe("CertificadosView", () => {
   it("imprimir invoca window.print", async () => {
     const spy = vi.spyOn(window, "print").mockImplementation(() => {});
     const wrapper = mount(CertificadosView);
-    await wrapper.find('input[placeholder="Ej: Perez o 12345678"]').setValue("perez");
+    await wrapper.find('input[placeholder="Ej: Pérez o 12345678"]').setValue("perez");
     await new Promise((r) => setTimeout(r, 400));
     await flushPromises();
-    await wrapper.find("tbody tr").trigger("click");
+    await wrapper.find(".cert-alumno-select").trigger("click");
     await flushPromises();
     await wrapper.find(".tb-btn.primary").trigger("click");
     expect(spy).toHaveBeenCalled();
