@@ -68,9 +68,13 @@ describe("HorariosView", () => {
 
   it("eliminar un bloque confirma con el servicio", async () => {
     academicoService.eliminarHorario.mockResolvedValue({ success: true, data: {} });
-    const wrapper = mount(HorariosView, { global: { stubs: { Modal: true } } });
+    const wrapper = mount(HorariosView);
     await flushPromises();
     await wrapper.find("button.icon-btn.delete").trigger("click");
+    await flushPromises();
+    const confirmar = document.body.querySelector(".modal-danger .tb-btn.danger");
+    expect(confirmar).toBeTruthy();
+    confirmar.click();
     await flushPromises();
     expect(academicoService.eliminarHorario).toHaveBeenCalledWith(1);
     expect(toast.success).toHaveBeenCalled();

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { mount, flushPromises } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
+import { createMemoryHistory, createRouter } from "vue-router";
 import {
   claseImportancia,
   extraerComunicados,
@@ -76,7 +77,13 @@ describe("CursosView (alumno) - comunicados", () => {
     const { default: CursosView } = await import(
       "../src/components/alumno/views/CursosView.vue"
     );
-    const wrapper = mount(CursosView, { global: { plugins: [createPinia()] } });
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: "/", component: { template: "<div />" } }],
+    });
+    await router.push("/");
+    await router.isReady();
+    const wrapper = mount(CursosView, { global: { plugins: [createPinia(), router] } });
     await flushPromises();
     return wrapper;
   };
@@ -117,7 +124,7 @@ describe("CursosView (alumno) - comunicados", () => {
   it("muestra estado vacío si el servicio falla", async () => {
     obtenerTodosComunicados.mockResolvedValue({ success: false, message: "boom" });
     const wrapper = await montar();
-    expect(wrapper.find(".comunicados-vacio").exists()).toBe(true);
+    expect(wrapper.find(".seccion-error").text()).toContain("boom");
     expect(wrapper.find(".comunicado-card").exists()).toBe(false);
   });
 
@@ -156,7 +163,7 @@ describe("NoticiaView (alumno) - confirmación de lectura", () => {
     setActivePinia(createPinia());
 
     const comunidad = await import("../src/services/comunidad-service.js");
-    vi.spyOn(comunidad, "obtenerNoticias").mockResolvedValue([]);
+    vi.spyOn(comunidad, "obtenerNoticiasConEstado").mockResolvedValue({ success: true, data: [] });
     vi.spyOn(comunidad, "obtenerTodosComunicados").mockResolvedValue({
       success: true,
       data: [{ ...COMUNICADO, destino: "todos" }],
@@ -169,8 +176,14 @@ describe("NoticiaView (alumno) - confirmación de lectura", () => {
     const { default: NoticiaView } = await import(
       "../src/components/alumno/views/NoticiaView.vue"
     );
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: "/", component: { template: "<div />" } }],
+    });
+    await router.push("/");
+    await router.isReady();
     const wrapper = mount(NoticiaView, {
-      global: { plugins: [createPinia()] },
+      global: { plugins: [createPinia(), router] },
     });
     await flushPromises();
 
