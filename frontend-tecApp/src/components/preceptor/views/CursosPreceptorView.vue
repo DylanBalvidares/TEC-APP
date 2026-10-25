@@ -6,11 +6,19 @@
     ========================== -->
 
     <div class="boletines-header">
-      <h1>Cursos</h1>
+      <h1>Cursos a cargo</h1>
 
       <p>
-        Seleccioná qué querés consultar del curso.
+        Gestioná los cursos asignados: consultá o agregá alumnos y revisá las calificaciones y boletines.
       </p>
+    </div>
+
+    <!-- Banner informativo -->
+    <div class="preceptor-info-banner">
+      <i class="fas fa-circle-info"></i>
+      <div>
+        <strong>Panel de Cursos Asignados:</strong> Seleccioná <em>Ver alumnos</em> para gestionar la nómina del curso (datos de contacto, tutores y matriculación) o <em>Ver boletines</em> para consultar las planillas de calificaciones por período.
+      </div>
     </div>
 
 

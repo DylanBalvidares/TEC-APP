@@ -36,6 +36,14 @@
 
         </section>
 
+        <!-- Banner explicativo comunicados -->
+        <div class="preceptor-info-banner">
+            <i class="fa-solid fa-circle-info"></i>
+            <div>
+                <strong>Centro de Comunicaciones:</strong> Los comunicados institucionales emitidos quedan registrados en el historial junto con el seguimiento y porcentaje de confirmación de lectura de las familias y estudiantes.
+            </div>
+        </div>
+
 
         <!-- =====================================================
              FILTROS
@@ -534,6 +542,9 @@
                             </option>
 
                         </select>
+                        <span class="preceptor-field-hint">
+                            <i class="fa-solid fa-circle-question"></i> Las alertas de importancia <strong>Alta</strong> resaltan con distintivo rojo y generan mayor prioridad en la bandeja de recepción.
+                        </span>
 
                     </div>
 
@@ -570,6 +581,9 @@
                             </option>
 
                         </select>
+                        <span class="preceptor-field-hint">
+                            <i class="fa-solid fa-circle-question"></i> Elegí quiénes verán la publicación. Si seleccionás <em>Un curso</em>, sólo los alumnos y tutores de dicha división tendrán acceso.
+                        </span>
 
                     </div>
 

@@ -5,11 +5,11 @@
     <header class="as-head">
       <div>
         <h1>Asistencias <span class="as-title-icon">✓</span></h1>
-        <p>Registrá y gestioná las asistencias de los alumnos.</p>
+        <p>Registrá y gestioná las asistencias diarias y por materia de los alumnos a tu cargo.</p>
       </div>
 
       <div class="as-actions">
-        <button class="as-btn as-btn-outline" @click="abrirImportador">
+        <button class="as-btn as-btn-outline" @click="abrirImportador" title="Cargar asistencias desde un archivo CSV o TXT">
           ↑ Importar desde archivo
         </button>
         <input
@@ -24,6 +24,14 @@
         </button>
       </div>
     </header>
+
+    <!-- Banner informativo de Asistencias -->
+    <div class="preceptor-info-banner">
+      <i class="fas fa-circle-info"></i>
+      <div>
+        <strong>Gestión de Presentismo:</strong> Podés registrar asistencia en lote mediante <em>+ Tomar asistencia</em>, ajustar estados de alumnos puntuales desde la tabla inferior o revisar el historial por fecha. Las ausencias computan para el seguimiento de regularidad.
+      </div>
+    </div>
 
     <!-- Estadísticas -->
     <section class="as-stats">
@@ -291,6 +299,13 @@
         </div>
 
         <p class="as-muted">{{ nombreCurso }} · {{ fechaFormateada }}</p>
+
+        <div class="preceptor-info-banner subtle" style="margin-bottom: 12px; font-size: 13px;">
+          <i class="fas fa-circle-question"></i>
+          <div>
+            <strong>Consejo rápido:</strong> Podés presionar <em>Todos presentes</em> y luego cambiar manualmente sólo a los estudiantes ausentes o que llegaron tarde. Estados: <strong>P</strong> (Presente), <strong>A</strong> (Ausente), <strong>T</strong> (Tarde), <strong>J</strong> (Justificada).
+          </div>
+        </div>
 
         <div class="as-modal-tools">
           <button class="as-btn as-btn-outline" @click="marcarTodos('presente')">

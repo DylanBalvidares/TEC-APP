@@ -783,3 +783,54 @@ body {
     }
 
 }
+
+/* =========================================================
+   GUÍAS Y MENSAJES EXPLICATIVOS COMUNES
+========================================================= */
+
+.preceptor-info-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: #f0f7ff;
+    border: 1px solid #bae0fd;
+    border-left: 4px solid #0284c7;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    color: #0f4c81;
+    font-size: 13.5px;
+    line-height: 1.45;
+}
+
+.preceptor-info-banner i {
+    font-size: 18px;
+    color: #0284c7;
+    margin-top: 1px;
+    flex-shrink: 0;
+}
+
+.preceptor-info-banner.subtle {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    border-left-color: #64748b;
+    color: #334155;
+}
+
+.preceptor-info-banner.subtle i {
+    color: #64748b;
+}
+
+.preceptor-field-hint {
+    display: block;
+    margin-top: 5px;
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.35;
+}
+
+.preceptor-field-hint i {
+    font-size: 11px;
+    margin-right: 3px;
+    color: #94a3b8;
+}

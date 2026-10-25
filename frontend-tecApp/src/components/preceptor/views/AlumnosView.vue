@@ -25,6 +25,14 @@
         </div>
       </div>
 
+      <!-- BANNER INFORMATIVO -->
+      <div class="preceptor-info-banner subtle">
+        <i class="fa-solid fa-circle-info"></i>
+        <div>
+          Podés buscar alumnos por <strong>nombre, apellido, DNI o tutor</strong>. Usá <em>Agregar alumno</em> para matricular un nuevo estudiante en este curso o <em>Comunicar al curso</em> para enviar un aviso general a todas las familias de la división.
+        </div>
+      </div>
+
       <!-- ERROR -->
       <div v-if="errorAlumnos" class="mensaje-error">
         <i class="fa-solid fa-circle-exclamation"></i>
@@ -369,6 +377,9 @@
                 placeholder="Ej. 45123456"
                 required
               />
+              <span class="preceptor-field-hint">
+                <i class="fa-solid fa-circle-question"></i> Ingresá sólo números sin puntos ni espacios (7 u 8 dígitos).
+              </span>
             </div>
 
             <div class="form-grupo">
@@ -379,6 +390,9 @@
                 type="date"
                 required
               />
+              <span class="preceptor-field-hint">
+                <i class="fa-solid fa-circle-question"></i> Formato de fecha requerido para la ficha y legajo oficial.
+              </span>
             </div>
 
             <div class="form-grupo">
@@ -390,6 +404,9 @@
                   placeholder="Ej. juan.perez@gmail.com"
                   required
                 />
+                <span class="preceptor-field-hint">
+                  <i class="fa-solid fa-circle-question"></i> Correo electrónico para acceso a la plataforma o contacto del alumno.
+                </span>
             </div>
 
           </div>
@@ -427,6 +444,9 @@
                 :error-externo="errorTelefono"
               />
               <p v-if="errorTelefono" class="form-error">{{ errorTelefono }}</p>
+              <span class="preceptor-field-hint">
+                <i class="fa-solid fa-circle-question"></i> Código de área sin 0 y número sin 15. Utilizado para envíos automáticos de WhatsApp.
+              </span>
             </div>
 
             <div class="form-grupo">
@@ -438,6 +458,9 @@
                 placeholder="Ej. Av. Rivadavia 1234"
                 required
               />
+              <span class="preceptor-field-hint">
+                <i class="fa-solid fa-circle-question"></i> Calle, numeración y localidad de residencia actual del alumno.
+              </span>
             </div>
 
           </div>
@@ -472,6 +495,9 @@
                 <option value="condicional">Condicional</option>
                 <option value="inactivo">Inactivo</option>
               </select>
+              <span class="preceptor-field-hint">
+                <i class="fa-solid fa-circle-question"></i> Los alumnos 'Activos' figuran normalmente en planillas de asistencia y libreta. 'Condicional' indica documentación o situación de pase pendiente.
+              </span>
             </div>
 
             <!-- CUENTA DE ACCESO (opcional / editable) -->
@@ -739,6 +765,13 @@
             </strong>
           </div>
 
+        </div>
+
+        <div class="preceptor-info-banner subtle" style="margin: 0 20px 16px 20px;">
+          <i class="fa-solid fa-circle-info"></i>
+          <div>
+            Este comunicado se publicará en el panel institucional y notificará por correo o aviso a las familias de los estudiantes de este curso.
+          </div>
         </div>
 
 

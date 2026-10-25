@@ -5,6 +5,14 @@
       <p>Consultá las calificaciones y promedios de los alumnos de tus cursos a cargo.</p>
     </div>
 
+    <!-- Banner informativo de Libreta Digital -->
+    <div class="preceptor-info-banner">
+      <i class="fas fa-circle-info"></i>
+      <div>
+        <strong>Planilla de Calificaciones en Tiempo Real:</strong> Como preceptor tenés acceso de supervisión y seguimiento pedagógico (solo lectura). Las notas son cargadas periódicamente por el equipo docente de cada materia. Podés hacer clic en el reloj <i class="fas fa-clock-rotate-left"></i> para inspeccionar el historial detallado de notas por estudiante.
+      </div>
+    </div>
+
     <!-- ── Selector de Curso ── -->
     <div class="cursos-selector-wrap" v-if="!cargandoCursos && cursos.length > 0">
       <label for="cursoSelect"><strong>Curso a consultar:</strong></label>
