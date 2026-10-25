@@ -134,7 +134,7 @@
       </p>
       <div class="form-grid">
         <label>Calificación (0 – 10)
-          <input type="number" v-model="modalEdit.calificacion" min="0" max="10" step="0.1" class="modal-input" placeholder="Ej. 8.5" />
+          <input type="number" v-model="modalEdit.calificacion" min="0" max="10" step="1" class="modal-input" placeholder="Nota entera (0 a 10)" />
         </label>
         <label>Observación (opcional)
           <input type="text" v-model="modalEdit.observaciones" class="modal-input" placeholder="Observación..." />
@@ -352,9 +352,10 @@ const abrirEdicion = (alumno, asig) => {
 
 const guardarEdicion = async () => {
   const m = modalEdit.value;
-  const num = parseFloat(m.calificacion);
-  if (isNaN(num) || num < 0 || num > 10) {
-    mostrarFeedback("La calificación debe ser un número entre 0 y 10.");
+  const num = Number(m.calificacion);
+  if ((typeof m.calificacion === "string" && m.calificacion.trim() === "")
+    || !Number.isInteger(num) || num < 0 || num > 10) {
+    mostrarFeedback("La calificación debe ser un número entero entre 0 y 10.");
     return;
   }
   m.saving = true;
@@ -363,14 +364,14 @@ const guardarEdicion = async () => {
     if (m.nota) {
       res = await modificarNotaService({
         id_nota: m.nota.id_nota,
-        calificacion: Math.round(num * 10) / 10,
+        calificacion: num,
         observaciones: m.observaciones,
       });
     } else {
       res = await guardarNota({
         id_alumno: m.alumno.id_alumno,
         id_asignacion: m.asignacion.id_asignacion,
-        calificacion: Math.round(num * 10) / 10,
+        calificacion: num,
         observaciones: m.observaciones || null,
       });
     }

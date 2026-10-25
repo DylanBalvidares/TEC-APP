@@ -204,6 +204,10 @@ test("guardarCalificacion valida tipos y acepta el 0", async (t) => {
     guardarCalificacion({ id_periodo: 1, id_asignacion: 2, id_alumno: 1, tipo: "numerica", valor: 11 }, 7, 3),
     /entre 0 y 10/,
   );
+  await assert.rejects(
+    guardarCalificacion({ id_periodo: 1, id_asignacion: 2, id_alumno: 1, tipo: "numerica", valor: 8.5 }, 7, 3),
+    /número entero/,
+  );
 
   mockMateriaPreparada(t);
   t.mock.method(Asignacion, "findByPk", async () =>

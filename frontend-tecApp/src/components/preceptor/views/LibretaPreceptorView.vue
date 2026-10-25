@@ -102,7 +102,8 @@
                     type="number"
                     min="0"
                     max="10"
-                    step="0.1"
+                    step="1"
+                    placeholder="Nota entera"
                     :aria-label="`Calificación de ${alumno.apellido}, ${alumno.nombre} en ${asig.materiaAsignacion?.nombre_materia || 'Materia'}`"
                   />
                   <button
@@ -322,9 +323,11 @@ const solicitarEdicion = async (asignacion) => {
 
 const guardarNotaPreceptor = async (alumno, asignacion) => {
   const clave = claveNota(alumno.id_alumno, asignacion.id_asignacion);
-  const valor = Number(notasBorrador[clave]);
-  if (!Number.isFinite(valor) || valor < 0 || valor > 10) {
-    mensajeAccion.value = "Ingresá una calificación entre 0 y 10.";
+  const valorOriginal = notasBorrador[clave];
+  const valor = Number(valorOriginal);
+  if (valorOriginal === "" || valorOriginal === null || valorOriginal === undefined
+    || !Number.isInteger(valor) || valor < 0 || valor > 10) {
+    mensajeAccion.value = "Ingresá una calificación entera entre 0 y 10.";
     errorAccion.value = true;
     return;
   }

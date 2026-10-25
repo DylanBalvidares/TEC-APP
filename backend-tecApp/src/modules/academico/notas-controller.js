@@ -14,10 +14,13 @@ import { exigirEdicionTemporalPreceptor } from "./notas-edicion-service.js";
 
 // Helper para formatear calificacion numérica
 const parseCalificacion = (val) => {
-  if (val === null || val === undefined || val === "") return null;
-  const num = parseFloat(val);
-  if (isNaN(num) || num < 0.0 || num > 10.0) return null;
-  return Math.round(num * 10) / 10;
+  if (val === null || val === undefined) return null;
+  if (typeof val === "string" && val.trim() === "") return null;
+  const num = typeof val === "number"
+    ? val
+    : typeof val === "string" ? Number(val) : Number.NaN;
+  if (!Number.isInteger(num) || num < 0 || num > 10) return null;
+  return num;
 };
 
 /**
@@ -227,7 +230,7 @@ async function crearNota(notaData, idUsuarioAuth, idRolAuth) {
 
     const valorCalificacion = parseCalificacion(calificacion);
     if (valorCalificacion === null) {
-      throw new ErrorHandler(400, "La calificación ingresada no es válida (debe ser un número entre 0.0 y 10.0)");
+      throw new ErrorHandler(400, "La calificación ingresada no es válida (debe ser un número entero entre 0 y 10)");
     }
 
     // Validar asignación y permisos si es profesor
@@ -342,7 +345,7 @@ async function modificarNota(notaData, idUsuarioAuth, idRolAuth) {
 
     const valorCalificacion = parseCalificacion(calificacion);
     if (valorCalificacion === null) {
-      throw new ErrorHandler(400, "La calificación ingresada no es válida (debe ser entre 0.0 y 10.0)");
+      throw new ErrorHandler(400, "La calificación ingresada no es válida (debe ser un entero entre 0 y 10)");
     }
 
     // Si es profesor, verificar que posea esa asignación

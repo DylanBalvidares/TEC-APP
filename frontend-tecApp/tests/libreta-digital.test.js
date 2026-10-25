@@ -6,6 +6,10 @@ const academico = vi.hoisted(() => ({
   obtenerNotasPreceptorCurso: vi.fn(),
   obtenerHistorialNotasAlumno: vi.fn(),
   obtenerNotasProfesor: vi.fn(),
+  obtenerCursos: vi.fn(),
+  obtenerPlanillaAdmin: vi.fn(),
+  modificarNotaService: vi.fn(),
+  eliminarNotaService: vi.fn(),
   guardarNota: vi.fn(),
   obtenerSolicitudesEdicionPreceptor: vi.fn(),
   solicitarEdicionPlanilla: vi.fn(),
@@ -61,6 +65,13 @@ beforeEach(() => {
       notas: [{ id_nota: 1, id_alumno: 8, id_asignacion: 12, calificacion: 7.5 }],
     },
   });
+  academico.obtenerCursos.mockResolvedValue({ success: true, data: [curso] });
+  academico.obtenerPlanillaAdmin.mockResolvedValue({
+    success: true,
+    data: { curso, alumnos, asignaciones: [asignacion], notas: [] },
+  });
+  academico.modificarNotaService.mockResolvedValue({ success: true, data: {} });
+  academico.eliminarNotaService.mockResolvedValue({ success: true, data: {} });
   academico.obtenerAccesosEdicionProfesor.mockResolvedValue({ success: true, data: [] });
   academico.decidirSolicitudEdicion.mockResolvedValue({ success: true, data: {} });
 });
@@ -104,18 +115,36 @@ describe("Libreta Digital del Preceptor", () => {
     const primeraNota = wrapper.find(".grade-editor input");
     await primeraNota.setValue("8.5");
     await wrapper.find(".btn-save-grade-preceptor").trigger("click");
+    expect(academico.guardarNota).not.toHaveBeenCalled();
+    expect(wrapper.text()).toContain("calificación entera");
+
+    await primeraNota.setValue("8");
+    await wrapper.find(".btn-save-grade-preceptor").trigger("click");
     await flushPromises();
 
     expect(academico.guardarNota).toHaveBeenCalledWith({
       id_alumno: 8,
       id_asignacion: 12,
-      calificacion: 8.5,
+      calificacion: 8,
     });
     expect(wrapper.text()).toContain("Edición temporal habilitada");
   });
 });
 
 describe("Libreta Digital del Profesor", () => {
+  it("rechaza notas decimales antes de llamar al servicio", async () => {
+    const wrapper = await montar("../src/components/profesores/views/LibretaDigitalView.vue");
+    const inputs = wrapper.findAll(".grade-input");
+    const botones = wrapper.findAll(".btn-save-grade");
+
+    await inputs[1].setValue("8.5");
+    await botones[1].trigger("click");
+
+    expect(academico.guardarNota).not.toHaveBeenCalled();
+    expect(wrapper.text()).toContain("número entero");
+    expect(inputs[1].attributes("step")).toBe("1");
+  });
+
   it("muestra y resuelve solicitudes de los preceptores", async () => {
     const pendiente = {
       id_solicitud: 4,
@@ -176,5 +205,25 @@ describe("Libreta Digital del Profesor", () => {
     expect(wrapper.findAll(".notas-table tbody tr")).toHaveLength(1);
     expect(wrapper.text()).toContain("Gómez");
     expect(wrapper.text()).not.toContain("Ana, Pérez");
+  });
+});
+
+describe("Libreta Digital del Administrador", () => {
+  it("rechaza notas decimales en el formulario de edición", async () => {
+    const wrapper = await montar("../src/components/administrador/views/LibretaAdminView.vue");
+    await wrapper.find('select[aria-label="Seleccionar curso"]').setValue("4");
+    await flushPromises();
+    await wrapper.find(".icon-btn.edit").trigger("click");
+    const notaInput = document.body.querySelector(".modal-input[type=number]");
+    notaInput.value = "8.5";
+    notaInput.dispatchEvent(new Event("input", { bubbles: true }));
+    await flushPromises();
+    expect(notaInput.value).toBe("8.5");
+    document.body.querySelector("button.tb-btn.primary").click();
+    await flushPromises();
+
+    expect(academico.guardarNota).not.toHaveBeenCalled();
+    expect(academico.modificarNotaService).not.toHaveBeenCalled();
+    expect(notaInput.getAttribute("step")).toBe("1");
   });
 });

@@ -122,11 +122,11 @@
               <div class="grade-input-wrap">
                 <input
                   type="number"
-                  step="0.1"
+                  step="1"
                   min="0"
                   max="10"
                   v-model="calificacionesState[alumno.id_alumno]"
-                  placeholder="Nota (ej. 8.5)"
+                  placeholder="Nota entera (0 a 10)"
                   class="grade-input"
                 />
               </div>
@@ -401,9 +401,9 @@ const guardarCalificacionAlumno = async (alumno) => {
     return;
   }
 
-  const num = parseFloat(rawNota);
-  if (isNaN(num) || num < 0 || num > 10) {
-    setFeedback("La calificación debe estar entre 0.0 y 10.0.", "error");
+  const num = Number(rawNota);
+  if (!Number.isInteger(num) || num < 0 || num > 10) {
+    setFeedback("La calificación debe ser un número entero entre 0 y 10.", "error");
     return;
   }
 

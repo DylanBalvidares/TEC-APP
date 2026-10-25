@@ -64,6 +64,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   boletines.obtenerPeriodosBoletin.mockResolvedValue({ success: true, data: [periodo] });
   boletines.obtenerCargaProfesorBoletin.mockResolvedValue(planillaDocente(false));
+  boletines.guardarCalificacionBoletin.mockResolvedValue({ success: true, data: {} });
   boletines.obtenerReaperturasBoletin.mockResolvedValue({ success: true, data: [] });
   academico.obtenerCursos.mockResolvedValue({ success: true, data: [{ id_curso: 4, nombre_curso: "2º A" }] });
   academico.obtenerCursosPreceptor.mockResolvedValue({ success: true, data: [{ id_curso: 4, nombre_curso: "2º A" }] });
@@ -91,6 +92,29 @@ describe("flujo de recepción de boletines", () => {
     expect(wrapper.find("input[type=number]").element.disabled).toBe(true);
     expect(wrapper.find("button.btn-finalizar").element.disabled).toBe(true);
     wrapper.unmount();
+  });
+
+  it("solo envía valores enteros en la calificación numérica", async () => {
+    boletines.obtenerCargaProfesorBoletin.mockResolvedValue(planillaDocente(true));
+    const wrapper = await montar("../src/components/profesores/views/BoletinProfesorView.vue");
+    const input = wrapper.find('input[type="number"]');
+
+    expect(input.attributes("step")).toBe("1");
+    await input.setValue("8.5");
+    await wrapper.find("button.btn-guardar").trigger("click");
+    expect(boletines.guardarCalificacionBoletin).not.toHaveBeenCalled();
+
+    await input.setValue("8");
+    await wrapper.find("button.btn-guardar").trigger("click");
+    await flushPromises();
+    expect(boletines.guardarCalificacionBoletin).toHaveBeenCalledWith({
+      id_periodo: 3,
+      id_asignacion: 12,
+      id_alumno: 8,
+      tipo: "numerica",
+      valor: 8,
+      motivo: null,
+    });
   });
 
   it("permite enviar una planilla completa y la registra como finalizada", async () => {
