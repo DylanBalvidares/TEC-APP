@@ -1,7 +1,20 @@
 <template>
   <div class="boletin-profesor">
     <div class="boletines-header">
-      <h1><i class="fas fa-file-signature"></i> Boletines Cuatrimestrales</h1>
+      <h1>
+        <i class="fas fa-file-signature"></i> Boletines Cuatrimestrales
+        <HelpPopover
+          tipo="popover"
+          titulo="Cierre de Cuatrimestre"
+          icono="fas fa-circle-question"
+          icono-titulo="fas fa-calendar-check"
+          posicion="bottom"
+          aria-label="Ayuda sobre boletines cuatrimestrales"
+        >
+          <p>Cargá tu planilla personal de cierre para el período cuatrimestral seleccionado.</p>
+          <p style="margin-top: 6px;">Una vez que finalices la planilla, quedará lista para que preceptoría y administración generen el consolidado oficial.</p>
+        </HelpPopover>
+      </h1>
       <p>Cargá tu planilla personal. Administración habilita la recepción al abrir el período; al enviarla, el preceptor podrá consultarla. El 0 es válido y la ausencia de dato queda pendiente.</p>
     </div>
 

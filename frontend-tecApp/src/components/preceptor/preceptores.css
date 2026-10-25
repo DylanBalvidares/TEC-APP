@@ -783,3 +783,242 @@ body {
     }
 
 }
+
+/* =========================================================
+   GUÍAS Y MENSAJES EXPLICATIVOS COMUNES
+========================================================= */
+
+.preceptor-info-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: #f0f7ff;
+    border: 1px solid #bae0fd;
+    border-left: 4px solid #0284c7;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    color: #0f4c81;
+    font-size: 13.5px;
+    line-height: 1.45;
+}
+
+.preceptor-info-banner i {
+    font-size: 18px;
+    color: #0284c7;
+    margin-top: 1px;
+    flex-shrink: 0;
+}
+
+.preceptor-info-banner.subtle {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    border-left-color: #64748b;
+    color: #334155;
+}
+
+.preceptor-info-banner.subtle i {
+    color: #64748b;
+}
+
+.preceptor-field-hint {
+    display: block;
+    margin-top: 5px;
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.35;
+}
+
+.preceptor-field-hint i {
+    font-size: 11px;
+    margin-right: 3px;
+    color: #94a3b8;
+}
+
+/* =========================================================
+   TOOLTIPS Y POPOVERS EXPLICATIVOS
+========================================================= */
+
+/* Disparador de Tooltip / Popover */
+.preceptor-help-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    margin-left: 6px;
+    border: none;
+    border-radius: 50%;
+    background: #e2e8f0;
+    color: #475569;
+    font-size: 11px;
+    cursor: pointer;
+    vertical-align: middle;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.preceptor-help-btn:hover,
+.preceptor-help-btn:focus {
+    background: #0284c7;
+    color: #ffffff;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.25);
+}
+
+.preceptor-help-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Tooltip (información corta: 1-2 líneas) */
+.preceptor-tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    background: #1e293b;
+    color: #f8fafc;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.35;
+    white-space: normal;
+    width: max-content;
+    max-width: 240px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 1050;
+    text-align: left;
+}
+
+/* Flecha tooltip */
+.preceptor-tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: #1e293b transparent transparent transparent;
+}
+
+/* Popover (información extendida, títulos, listas o párrafos explicativos) */
+.preceptor-popover {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 0;
+    background: #ffffff;
+    color: #1e293b;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 12px 14px;
+    width: 290px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-4px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 1060;
+    text-align: left;
+    font-size: 12.5px;
+    line-height: 1.45;
+}
+
+/* Flecha popover */
+.preceptor-popover::after {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 12px;
+    border-width: 6px;
+    border-style: solid;
+    border-color: transparent transparent #ffffff transparent;
+}
+.preceptor-popover::before {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 11px;
+    border-width: 7px;
+    border-style: solid;
+    border-color: transparent transparent #cbd5e1 transparent;
+}
+
+.preceptor-popover-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    font-size: 13px;
+    color: #0f172a;
+    margin-bottom: 6px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.preceptor-popover-title i {
+    color: #0284c7;
+    font-size: 13px;
+}
+
+.preceptor-popover-body {
+    color: #475569;
+}
+
+/* Estados activos en hover / focus / clase visible */
+.preceptor-help-wrapper:hover .preceptor-tooltip,
+.preceptor-help-wrapper:focus-within .preceptor-tooltip,
+.preceptor-help-wrapper:hover .preceptor-popover,
+.preceptor-help-wrapper:focus-within .preceptor-popover,
+.preceptor-popover.is-open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0) translateY(0);
+}
+
+.preceptor-help-wrapper:hover .preceptor-tooltip,
+.preceptor-help-wrapper:focus-within .preceptor-tooltip {
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Variación alinear derecha para popover */
+.preceptor-popover.align-right {
+    left: auto;
+    right: 0;
+}
+.preceptor-popover.align-right::after {
+    left: auto;
+    right: 12px;
+}
+.preceptor-popover.align-right::before {
+    left: auto;
+    right: 11px;
+}
+
+/* Banner plegable / con popover informativo */
+.preceptor-guide-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #e0f2fe;
+    color: #0369a1;
+    padding: 5px 12px;
+    border-radius: 9999px;
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid #bae6fd;
+    transition: all 0.2s ease;
+}
+
+.preceptor-guide-badge:hover {
+    background: #bae6fd;
+    color: #0284c7;
+}

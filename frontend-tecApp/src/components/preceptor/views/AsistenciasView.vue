@@ -4,12 +4,25 @@
     <!-- Encabezado de la página -->
     <header class="as-head">
       <div>
-        <h1>Asistencias <span class="as-title-icon">✓</span></h1>
-        <p>Registrá y gestioná las asistencias de los alumnos.</p>
+        <h1>
+          Asistencias <span class="as-title-icon">✓</span>
+          <HelpPopover
+            tipo="popover"
+            titulo="Gestión de Presentismo"
+            icono="fas fa-circle-question"
+            icono-titulo="fas fa-calendar-check"
+            posicion="bottom"
+            aria-label="Ayuda sobre asistencias"
+          >
+            <p>Podés registrar asistencia en lote mediante <strong>+ Tomar asistencia</strong> o ajustar alumnos desde la grilla.</p>
+            <p style="margin-top: 6px;">Las inasistencias computan para el índice de regularidad general del estudiante.</p>
+          </HelpPopover>
+        </h1>
+        <p>Registrá y gestioná las asistencias diarias y por materia de los alumnos a tu cargo.</p>
       </div>
 
       <div class="as-actions">
-        <button class="as-btn as-btn-outline" @click="abrirImportador">
+        <button class="as-btn as-btn-outline" @click="abrirImportador" title="Cargar asistencias desde un archivo CSV o TXT">
           ↑ Importar desde archivo
         </button>
         <input
@@ -286,7 +299,25 @@
     <div v-if="modalTomar" class="as-modal" @click.self="modalTomar = false">
       <div class="as-modal-box">
         <div class="as-modal-head">
-          <h2>Tomar asistencia</h2>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <h2>Tomar asistencia</h2>
+            <HelpPopover
+              tipo="popover"
+              titulo="Carga Rápida y Estados"
+              icono="fas fa-circle-question"
+              icono-titulo="fas fa-check-double"
+              posicion="bottom"
+              aria-label="Ayuda sobre toma de asistencia"
+            >
+              <p>Presioná <strong>Todos presentes</strong> y modificá únicamente las inasistencias.</p>
+              <ul style="margin: 6px 0 0 16px; padding: 0;">
+                <li><strong>Presente (P):</strong> En horario.</li>
+                <li><strong>Ausente (A):</strong> Sin concurrencia.</li>
+                <li><strong>Tarde (T):</strong> Ingreso posterior.</li>
+                <li><strong>Justificada (J):</strong> Certificado presentado.</li>
+              </ul>
+            </HelpPopover>
+          </div>
           <button class="as-close" @click="modalTomar = false">×</button>
         </div>
 
@@ -396,6 +427,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
+import HelpPopover from "@/components/ui/HelpPopover.vue";
 
 import {
   obtenerCursosPreceptor,

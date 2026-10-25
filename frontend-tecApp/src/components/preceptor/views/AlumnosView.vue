@@ -13,7 +13,20 @@
       <!-- HEADER -->
       <div class="alumnos-header">
         <div>
-          <h1>Alumnos</h1>
+          <h1>
+            Alumnos
+            <HelpPopover
+              tipo="popover"
+              titulo="Gestión de Alumnos"
+              icono="fa-solid fa-circle-question"
+              icono-titulo="fa-solid fa-users"
+              posicion="bottom"
+              aria-label="Ayuda sobre nómina de alumnos"
+            >
+              <p>Podés buscar por <strong>nombre, apellido, DNI o tutor</strong>.</p>
+              <p style="margin-top: 6px;">Usá <strong>Agregar alumno</strong> para matricular un nuevo estudiante en el curso o <strong>Comunicar al curso</strong> para enviar un aviso general.</p>
+            </HelpPopover>
+          </h1>
 
           <p v-if="cursoSeleccionado">
             Alumnos de {{ cursoSeleccionado.nombre_curso || cursoSeleccionado.nombre }}
@@ -361,7 +374,14 @@
             </div>
 
             <div class="form-grupo">
-              <label>DNI *</label>
+              <label>
+                DNI *
+                <HelpPopover
+                  tipo="tooltip"
+                  texto="Ingresá 7 u 8 números sin puntos ni espacios."
+                  aria-label="Ayuda sobre DNI"
+                />
+              </label>
 
               <input
                 v-model="formulario.dni"
@@ -372,7 +392,14 @@
             </div>
 
             <div class="form-grupo">
-              <label>Fecha de nacimiento *</label>
+              <label>
+                Fecha de nacimiento *
+                <HelpPopover
+                  tipo="tooltip"
+                  texto="Requerida para la ficha de matriculación y legajo oficial."
+                  aria-label="Ayuda sobre fecha de nacimiento"
+                />
+              </label>
 
               <input
                 v-model="formulario.fecha_nacimiento"
@@ -382,14 +409,21 @@
             </div>
 
             <div class="form-grupo">
-                <label>Gmail *</label>
-
-                <input
-                  v-model="formulario.email"
-                  type="email"
-                  placeholder="Ej. juan.perez@gmail.com"
-                  required
+              <label>
+                Gmail *
+                <HelpPopover
+                  tipo="tooltip"
+                  texto="Correo institucional o de contacto del estudiante."
+                  aria-label="Ayuda sobre correo"
                 />
+              </label>
+
+              <input
+                v-model="formulario.email"
+                type="email"
+                placeholder="Ej. juan.perez@gmail.com"
+                required
+              />
             </div>
 
           </div>
@@ -418,7 +452,14 @@
             </div>
 
             <div class="form-grupo">
-              <label>Teléfono *</label>
+              <label>
+                Teléfono *
+                <HelpPopover
+                  tipo="tooltip"
+                  texto="Código de área sin 0 y número sin 15. Usado para WhatsApp."
+                  aria-label="Ayuda sobre teléfono"
+                />
+              </label>
 
               <TelefonoInput
                 v-model="formulario.telefono_tutor"
@@ -430,7 +471,14 @@
             </div>
 
             <div class="form-grupo">
-              <label>Domicilio *</label>
+              <label>
+                Domicilio *
+                <HelpPopover
+                  tipo="tooltip"
+                  texto="Calle, altura y localidad de residencia del alumno."
+                  aria-label="Ayuda sobre domicilio"
+                />
+              </label>
 
               <input
                 v-model="formulario.domicilio"
@@ -465,7 +513,21 @@
             </div>
 
             <div class="form-grupo">
-              <label>Estado</label>
+              <label>
+                Estado
+                <HelpPopover
+                  tipo="popover"
+                  titulo="Estados del Estudiante"
+                  icono="fa-solid fa-circle-info"
+                  icono-titulo="fa-solid fa-user-check"
+                  posicion="bottom-right"
+                  aria-label="Información de estados de alumno"
+                >
+                  <p><strong>Activo:</strong> Figura en listas de asistencia, calificaciones y libreta digital.</p>
+                  <p style="margin-top: 6px;"><strong>Condicional:</strong> Posee documentación pendiente o pase provisorio en trámite.</p>
+                  <p style="margin-top: 6px;"><strong>Inactivo:</strong> Baja o egreso; no computa para asistencia activa.</p>
+                </HelpPopover>
+              </label>
 
               <select v-model="formulario.estado">
                 <option value="activo">Activo</option>
@@ -739,6 +801,13 @@
             </strong>
           </div>
 
+          <HelpPopover
+            tipo="tooltip"
+            texto="Llegará al panel institucional y notificaciones de alumnos y tutores de este curso."
+            posicion="bottom-right"
+            aria-label="Ayuda sobre destinatarios del curso"
+          />
+
         </div>
 
 
@@ -865,6 +934,7 @@ import {
 
 import TelefonoInput from "@/components/ui/TelefonoInput.vue";
 import UserAccessPanel from "@/components/ui/UserAccessPanel.vue";
+import HelpPopover from "@/components/ui/HelpPopover.vue";
 import { validarTelefonoAR, validarEmail } from "@/utils/validators.js";
 
 

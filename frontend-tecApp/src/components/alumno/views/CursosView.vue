@@ -2,7 +2,21 @@
   <main class="content">
     <header class="page-header">
       <div class="page-header-text">
-        <h1><i class="fas fa-graduation-cap header-icon"></i> Mi curso</h1>
+        <h1>
+          <i class="fas fa-graduation-cap header-icon"></i> Mi curso
+          <HelpPopover
+            tipo="popover"
+            titulo="Espacio de tu Curso"
+            icono="fas fa-circle-question"
+            icono-titulo="fas fa-users"
+            posicion="bottom"
+            aria-label="Ayuda sobre mi curso"
+          >
+            <p><strong>Mis Materias:</strong> Lista de materias asignadas a tu división.</p>
+            <p style="margin-top: 5px;"><strong>Comunicados:</strong> Mensajes y avisos dirigidos a tu curso.</p>
+            <p style="margin-top: 5px;"><strong>Participantes:</strong> Tus compañeros de clase y preceptores a cargo.</p>
+          </HelpPopover>
+        </h1>
         <p>Consultá tus materias, comunicados y las personas que forman parte de tu curso.</p>
       </div>
     </header>

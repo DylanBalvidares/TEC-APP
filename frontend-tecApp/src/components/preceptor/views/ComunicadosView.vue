@@ -15,7 +15,20 @@
                 />
 
                 <div>
-                    <h1>Comunicados</h1>
+                    <h1>
+                        Comunicados
+                        <HelpPopover
+                            tipo="popover"
+                            titulo="Centro de Comunicaciones"
+                            icono="fa-solid fa-circle-question"
+                            icono-titulo="fa-solid fa-bullhorn"
+                            posicion="bottom"
+                            aria-label="Ayuda sobre comunicados"
+                        >
+                            <p>Los comunicados institucionales emitidos quedan registrados en el historial de la sección.</p>
+                            <p style="margin-top: 6px;">Podés supervisar el porcentaje y detalle de <strong>confirmación de lectura</strong> de cada familia y alumno.</p>
+                        </HelpPopover>
+                    </h1>
 
                     <p>
                         Gestioná los comunicados enviados a alumnos,
@@ -540,6 +553,11 @@
 
                         <label for="importancia">
                             Importancia
+                            <HelpPopover
+                                tipo="tooltip"
+                                texto="Alta resalta con distintivo rojo y prioridad de lectura."
+                                aria-label="Ayuda sobre importancia"
+                            />
                         </label>
 
                         <select
@@ -568,6 +586,17 @@
 
                         <label for="destino">
                             Destinatarios
+                            <HelpPopover
+                                tipo="popover"
+                                titulo="Alcance de Envío"
+                                icono="fa-solid fa-circle-info"
+                                icono-titulo="fa-solid fa-users"
+                                posicion="bottom"
+                                aria-label="Información sobre destinatarios"
+                            >
+                                <p><strong>Todos:</strong> Notifica a toda la comunidad educativa de la institución.</p>
+                                <p style="margin-top: 5px;"><strong>Un curso:</strong> Restringe la lectura únicamente a los alumnos matriculados en la división y sus respectivos tutores.</p>
+                            </HelpPopover>
                         </label>
 
                         <select
@@ -709,6 +738,7 @@ import {
 } from "@/services/comunidad-service.js";
 
 import ConfirmacionesLectura from "../../ui/ConfirmacionesLectura.vue";
+import HelpPopover from "@/components/ui/HelpPopover.vue";
 import Modal from "../../ui/Modal.vue";
 
 import {

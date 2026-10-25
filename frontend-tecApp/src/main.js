@@ -6,11 +6,13 @@ import { useAuthStore } from "./stores/auth";
 import axios from "axios";
 import "./style.css";
 import "./assets/admin-shared.css";
+import HelpPopover from "./components/ui/HelpPopover.vue";
 
 const app = createApp(App);
 const pinia = createPinia();
 
 app.use(pinia);
+app.component("HelpPopover", HelpPopover);
 
 // Configuración global de Axios para inyectar Token automáticamente
 axios.interceptors.request.use(

@@ -28,6 +28,17 @@
                     <div class="card-title">
                         <i class="ti ti-users" aria-hidden="true"></i>
                         Gestión de usuarios
+                        <HelpPopover
+                            tipo="popover"
+                            titulo="Gestión de Cuentas y Accesos"
+                            icono="fas fa-circle-question"
+                            icono-titulo="fas fa-users-cog"
+                            posicion="bottom"
+                            aria-label="Ayuda sobre gestión de usuarios"
+                        >
+                            <p>Administrá las cuentas de acceso a la plataforma (alumnos, docentes, preceptores, directivos).</p>
+                            <p style="margin-top: 6px;">Podés crear nuevos usuarios, restablecer contraseñas y asignar roles o permisos específicos del sistema.</p>
+                        </HelpPopover>
                     </div>
                     <button
                         @click="cambiarVista('crear')"

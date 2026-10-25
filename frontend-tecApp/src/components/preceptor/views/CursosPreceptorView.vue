@@ -6,10 +6,23 @@
     ========================== -->
 
     <div class="boletines-header">
-      <h1>Cursos</h1>
+      <h1>
+        Cursos a cargo
+        <HelpPopover
+          tipo="popover"
+          titulo="Guía de Cursos Asignados"
+          icono="fas fa-circle-question"
+          icono-titulo="fas fa-school"
+          posicion="bottom"
+          aria-label="Ayuda sobre cursos asignados"
+        >
+          <p>Seleccioná <strong>Ver alumnos</strong> para gestionar la nómina del curso (datos de contacto, tutores y matriculación).</p>
+          <p style="margin-top: 6px;">Seleccioná <strong>Ver boletines</strong> para consultar las planillas de calificaciones por período.</p>
+        </HelpPopover>
+      </h1>
 
       <p>
-        Seleccioná qué querés consultar del curso.
+        Gestioná los cursos asignados: consultá o agregá alumnos y revisá las calificaciones y boletines.
       </p>
     </div>
 
@@ -134,6 +147,7 @@
 
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import HelpPopover from "@/components/ui/HelpPopover.vue";
 
 import {
   obtenerCursosPreceptor

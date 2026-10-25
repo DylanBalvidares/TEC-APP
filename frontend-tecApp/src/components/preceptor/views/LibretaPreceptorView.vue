@@ -3,7 +3,20 @@
     <div class="boletines-header libreta-intro">
       <div>
         <span class="libreta-eyebrow">Seguimiento académico</span>
-        <h1><InlineIcon name="book-open" :size="22" /> Libreta Digital</h1>
+        <h1>
+          <InlineIcon name="book-open" :size="22" /> Libreta Digital
+          <HelpPopover
+            tipo="popover"
+            titulo="Planilla de Calificaciones"
+            icono="fas fa-circle-question"
+            icono-titulo="fas fa-graduation-cap"
+            posicion="bottom"
+            aria-label="Ayuda sobre libreta digital"
+          >
+            <p>Como preceptor tenés acceso de supervisión y seguimiento pedagógico (solo lectura).</p>
+            <p style="margin-top: 6px;">Las notas son cargadas periódicamente por los docentes. Podés hacer clic en el reloj <i class="fas fa-clock-rotate-left"></i> para inspeccionar el historial de cada estudiante.</p>
+          </HelpPopover>
+        </h1>
         <p>Consultá las calificaciones de tus cursos y solicitá acceso temporal para corregir una planilla.</p>
       </div>
       <div class="libreta-privacy"><InlineIcon name="shield" :size="19" /><span>La edición requiere autorización del profesor titular</span></div>
@@ -191,6 +204,7 @@
 <script setup>
 import { ref, computed, reactive, onMounted } from "vue";
 import InlineIcon from "@/components/ui/InlineIcon.vue";
+import HelpPopover from "@/components/ui/HelpPopover.vue";
 import {
   obtenerCursosPreceptor,
   obtenerNotasPreceptorCurso,

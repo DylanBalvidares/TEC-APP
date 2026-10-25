@@ -1,7 +1,20 @@
 <template>
   <div class="preceptor-view boletines-preceptor">
     <header class="boletines-header">
-      <h1><i class="fas fa-file-invoice" aria-hidden="true"></i> Boletines Cuatrimestrales</h1>
+      <h1>
+        <i class="fas fa-file-invoice" aria-hidden="true"></i> Boletines Cuatrimestrales
+        <HelpPopover
+          tipo="popover"
+          titulo="Boletines y Cierres"
+          icono="fas fa-circle-question"
+          icono-titulo="fas fa-file-lines"
+          posicion="bottom"
+          aria-label="Ayuda sobre boletines cuatrimestrales"
+        >
+          <p>Supervisá el estado de cierre cuatrimestral de cada materia asignada al curso.</p>
+          <p style="margin-top: 6px;">Cuando todas las asignaturas estén finalizadas por los docentes, el consolidado general se generará automáticamente para consulta formal (solo lectura).</p>
+        </HelpPopover>
+      </h1>
       <p>Consultá las calificaciones finales por período. Las planillas y el consolidado son de solo lectura.</p>
     </header>
 
@@ -138,6 +151,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from "vue";
+import HelpPopover from "@/components/ui/HelpPopover.vue";
 import { obtenerCursosPreceptor } from "@/services/academico-service.js";
 import {
   obtenerPeriodosBoletin,
