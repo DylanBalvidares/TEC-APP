@@ -77,6 +77,7 @@ describe("Libreta Digital del Preceptor", () => {
       .mockResolvedValueOnce({ success: true, data: [{ id_asignacion: 12, estado: "pendiente" }] });
     const wrapper = await montar("../src/components/preceptor/views/LibretaPreceptorView.vue");
 
+    expect(wrapper.findAll("i[class*='fa-']")).toHaveLength(0);
     expect(wrapper.findAll(".planilla-table tbody tr")).toHaveLength(2);
     expect(wrapper.find('.btn-history-icon [data-icon="history"]').exists()).toBe(true);
     expect(wrapper.find('.btn-request-edit [data-icon="key"]').exists()).toBe(true);

@@ -3,15 +3,15 @@
     <div class="boletines-header libreta-intro">
       <div>
         <span class="libreta-eyebrow">Seguimiento académico</span>
-        <h1><i class="fas fa-book-open" aria-hidden="true"></i> Libreta Digital</h1>
+        <h1><InlineIcon name="book-open" :size="22" /> Libreta Digital</h1>
         <p>Consultá las calificaciones de tus cursos y solicitá acceso temporal para corregir una planilla.</p>
       </div>
-      <div class="libreta-privacy"><i class="fas fa-shield-halved" aria-hidden="true"></i><span>La edición requiere autorización del profesor titular</span></div>
+      <div class="libreta-privacy"><InlineIcon name="shield" :size="19" /><span>La edición requiere autorización del profesor titular</span></div>
     </div>
 
     <!-- ── Selector de Curso ── -->
     <div class="cursos-selector-wrap" v-if="!cargandoCursos && cursos.length > 0">
-      <label for="cursoSelect"><i class="fas fa-users" aria-hidden="true"></i><strong>Curso a consultar</strong></label>
+      <label for="cursoSelect"><InlineIcon name="users" :size="16" /><strong>Curso a consultar</strong></label>
       <select id="cursoSelect" v-model="cursoSeleccionadoId" @change="onCursoChange" class="select-curso">
         <option value="" disabled>Seleccioná un curso...</option>
         <option v-for="c in cursos" :key="c.id_curso" :value="c.id_curso">
@@ -22,19 +22,19 @@
 
     <!-- ── Estados de Carga / Vacio ── -->
     <div v-if="cargandoCursos" class="mensaje-estado">
-      <i class="fas fa-spinner fa-spin"></i> Cargando tus cursos...
+      <InlineIcon name="spinner" /> Cargando tus cursos...
     </div>
 
     <div v-else-if="cursos.length === 0" class="mensaje-estado">
-      <i class="fas fa-school"></i> No tenés cursos asignados a tu cargo.
+      <InlineIcon name="school" /> No tenés cursos asignados a tu cargo.
     </div>
 
     <div v-else-if="cargandoPlanilla" class="mensaje-estado">
-      <i class="fas fa-spinner fa-spin"></i> Cargando planilla de calificaciones...
+      <InlineIcon name="spinner" /> Cargando planilla de calificaciones...
     </div>
 
     <div v-else-if="errorPlanilla" class="mensaje-estado error">
-      <i class="fas fa-circle-exclamation"></i> {{ errorPlanilla }}
+      <InlineIcon name="alert" /> {{ errorPlanilla }}
     </div>
 
     <!-- ── Planilla Consolidada ── -->
@@ -45,20 +45,20 @@
           <h2>{{ cursoActual?.nombre_curso }}</h2>
         </div>
         <span v-if="asignaciones.some((a) => permisoActivo(a.id_asignacion))" class="read-only-badge editing-badge">
-          <i class="fas fa-pen-to-square" aria-hidden="true"></i> Edición temporal habilitada
+          <InlineIcon name="edit" /> Edición temporal habilitada
         </span>
-        <span v-else class="read-only-badge"><i class="fas fa-eye" aria-hidden="true"></i> Solo lectura</span>
+        <span v-else class="read-only-badge"><InlineIcon name="eye" /> Solo lectura</span>
       </div>
 
       <div class="resumen-libretas" aria-label="Resumen del curso">
-        <div class="resumen-card"><i class="fas fa-user-graduate" aria-hidden="true"></i><span><strong>{{ alumnos.length }}</strong><small>Alumnos</small></span></div>
-        <div class="resumen-card"><i class="fas fa-book" aria-hidden="true"></i><span><strong>{{ asignaciones.length }}</strong><small>Materias</small></span></div>
-        <div class="resumen-card"><i class="fas fa-clipboard-check" aria-hidden="true"></i><span><strong>{{ cantidadNotas }}</strong><small>Calificaciones cargadas</small></span></div>
+        <div class="resumen-card"><InlineIcon name="student" :size="20" /><span><strong>{{ alumnos.length }}</strong><small>Alumnos</small></span></div>
+        <div class="resumen-card"><InlineIcon name="book" :size="20" /><span><strong>{{ asignaciones.length }}</strong><small>Materias</small></span></div>
+        <div class="resumen-card"><InlineIcon name="clipboard-check" :size="20" /><span><strong>{{ cantidadNotas }}</strong><small>Calificaciones cargadas</small></span></div>
       </div>
 
       <div class="libreta-table-tools">
         <label class="buscador-alumno" for="buscarAlumnoLibreta">
-          <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+          <InlineIcon name="search" :size="16" />
           <input id="buscarAlumnoLibreta" v-model="busquedaAlumno" type="search" placeholder="Buscar alumno por nombre o apellido" />
         </label>
         <p>Las calificaciones se editan por materia cuando el profesor habilita el acceso.</p>
@@ -153,7 +153,7 @@
           </p>
 
           <div v-if="cargandoHistorial" class="text-center py-4">
-            <i class="fas fa-spinner fa-spin"></i> Cargando historial...
+            <InlineIcon name="spinner" /> Cargando historial...
           </div>
           <div v-else-if="historialItems.length === 0" class="empty-historial">
             Sin cambios de calificaciones registrados para este alumno.
@@ -170,7 +170,7 @@
                   <span class="calif-change">
                     <span v-if="item.calificacion_anterior !== null" class="prev-val">{{ item.calificacion_anterior }}</span>
                     <span v-else class="prev-val text-muted">Sin nota</span>
-                    <i class="fas fa-arrow-right arrow-icon"></i>
+                    <InlineIcon name="arrow-right" class="arrow-icon" />
                     <span class="new-val">{{ item.calificacion_nueva }}</span>
                   </span>
                   <p class="mod-by">Modificado por: <strong>{{ item.usuarioModificador ? `${item.usuarioModificador.nombre} ${item.usuarioModificador.apellido}` : 'Profesor' }}</strong></p>
@@ -442,10 +442,10 @@ onMounted(() => {
 
 .libreta-eyebrow { display: block; margin-bottom: 5px; color: #9f1239; font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
 .libreta-intro h1 { margin: 0 0 5px; color: #172033; font-size: clamp(1.5rem, 2.6vw, 2rem); }
-.libreta-intro h1 i { margin-right: 8px; color: #b42335; }
+.libreta-intro h1 .inline-icon { margin-right: 8px; color: #b42335; }
 .libreta-intro p { max-width: 680px; margin: 0; color: #64748b; }
 .libreta-privacy { display: flex; align-items: center; gap: 10px; max-width: 265px; padding: 12px 14px; border: 1px solid #fecdd3; border-radius: 12px; background: #fff; color: #7f1d1d; font-size: .82rem; font-weight: 700; }
-.libreta-privacy i { font-size: 1.15rem; }
+.libreta-privacy .inline-icon { flex: 0 0 auto; }
 
 .boletines-header h1 {
   font-size: 1.6rem;
@@ -470,7 +470,7 @@ onMounted(() => {
 }
 
 .cursos-selector-wrap label { display: inline-flex; align-items: center; gap: 8px; color: #334155; }
-.cursos-selector-wrap label i { color: #b42335; }
+.cursos-selector-wrap label .inline-icon { color: #b42335; }
 
 .select-curso {
   padding: 10px 14px;
@@ -526,7 +526,7 @@ onMounted(() => {
 .editing-badge { background: #ecfdf5; color: #047857; }
 .resumen-libretas { display: grid; grid-template-columns: repeat(3, minmax(140px, 1fr)); gap: 12px; margin: 18px 0; }
 .resumen-card { display: flex; align-items: center; gap: 12px; min-height: 72px; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fbfdff; }
-.resumen-card > i { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 11px; background: #fff1f2; color: #b42335; }
+.resumen-card > .inline-icon { box-sizing: border-box; width: 38px; height: 38px; padding: 9px; border-radius: 11px; background: #fff1f2; color: #b42335; }
 .resumen-card span { display: grid; gap: 2px; }
 .resumen-card strong { color: #172033; font-size: 1.12rem; }
 .resumen-card small { color: #64748b; font-size: .75rem; }
