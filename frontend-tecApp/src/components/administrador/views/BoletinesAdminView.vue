@@ -29,7 +29,7 @@
         <div>
           <p class="panel-kicker">Configuración</p>
           <h2 id="periodos-title">Períodos de carga</h2>
-          <p>Definí las fechas y el estado que habilitan la carga docente.</p>
+          <p>Definí cuándo se reciben las planillas. Al abrir el período, los docentes pueden cargar y enviar sus calificaciones.</p>
         </div>
         <span class="panel-count">{{ periodos.length }} {{ periodos.length === 1 ? "período" : "períodos" }}</span>
       </div>
@@ -45,7 +45,7 @@
       </div>
       <div v-else class="boletin-table-wrap">
         <table class="boletin-table" aria-label="Períodos de carga de boletines">
-          <thead><tr><th>Período</th><th>Vigencia</th><th>Estado de carga</th><th class="actions-col">Acción</th></tr></thead>
+          <thead><tr><th>Período</th><th>Vigencia</th><th>Recepción de planillas</th><th class="actions-col">Acción</th></tr></thead>
           <tbody>
             <tr v-for="p in periodos" :key="p.id_periodo">
               <td>
@@ -60,7 +60,7 @@
                   <span :class="['state-dot', `dot-${p.estado}`]" aria-hidden="true"></span>
                   <select v-model="p.estado" :disabled="guardandoEstado[p.id_periodo]" :aria-label="`Estado del período ${p.ciclo_lectivo}, cuatrimestre ${p.cuatrimestre}`" @change="cambiarEstado(p)">
                     <option value="programado">Programado</option>
-                    <option value="abierto">Abierto</option>
+                    <option value="abierto">Abierto · habilita carga y envío</option>
                     <option value="cerrado">Cerrado</option>
                   </select>
                   <span v-if="p.vigente" class="vigente-tag">En fecha</span>

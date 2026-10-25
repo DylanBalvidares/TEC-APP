@@ -116,4 +116,18 @@ describe("Sidebar — modos de visualización", () => {
     expect(wrapper.emitted("cambiar-vista")[0]).toEqual(["alumnos"]);
     wrapper.unmount();
   });
+
+  it("agrupa Boletines dentro de Académico", () => {
+    const wrapper = mount(Sidebar, {
+      props: { vistaActual: "boletines", colapsado: false, movilAbierto: false },
+    });
+    const grupoAcademico = wrapper.findAll(".sidebar-group").find((grupo) =>
+      grupo.find("h2").text() === "Academico",
+    );
+
+    expect(grupoAcademico).toBeTruthy();
+    expect(grupoAcademico.text()).toContain("Boletines");
+    expect(wrapper.findAll(".sidebar-group").find((grupo) => grupo.find("h2").text() === "Comunicación").text()).not.toContain("Boletines");
+    wrapper.unmount();
+  });
 });

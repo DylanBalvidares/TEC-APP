@@ -8,18 +8,21 @@
 
       <nav class="sidebar-nav">
         <ul>
+        <li class="sidebar-section" role="presentation">Inicio</li>
         <li>
           <RouterLink to="/alumno/inicio" active-class="active" @click="$emit('close')">
             <div class="nav-icon"><i class="fas fa-home"></i></div>
             <span>Inicio</span>
           </RouterLink>
         </li>
+        <li class="sidebar-section" role="presentation">Comunicación</li>
         <li>
           <RouterLink to="/alumno/noticias" active-class="active" @click="$emit('close')">
             <div class="nav-icon"><i class="fas fa-newspaper"></i></div>
             <span>Noticias</span>
           </RouterLink>
         </li>
+        <li class="sidebar-section" role="presentation">Académico</li>
         <li>
           <RouterLink to="/alumno/cursos" active-class="active" @click="$emit('close')">
             <div class="nav-icon"><i class="fas fa-graduation-cap"></i></div>
@@ -32,6 +35,7 @@
             <span>Libreta Digital</span>
           </RouterLink>
         </li>
+        <li class="sidebar-section" role="presentation">Servicios</li>
         <li>
           <RouterLink to="/alumno/objetos-perdidos" active-class="active" @click="$emit('close')">
             <div class="nav-icon"><i class="fas fa-box"></i></div>
@@ -167,6 +171,9 @@ defineEmits(["close"]);
   font-weight: 500;
   color: rgba(255, 255, 255, 0.8);
 }
+
+.sidebar-nav li.sidebar-section { padding: 12px 14px 4px; color: rgba(255,255,255,.65); font-size: .68rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; cursor: default; }
+.sidebar-nav li.sidebar-section:hover { background: transparent; }
 
 .sidebar-nav li:hover {
   background: rgba(255, 255, 255, 0.12);
