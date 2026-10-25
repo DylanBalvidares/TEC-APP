@@ -512,15 +512,17 @@ function normalizarLista(resultado) {
 }
 
 function normalizarCurso(curso) {
-  return (
-  [
+  const nombre = curso.nombre_curso || [
     curso.anio != null ? `${curso.anio}° año` : "",
     curso.division ?? "",
-  ]
-    .filter(Boolean)
-    .join(" ") || "Curso"
-  );
-};
+  ].filter(Boolean).join(" ") || "Curso";
+
+  return {
+    ...curso,
+    id: curso.id_curso ?? curso.id,
+    nombre,
+  };
+}
 
 
 function normalizarAlumno(alumno) {
