@@ -2,7 +2,7 @@
   <div class="auth-wrapper">
     <div class="auth-card">
       <div class="auth-header">
-        <div class="logo-dot">TA</div>
+        <div class="logo-dot"><img src="/logoEscuela.png" alt="Logo de la escuela" width="26" height="26" /></div>
         <div class="brand-text">
           <h1>Iniciar sesión</h1>
           <p>Ingresa a tu cuenta para continuar</p>

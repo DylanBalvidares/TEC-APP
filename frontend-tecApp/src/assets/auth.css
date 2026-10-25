@@ -33,6 +33,12 @@
     color: #fff;
     font-weight: 600;
 }
+.logo-dot img {
+    display: block;
+    width: 26px;
+    height: 26px;
+    object-fit: contain;
+}
 .brand-text h1 {
     font-size: 18px;
     color: #111827;
