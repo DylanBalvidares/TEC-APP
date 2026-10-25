@@ -9,7 +9,7 @@ const academico = vi.hoisted(() => ({
   guardarNota: vi.fn(),
   obtenerSolicitudesEdicionPreceptor: vi.fn(),
   solicitarEdicionPlanilla: vi.fn(),
-  obtenerSolicitudesEdicionPendientes: vi.fn(),
+  obtenerAccesosEdicionProfesor: vi.fn(),
   decidirSolicitudEdicion: vi.fn(),
 }));
 
@@ -61,7 +61,7 @@ beforeEach(() => {
       notas: [{ id_nota: 1, id_alumno: 8, id_asignacion: 12, calificacion: 7.5 }],
     },
   });
-  academico.obtenerSolicitudesEdicionPendientes.mockResolvedValue({ success: true, data: [] });
+  academico.obtenerAccesosEdicionProfesor.mockResolvedValue({ success: true, data: [] });
   academico.decidirSolicitudEdicion.mockResolvedValue({ success: true, data: {} });
 });
 
@@ -119,6 +119,7 @@ describe("Libreta Digital del Profesor", () => {
   it("muestra y resuelve solicitudes de los preceptores", async () => {
     const pendiente = {
       id_solicitud: 4,
+      estado: "pendiente",
       fecha_solicitud: "2026-10-24T12:00:00.000Z",
       asignacion: {
         cursoAsignacion: curso,
@@ -126,7 +127,7 @@ describe("Libreta Digital del Profesor", () => {
       },
       preceptor: { nombre: "Mario", apellido: "Ruiz" },
     };
-    academico.obtenerSolicitudesEdicionPendientes
+    academico.obtenerAccesosEdicionProfesor
       .mockResolvedValueOnce({ success: true, data: [pendiente] })
       .mockResolvedValueOnce({ success: true, data: [] });
     const wrapper = await montar("../src/components/profesores/views/LibretaDigitalView.vue");
@@ -139,6 +140,32 @@ describe("Libreta Digital del Profesor", () => {
     expect(academico.decidirSolicitudEdicion).toHaveBeenCalledWith(4, "aprobar");
     expect(wrapper.text()).toContain("No hay solicitudes pendientes");
     expect(wrapper.text()).toContain("Acceso habilitado por 24 horas.");
+  });
+
+  it("permite revocar un permiso temporal vigente", async () => {
+    const permisoActivo = {
+      id_solicitud: 18,
+      estado: "aprobada",
+      fecha_expiracion: new Date(Date.now() + 60_000).toISOString(),
+      asignacion: {
+        cursoAsignacion: curso,
+        materiaAsignacion: { nombre_materia: "Matemática" },
+      },
+      preceptor: { nombre: "Mario", apellido: "Ruiz" },
+    };
+    academico.obtenerAccesosEdicionProfesor
+      .mockResolvedValueOnce({ success: true, data: [permisoActivo] })
+      .mockResolvedValueOnce({ success: true, data: [] });
+    const wrapper = await montar("../src/components/profesores/views/LibretaDigitalView.vue");
+
+    expect(wrapper.text()).toContain("1 permiso activo");
+    expect(wrapper.find(".btn-solicitud-revocar").exists()).toBe(true);
+    await wrapper.find(".btn-solicitud-revocar").trigger("click");
+    await flushPromises();
+
+    expect(academico.decidirSolicitudEdicion).toHaveBeenCalledWith(18, "revocar");
+    expect(wrapper.text()).toContain("Acceso revocado.");
+    expect(wrapper.find(".btn-solicitud-revocar").exists()).toBe(false);
   });
 
   it("busca alumnos por nombre o apellido en la planilla docente", async () => {

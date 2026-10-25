@@ -74,45 +74,77 @@ export async function listarSolicitudesPendientesProfesor(idUsuario) {
 
   return SolicitudEdicionNota.findAll({
     where: { estado: "pendiente" },
-    include: [
-      {
-        model: Asignacion,
-        as: "asignacion",
-        required: true,
-        where: { id_profesor: profesor.id_profesor },
-        include: [
-          { model: Curso, as: "cursoAsignacion", attributes: ["id_curso", "nombre_curso"] },
-          { model: Materia, as: "materiaAsignacion", attributes: ["id_materia", "nombre_materia"] },
-        ],
-      },
-      {
-        model: Personal,
-        as: "preceptor",
-        attributes: ["id_personal", "nombre", "apellido"],
-      },
-    ],
+    include: incluirDatosSolicitudEdicion(profesor.id_profesor),
     order: [["fecha_solicitud", "ASC"]],
   });
 }
 
+export async function listarAccesosEdicionProfesor(idUsuario) {
+  const profesor = await Profesor.findOne({ where: { id_usuario: Number(idUsuario) } });
+  if (!profesor) throw new ErrorHandler(404, "No se encontró el perfil docente para este usuario");
+
+  return SolicitudEdicionNota.findAll({
+    where: {
+      [Op.or]: [
+        { estado: "pendiente" },
+        { estado: "aprobada", fecha_expiracion: { [Op.gt]: new Date() } },
+      ],
+    },
+    include: incluirDatosSolicitudEdicion(profesor.id_profesor),
+    order: [["fecha_solicitud", "ASC"]],
+  });
+}
+
+function incluirDatosSolicitudEdicion(idProfesor) {
+  return [
+    {
+      model: Asignacion,
+      as: "asignacion",
+      required: true,
+      where: { id_profesor: idProfesor },
+      include: [
+        { model: Curso, as: "cursoAsignacion", attributes: ["id_curso", "nombre_curso"] },
+        { model: Materia, as: "materiaAsignacion", attributes: ["id_materia", "nombre_materia"] },
+      ],
+    },
+    {
+      model: Personal,
+      as: "preceptor",
+      attributes: ["id_personal", "nombre", "apellido"],
+    },
+  ];
+}
+
 export async function decidirSolicitudEdicion(idUsuario, idSolicitud, decision) {
-  if (!["aprobar", "rechazar"].includes(decision)) {
-    throw new ErrorHandler(400, "La decisión debe ser aprobar o rechazar");
+  if (!["aprobar", "rechazar", "revocar"].includes(decision)) {
+    throw new ErrorHandler(400, "La decisión debe ser aprobar, rechazar o revocar");
   }
   const solicitud = await SolicitudEdicionNota.findByPk(Number(idSolicitud));
   if (!solicitud) throw new ErrorHandler(404, "No se encontró la solicitud");
-  if (solicitud.estado !== "pendiente") {
-    throw new ErrorHandler(409, "La solicitud ya fue resuelta");
-  }
-
   await obtenerProfesorAsignacion(idUsuario, solicitud.id_asignacion);
   const ahora = new Date();
-  solicitud.estado = decision === "aprobar" ? "aprobada" : "rechazada";
+
+  if (decision === "revocar") {
+    if (solicitud.estado !== "aprobada") {
+      throw new ErrorHandler(409, "La solicitud no tiene un permiso activo para revocar");
+    }
+    if (!solicitud.fecha_expiracion || new Date(solicitud.fecha_expiracion) <= ahora) {
+      throw new ErrorHandler(409, "El permiso de edición ya venció");
+    }
+    solicitud.estado = "revocada";
+    solicitud.fecha_expiracion = ahora;
+  } else {
+    if (solicitud.estado !== "pendiente") {
+      throw new ErrorHandler(409, "La solicitud ya fue resuelta");
+    }
+    solicitud.estado = decision === "aprobar" ? "aprobada" : "rechazada";
+    solicitud.fecha_expiracion = decision === "aprobar"
+      ? new Date(ahora.getTime() + DURACION_EDICION_PRECEPTOR_MS)
+      : null;
+  }
+
   solicitud.fecha_decision = ahora;
   solicitud.id_usuario_decisor = Number(idUsuario);
-  solicitud.fecha_expiracion = decision === "aprobar"
-    ? new Date(ahora.getTime() + DURACION_EDICION_PRECEPTOR_MS)
-    : null;
   await solicitud.save();
   return solicitud;
 }

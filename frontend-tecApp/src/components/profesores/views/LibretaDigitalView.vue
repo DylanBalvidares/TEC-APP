@@ -42,7 +42,7 @@
           <span class="solicitudes-eyebrow">Acceso temporal a planillas</span>
           <h3 id="solicitudesEdicionTitulo"><i class="fas fa-key" aria-hidden="true"></i> Solicitudes del Preceptor</h3>
         </div>
-        <span class="solicitudes-count">{{ solicitudesEdicion.length }} pendientes</span>
+        <span class="solicitudes-count">{{ pendientesEdicionCount }} pendientes · {{ permisosVigentesCount }} {{ permisosVigentesCount === 1 ? 'permiso activo' : 'permisos activos' }}</span>
       </div>
       <p v-if="cargandoSolicitudes" class="solicitudes-empty" role="status">Buscando solicitudes pendientes…</p>
       <p v-else-if="solicitudesEdicion.length === 0" class="solicitudes-empty">No hay solicitudes pendientes para tus materias.</p>
@@ -51,15 +51,20 @@
           <div class="solicitud-edicion-info">
             <strong>{{ solicitud.asignacion?.materiaAsignacion?.nombre_materia || 'Materia' }} · {{ solicitud.asignacion?.cursoAsignacion?.nombre_curso || 'Curso' }}</strong>
             <span>Solicita {{ solicitud.preceptor?.nombre }} {{ solicitud.preceptor?.apellido }}</span>
-            <small>Recibida {{ formatearFechaHora(solicitud.fecha_solicitud) }}</small>
+            <small v-if="solicitud.estado === 'pendiente'">Recibida {{ formatearFechaHora(solicitud.fecha_solicitud) }}</small>
+            <small v-else>Acceso habilitado hasta {{ formatearFechaHora(solicitud.fecha_expiracion) }}</small>
           </div>
           <div class="solicitud-edicion-acciones">
-            <button type="button" class="btn-solicitud-rechazar" :disabled="procesandoSolicitudId === solicitud.id_solicitud" @click="resolverSolicitud(solicitud, 'rechazar')">
+            <button v-if="solicitud.estado === 'pendiente'" type="button" class="btn-solicitud-rechazar" :disabled="procesandoSolicitudId === solicitud.id_solicitud" @click="resolverSolicitud(solicitud, 'rechazar')">
               Rechazar
             </button>
-            <button type="button" class="btn-solicitud-aprobar" :disabled="procesandoSolicitudId === solicitud.id_solicitud" @click="resolverSolicitud(solicitud, 'aprobar')">
+            <button v-if="solicitud.estado === 'pendiente'" type="button" class="btn-solicitud-aprobar" :disabled="procesandoSolicitudId === solicitud.id_solicitud" @click="resolverSolicitud(solicitud, 'aprobar')">
               <i :class="procesandoSolicitudId === solicitud.id_solicitud ? 'fas fa-spinner fa-spin' : 'fas fa-unlock'" aria-hidden="true"></i>
               Aprobar por 24 horas
+            </button>
+            <button v-else type="button" class="btn-solicitud-revocar" :disabled="procesandoSolicitudId === solicitud.id_solicitud" @click="resolverSolicitud(solicitud, 'revocar')">
+              <i :class="procesandoSolicitudId === solicitud.id_solicitud ? 'fas fa-spinner fa-spin' : 'fas fa-lock'" aria-hidden="true"></i>
+              Revocar acceso
             </button>
           </div>
         </article>
@@ -219,7 +224,7 @@ import {
   obtenerNotasProfesor,
   guardarNota,
   obtenerHistorialNotasAlumno,
-  obtenerSolicitudesEdicionPendientes,
+  obtenerAccesosEdicionProfesor,
   decidirSolicitudEdicion,
 } from "@/services/academico-service.js";
 
@@ -240,6 +245,12 @@ const guardandoId = ref(null);
 const solicitudesEdicion = ref([]);
 const cargandoSolicitudes = ref(true);
 const procesandoSolicitudId = ref(null);
+const permisosVigentesCount = computed(() => solicitudesEdicion.value.filter(
+  (solicitud) => solicitud.estado === "aprobada" && new Date(solicitud.fecha_expiracion).getTime() > Date.now(),
+).length);
+const pendientesEdicionCount = computed(() => solicitudesEdicion.value.filter(
+  (solicitud) => solicitud.estado === "pendiente",
+).length);
 const busquedaAlumno = ref("");
 
 // Modal Historial
@@ -258,21 +269,29 @@ const setFeedback = (msg, tipo = "success") => {
 
 const cargarSolicitudesEdicion = async () => {
   cargandoSolicitudes.value = true;
-  const res = await obtenerSolicitudesEdicionPendientes();
+  const res = await obtenerAccesosEdicionProfesor();
   solicitudesEdicion.value = res.success && Array.isArray(res.data) ? res.data : [];
   cargandoSolicitudes.value = false;
 };
 
 const resolverSolicitud = async (solicitud, decision) => {
   procesandoSolicitudId.value = solicitud.id_solicitud;
-  const res = await decidirSolicitudEdicion(solicitud.id_solicitud, decision);
-  if (res.success) {
-    setFeedback(decision === "aprobar" ? "Acceso habilitado por 24 horas." : "Solicitud rechazada.");
-    await cargarSolicitudesEdicion();
-  } else {
-    setFeedback(res.message || "No se pudo resolver la solicitud.", "error");
+  try {
+    const res = await decidirSolicitudEdicion(solicitud.id_solicitud, decision);
+    if (res.success) {
+      const mensajes = {
+        aprobar: "Acceso habilitado por 24 horas.",
+        rechazar: "Solicitud rechazada.",
+        revocar: "Acceso revocado. El preceptor ya no puede editar esta planilla.",
+      };
+      setFeedback(mensajes[decision]);
+      await cargarSolicitudesEdicion();
+    } else {
+      setFeedback(res.message || "No se pudo resolver la solicitud.", "error");
+    }
+  } finally {
+    procesandoSolicitudId.value = null;
   }
-  procesandoSolicitudId.value = null;
 };
 
 const cargarDatosProfesor = async () => {
@@ -520,11 +539,12 @@ onMounted(() => {
 .solicitud-edicion-info span { color: #475569; font-size: .82rem; }
 .solicitud-edicion-info small { color: #94a3b8; font-size: .72rem; }
 .solicitud-edicion-acciones { display: flex; flex-wrap: wrap; gap: 8px; }
-.btn-solicitud-rechazar, .btn-solicitud-aprobar { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 7px 11px; border: 1px solid transparent; border-radius: 8px; font: inherit; font-size: .78rem; font-weight: 750; cursor: pointer; }
+.btn-solicitud-rechazar, .btn-solicitud-aprobar, .btn-solicitud-revocar { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 7px 11px; border: 1px solid transparent; border-radius: 8px; font: inherit; font-size: .78rem; font-weight: 750; cursor: pointer; }
 .btn-solicitud-rechazar { border-color: #cbd5e1; background: #fff; color: #475569; }
 .btn-solicitud-aprobar { background: #047857; color: #fff; }
-.btn-solicitud-rechazar:disabled, .btn-solicitud-aprobar:disabled { opacity: .6; cursor: wait; }
-.btn-solicitud-rechazar:focus-visible, .btn-solicitud-aprobar:focus-visible { outline: 2px solid #b42335; outline-offset: 2px; }
+.btn-solicitud-revocar { background: #b42335; color: #fff; }
+.btn-solicitud-rechazar:disabled, .btn-solicitud-aprobar:disabled, .btn-solicitud-revocar:disabled { opacity: .6; cursor: wait; }
+.btn-solicitud-rechazar:focus-visible, .btn-solicitud-aprobar:focus-visible, .btn-solicitud-revocar:focus-visible { outline: 2px solid #b42335; outline-offset: 2px; }
 @media (max-width: 760px) {
   .solicitud-edicion-card { align-items: stretch; flex-direction: column; }
   .solicitud-edicion-acciones > button { flex: 1; }

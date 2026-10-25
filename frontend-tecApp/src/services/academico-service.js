@@ -1052,15 +1052,15 @@ export const solicitarEdicionPlanilla = async (idAsignacion) => {
   }
 };
 
-export const obtenerSolicitudesEdicionPendientes = async () => {
+export const obtenerAccesosEdicionProfesor = async () => {
   try {
     const response = await axios.get(
-      `${API_URL}/notas/solicitudes-edicion/pendientes`,
+      `${API_URL}/notas/solicitudes-edicion/gestionables`,
       getConfig(),
     );
     return { success: true, data: response.data || [] };
   } catch (error) {
-    return manejarErrorApi(error, "No se pudieron obtener las solicitudes pendientes");
+    return manejarErrorApi(error, "No se pudieron obtener las solicitudes y permisos de edición");
   }
 };
 
