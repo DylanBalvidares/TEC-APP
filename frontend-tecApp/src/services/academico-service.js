@@ -1027,6 +1027,56 @@ export const obtenerNotasPreceptorCurso = async (idCurso) => {
   }
 };
 
+export const obtenerSolicitudesEdicionPreceptor = async (idCurso) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/notas/solicitudes-edicion/mias/${idCurso}`,
+      getConfig(),
+    );
+    return { success: true, data: response.data || [] };
+  } catch (error) {
+    return manejarErrorApi(error, "No se pudieron obtener las solicitudes de edición");
+  }
+};
+
+export const solicitarEdicionPlanilla = async (idAsignacion) => {
+  try {
+    const response = await axios.post(
+      `${API_URL}/notas/solicitudes-edicion`,
+      { id_asignacion: idAsignacion },
+      getConfig(),
+    );
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "No se pudo solicitar la edición de la planilla");
+  }
+};
+
+export const obtenerSolicitudesEdicionPendientes = async () => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/notas/solicitudes-edicion/pendientes`,
+      getConfig(),
+    );
+    return { success: true, data: response.data || [] };
+  } catch (error) {
+    return manejarErrorApi(error, "No se pudieron obtener las solicitudes pendientes");
+  }
+};
+
+export const decidirSolicitudEdicion = async (idSolicitud, decision) => {
+  try {
+    const response = await axios.patch(
+      `${API_URL}/notas/solicitudes-edicion/${idSolicitud}/decision`,
+      { decision },
+      getConfig(),
+    );
+    return { success: true, data: response.data };
+  } catch (error) {
+    return manejarErrorApi(error, "No se pudo resolver la solicitud");
+  }
+};
+
 export const obtenerMisNotasAlumno = async () => {
   try {
     const response = await axios.get(`${API_URL}/notas/mis-notas`, getConfig());

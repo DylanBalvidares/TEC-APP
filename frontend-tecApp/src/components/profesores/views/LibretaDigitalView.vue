@@ -36,6 +36,36 @@
       {{ feedbackMsg }}
     </div>
 
+    <section class="solicitudes-edicion-panel" aria-labelledby="solicitudesEdicionTitulo">
+      <div class="solicitudes-edicion-heading">
+        <div>
+          <span class="solicitudes-eyebrow">Acceso temporal a planillas</span>
+          <h3 id="solicitudesEdicionTitulo"><i class="fas fa-key" aria-hidden="true"></i> Solicitudes del Preceptor</h3>
+        </div>
+        <span class="solicitudes-count">{{ solicitudesEdicion.length }} pendientes</span>
+      </div>
+      <p v-if="cargandoSolicitudes" class="solicitudes-empty" role="status">Buscando solicitudes pendientes…</p>
+      <p v-else-if="solicitudesEdicion.length === 0" class="solicitudes-empty">No hay solicitudes pendientes para tus materias.</p>
+      <div v-else class="solicitudes-edicion-lista">
+        <article v-for="solicitud in solicitudesEdicion" :key="solicitud.id_solicitud" class="solicitud-edicion-card">
+          <div class="solicitud-edicion-info">
+            <strong>{{ solicitud.asignacion?.materiaAsignacion?.nombre_materia || 'Materia' }} · {{ solicitud.asignacion?.cursoAsignacion?.nombre_curso || 'Curso' }}</strong>
+            <span>Solicita {{ solicitud.preceptor?.nombre }} {{ solicitud.preceptor?.apellido }}</span>
+            <small>Recibida {{ formatearFechaHora(solicitud.fecha_solicitud) }}</small>
+          </div>
+          <div class="solicitud-edicion-acciones">
+            <button type="button" class="btn-solicitud-rechazar" :disabled="procesandoSolicitudId === solicitud.id_solicitud" @click="resolverSolicitud(solicitud, 'rechazar')">
+              Rechazar
+            </button>
+            <button type="button" class="btn-solicitud-aprobar" :disabled="procesandoSolicitudId === solicitud.id_solicitud" @click="resolverSolicitud(solicitud, 'aprobar')">
+              <i :class="procesandoSolicitudId === solicitud.id_solicitud ? 'fas fa-spinner fa-spin' : 'fas fa-unlock'" aria-hidden="true"></i>
+              Aprobar por 24 horas
+            </button>
+          </div>
+        </article>
+      </div>
+    </section>
+
     <!-- ── Estado de Carga / Vacio ── -->
     <div v-if="cargando" class="empty-state">
       <i class="fas fa-spinner fa-spin empty-icon"></i>
@@ -61,6 +91,12 @@
         </h3>
       </div>
 
+      <div class="libreta-profesor-tools">
+        <div class="libreta-profesor-stat"><i class="fas fa-user-graduate" aria-hidden="true"></i><span><strong>{{ alumnosDelCurso.length }}</strong><small>Alumnos</small></span></div>
+        <div class="libreta-profesor-stat"><i class="fas fa-clipboard-check" aria-hidden="true"></i><span><strong>{{ notasDeAsignacion.length }}</strong><small>Notas cargadas</small></span></div>
+        <label class="buscar-alumno-profesor" for="buscarAlumnoProfesor"><i class="fas fa-magnifying-glass" aria-hidden="true"></i><input id="buscarAlumnoProfesor" v-model="busquedaAlumno" type="search" placeholder="Buscar alumno" /></label>
+      </div>
+
       <table class="notas-table">
         <thead>
           <tr>
@@ -72,7 +108,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="alumno in alumnosDelCurso" :key="alumno.id_alumno">
+          <tr v-for="alumno in alumnosVisibles" :key="alumno.id_alumno">
             <td>
               <strong>{{ alumno.apellido }}, {{ alumno.nombre }}</strong>
             </td>
@@ -117,9 +153,9 @@
               </button>
             </td>
           </tr>
-          <tr v-if="alumnosDelCurso.length === 0">
+          <tr v-if="alumnosVisibles.length === 0">
             <td colspan="5" class="text-center py-4 text-muted">
-              No hay alumnos registrados en este curso.
+              {{ alumnosDelCurso.length === 0 ? 'No hay alumnos registrados en este curso.' : 'No encontramos alumnos con esa búsqueda.' }}
             </td>
           </tr>
         </tbody>
@@ -182,6 +218,8 @@ import {
   obtenerNotasProfesor,
   guardarNota,
   obtenerHistorialNotasAlumno,
+  obtenerSolicitudesEdicionPendientes,
+  decidirSolicitudEdicion,
 } from "@/services/academico-service.js";
 
 const asignaciones = ref([]);
@@ -198,6 +236,10 @@ const observacionesState = reactive({});
 const feedbackMsg = ref("");
 const feedbackTipo = ref(""); // "success" o "error"
 const guardandoId = ref(null);
+const solicitudesEdicion = ref([]);
+const cargandoSolicitudes = ref(true);
+const procesandoSolicitudId = ref(null);
+const busquedaAlumno = ref("");
 
 // Modal Historial
 const modalHistorialOpen = ref(false);
@@ -211,6 +253,25 @@ const setFeedback = (msg, tipo = "success") => {
   setTimeout(() => {
     feedbackMsg.value = "";
   }, 4000);
+};
+
+const cargarSolicitudesEdicion = async () => {
+  cargandoSolicitudes.value = true;
+  const res = await obtenerSolicitudesEdicionPendientes();
+  solicitudesEdicion.value = res.success && Array.isArray(res.data) ? res.data : [];
+  cargandoSolicitudes.value = false;
+};
+
+const resolverSolicitud = async (solicitud, decision) => {
+  procesandoSolicitudId.value = solicitud.id_solicitud;
+  const res = await decidirSolicitudEdicion(solicitud.id_solicitud, decision);
+  if (res.success) {
+    setFeedback(decision === "aprobar" ? "Acceso habilitado por 24 horas." : "Solicitud rechazada.");
+    await cargarSolicitudesEdicion();
+  } else {
+    setFeedback(res.message || "No se pudo resolver la solicitud.", "error");
+  }
+  procesandoSolicitudId.value = null;
 };
 
 const cargarDatosProfesor = async () => {
@@ -266,6 +327,18 @@ const alumnosDelCurso = computed(() => {
     (al) => al.id_curso === parseInt(cursoSeleccionadoId.value)
   );
 });
+
+const alumnosVisibles = computed(() => {
+  const busqueda = busquedaAlumno.value.trim().toLocaleLowerCase("es-AR");
+  if (!busqueda) return alumnosDelCurso.value;
+  return alumnosDelCurso.value.filter((alumno) =>
+    `${alumno.nombre || ""} ${alumno.apellido || ""}`.toLocaleLowerCase("es-AR").includes(busqueda),
+  );
+});
+
+const notasDeAsignacion = computed(() => notas.value.filter((nota) =>
+  Number(nota.id_asignacion) === Number(asignacionSeleccionadaId.value),
+));
 
 const cursoActualNombre = computed(() => {
   const c = cursosUnicos.value.find((x) => x.id === parseInt(cursoSeleccionadoId.value));
@@ -379,6 +452,7 @@ const formatearFechaHora = (str) => {
 
 onMounted(() => {
   cargarDatosProfesor();
+  cargarSolicitudesEdicion();
 });
 </script>
 
@@ -431,6 +505,30 @@ onMounted(() => {
   border: 1px solid #fecaca;
 }
 
+.solicitudes-edicion-panel { margin-top: 14px; padding: 18px 20px; border: 1px solid #fecdd3; border-radius: 15px; background: linear-gradient(120deg, #fff 20%, #fff7f7); }
+.solicitudes-edicion-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.solicitudes-eyebrow { color: #9f1239; font-size: .68rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.solicitudes-edicion-heading h3 { margin: 3px 0 0; color: #1e293b; font-size: 1.04rem; }
+.solicitudes-edicion-heading h3 i { margin-right: 5px; color: #b42335; }
+.solicitudes-count { padding: 5px 9px; border-radius: 999px; background: #ffe4e6; color: #9f1239; font-size: .72rem; font-weight: 800; white-space: nowrap; }
+.solicitudes-empty { margin: 8px 0 0; color: #64748b; font-size: .88rem; }
+.solicitudes-edicion-lista { display: grid; gap: 9px; margin-top: 12px; }
+.solicitud-edicion-card { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: 11px; background: #fff; }
+.solicitud-edicion-info { display: grid; gap: 3px; }
+.solicitud-edicion-info strong { color: #1e293b; font-size: .9rem; }
+.solicitud-edicion-info span { color: #475569; font-size: .82rem; }
+.solicitud-edicion-info small { color: #94a3b8; font-size: .72rem; }
+.solicitud-edicion-acciones { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn-solicitud-rechazar, .btn-solicitud-aprobar { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 7px 11px; border: 1px solid transparent; border-radius: 8px; font: inherit; font-size: .78rem; font-weight: 750; cursor: pointer; }
+.btn-solicitud-rechazar { border-color: #cbd5e1; background: #fff; color: #475569; }
+.btn-solicitud-aprobar { background: #047857; color: #fff; }
+.btn-solicitud-rechazar:disabled, .btn-solicitud-aprobar:disabled { opacity: .6; cursor: wait; }
+.btn-solicitud-rechazar:focus-visible, .btn-solicitud-aprobar:focus-visible { outline: 2px solid #b42335; outline-offset: 2px; }
+@media (max-width: 760px) {
+  .solicitud-edicion-card { align-items: stretch; flex-direction: column; }
+  .solicitud-edicion-acciones > button { flex: 1; }
+}
+
 .table-container {
   background: #fff;
   border-radius: 16px;
@@ -456,6 +554,16 @@ onMounted(() => {
   gap: 8px;
 }
 
+.libreta-profesor-tools { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; }
+.libreta-profesor-stat { display: flex; align-items: center; gap: 8px; min-width: 112px; padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 9px; background: #f8fafc; }
+.libreta-profesor-stat > i { color: #b42335; }
+.libreta-profesor-stat span { display: grid; gap: 1px; }
+.libreta-profesor-stat strong { color: #1e293b; font-size: .84rem; }
+.libreta-profesor-stat small { color: #64748b; font-size: .67rem; }
+.buscar-alumno-profesor { display: flex; align-items: center; gap: 8px; width: min(300px, 100%); margin-left: auto; padding: 0 10px; border: 1px solid #cbd5e1; border-radius: 8px; color: #64748b; }
+.buscar-alumno-profesor:focus-within { border-color: #b42335; box-shadow: 0 0 0 3px rgba(180,21,42,.12); }
+.buscar-alumno-profesor input { width: 100%; min-width: 0; padding: 9px 0; border: 0; outline: 0; background: transparent; font: inherit; }
+
 .highlight-materia {
   color: var(--primary, #c0152a);
   font-weight: 800;
@@ -465,6 +573,8 @@ onMounted(() => {
   width: 100%;
   border-collapse: collapse;
 }
+
+.notas-table tbody tr:hover { background: #fffafa; }
 
 .notas-table th {
   text-align: left;
@@ -709,5 +819,13 @@ onMounted(() => {
   margin: 4px 0 0 0;
   font-size: 0.8rem;
   color: #64748b;
+}
+
+@media (max-width: 680px) {
+  .libreta-profesor-tools { flex-wrap: wrap; }
+  .libreta-profesor-stat { flex: 1; }
+  .buscar-alumno-profesor { flex-basis: 100%; max-width: none; }
+  .solicitudes-edicion-panel { padding: 14px; }
+  .solicitudes-edicion-heading { align-items: flex-start; }
 }
 </style>

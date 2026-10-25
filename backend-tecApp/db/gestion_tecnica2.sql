@@ -513,6 +513,24 @@ CREATE TABLE `historial_notas` (
     CONSTRAINT `fk_hist_user`   FOREIGN KEY (`modificado_por`) REFERENCES `usuarios`    (`id_usuario`)    ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE `solicitudes_edicion_notas` (
+    `id_solicitud`          int(11) NOT NULL AUTO_INCREMENT,
+    `id_personal_preceptor` int(11) NOT NULL,
+    `id_asignacion`         int(11) NOT NULL,
+    `estado`                ENUM('pendiente','aprobada','rechazada') NOT NULL DEFAULT 'pendiente',
+    `fecha_solicitud`       datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `fecha_decision`        datetime DEFAULT NULL,
+    `id_usuario_decisor`    int(11) DEFAULT NULL,
+    `fecha_expiracion`      datetime DEFAULT NULL,
+    PRIMARY KEY (`id_solicitud`),
+    KEY `idx_sol_edicion_preceptor` (`id_personal_preceptor`),
+    KEY `idx_sol_edicion_asignacion` (`id_asignacion`),
+    KEY `idx_sol_edicion_estado` (`estado`,`fecha_expiracion`),
+    CONSTRAINT `fk_sol_edicion_preceptor` FOREIGN KEY (`id_personal_preceptor`) REFERENCES `personal`(`id_personal`) ON DELETE CASCADE,
+    CONSTRAINT `fk_sol_edicion_asignacion` FOREIGN KEY (`id_asignacion`) REFERENCES `asignaciones`(`id_asignacion`) ON DELETE CASCADE,
+    CONSTRAINT `fk_sol_edicion_decisor` FOREIGN KEY (`id_usuario_decisor`) REFERENCES `usuarios`(`id_usuario`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- ============================================================
 -- BOLETINES CUATRIMESTRALES (aditivo: no toca notas)
 -- ============================================================

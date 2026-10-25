@@ -11,6 +11,7 @@ import Personal from "./personal-model.js";
 import Materia from "./materias-model.js";
 import Nota from "./notas-model.js";
 import HistorialNota from "./historial-notas-model.js";
+import SolicitudEdicionNota from "./solicitud-edicion-nota-model.js";
 import PeriodoBoletin from "./periodos-boletin-model.js";
 import BoletinMateria from "./boletin-materias-model.js";
 import BoletinCalificacion from "./boletin-calificaciones-model.js";
@@ -104,6 +105,12 @@ HistorialNota.belongsTo(Alumno, { foreignKey: "id_alumno" });
 HistorialNota.belongsTo(Asignacion, { foreignKey: "id_asignacion" });
 HistorialNota.belongsTo(Usuario, { foreignKey: "modificado_por", as: "usuarioModificador" });
 
+SolicitudEdicionNota.belongsTo(Personal, { foreignKey: "id_personal_preceptor", as: "preceptor" });
+Personal.hasMany(SolicitudEdicionNota, { foreignKey: "id_personal_preceptor", as: "solicitudesEdicionNotas" });
+SolicitudEdicionNota.belongsTo(Asignacion, { foreignKey: "id_asignacion", as: "asignacion" });
+Asignacion.hasMany(SolicitudEdicionNota, { foreignKey: "id_asignacion", as: "solicitudesEdicionNotas" });
+SolicitudEdicionNota.belongsTo(Usuario, { foreignKey: "id_usuario_decisor", as: "decisor" });
+
 // ==========================================
 // Relaciones: Boletines cuatrimestrales
 // (aditivo: no toca Nota ni HistorialNota)
@@ -183,6 +190,7 @@ export {
   Asignacion,
   Nota,
   HistorialNota,
+  SolicitudEdicionNota,
   PeriodoBoletin,
   BoletinMateria,
   BoletinCalificacion,

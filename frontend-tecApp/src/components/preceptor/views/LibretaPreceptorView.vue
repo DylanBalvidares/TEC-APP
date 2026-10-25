@@ -1,13 +1,17 @@
 <template>
   <div class="preceptor-view">
-    <div class="boletines-header">
-      <h1><i class="fas fa-file-invoice"></i> Libreta Digital (Vista Preceptor)</h1>
-      <p>Consultá las calificaciones y promedios de los alumnos de tus cursos a cargo.</p>
+    <div class="boletines-header libreta-intro">
+      <div>
+        <span class="libreta-eyebrow">Seguimiento académico</span>
+        <h1><i class="fas fa-book-open" aria-hidden="true"></i> Libreta Digital</h1>
+        <p>Consultá las calificaciones de tus cursos y solicitá acceso temporal para corregir una planilla.</p>
+      </div>
+      <div class="libreta-privacy"><i class="fas fa-shield-halved" aria-hidden="true"></i><span>La edición requiere autorización del profesor titular</span></div>
     </div>
 
     <!-- ── Selector de Curso ── -->
     <div class="cursos-selector-wrap" v-if="!cargandoCursos && cursos.length > 0">
-      <label for="cursoSelect"><strong>Curso a consultar:</strong></label>
+      <label for="cursoSelect"><i class="fas fa-users" aria-hidden="true"></i><strong>Curso a consultar</strong></label>
       <select id="cursoSelect" v-model="cursoSeleccionadoId" @change="onCursoChange" class="select-curso">
         <option value="" disabled>Seleccioná un curso...</option>
         <option v-for="c in cursos" :key="c.id_curso" :value="c.id_curso">
@@ -36,31 +40,82 @@
     <!-- ── Planilla Consolidada ── -->
     <div v-else-if="cursoSeleccionadoId" class="planilla-container">
       <div class="planilla-header">
-        <h2>
-          Planilla Consolidada — <span>{{ cursoActual?.nombre_curso }}</span>
-        </h2>
-        <span class="read-only-badge"><i class="fas fa-eye"></i> Solo Lectura</span>
+        <div>
+          <span class="libreta-eyebrow">Planilla del curso</span>
+          <h2>{{ cursoActual?.nombre_curso }}</h2>
+        </div>
+        <span v-if="asignaciones.some((a) => permisoActivo(a.id_asignacion))" class="read-only-badge editing-badge">
+          <i class="fas fa-pen-to-square" aria-hidden="true"></i> Edición temporal habilitada
+        </span>
+        <span v-else class="read-only-badge"><i class="fas fa-eye" aria-hidden="true"></i> Solo lectura</span>
       </div>
+
+      <div class="resumen-libretas" aria-label="Resumen del curso">
+        <div class="resumen-card"><i class="fas fa-user-graduate" aria-hidden="true"></i><span><strong>{{ alumnos.length }}</strong><small>Alumnos</small></span></div>
+        <div class="resumen-card"><i class="fas fa-book" aria-hidden="true"></i><span><strong>{{ asignaciones.length }}</strong><small>Materias</small></span></div>
+        <div class="resumen-card"><i class="fas fa-clipboard-check" aria-hidden="true"></i><span><strong>{{ cantidadNotas }}</strong><small>Calificaciones cargadas</small></span></div>
+      </div>
+
+      <div class="libreta-table-tools">
+        <label class="buscador-alumno" for="buscarAlumnoLibreta">
+          <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+          <input id="buscarAlumnoLibreta" v-model="busquedaAlumno" type="search" placeholder="Buscar alumno por nombre o apellido" />
+        </label>
+        <p>Las calificaciones se editan por materia cuando el profesor habilita el acceso.</p>
+      </div>
+      <div v-if="mensajeAccion" class="feedback-edicion" :class="{ error: errorAccion }" role="status">{{ mensajeAccion }}</div>
 
       <div class="table-responsive">
         <table class="planilla-table">
           <thead>
             <tr>
               <th class="sticky-col">Alumno</th>
-              <th v-for="asig in asignaciones" :key="asig.id_asignacion">
-                {{ asig.materiaAsignacion?.nombre_materia || 'Materia' }}
+              <th v-for="asig in asignaciones" :key="asig.id_asignacion" class="materia-heading">
+                <span>{{ asig.materiaAsignacion?.nombre_materia || 'Materia' }}</span>
+                <span v-if="permisoActivo(asig.id_asignacion)" class="status-chip status-approved">
+                  <i class="fas fa-unlock" aria-hidden="true"></i> Hasta {{ fechaCorta(solicitudDe(asig.id_asignacion)?.fecha_expiracion) }}
+                </span>
+                <button
+                  v-else
+                  type="button"
+                  class="btn-request-edit"
+                  :disabled="solicitandoId === asig.id_asignacion || solicitudDe(asig.id_asignacion)?.estado === 'pendiente'"
+                  @click="solicitarEdicion(asig)"
+                >
+                  <i :class="solicitudDe(asig.id_asignacion)?.estado === 'pendiente' ? 'fas fa-clock' : 'fas fa-key'" aria-hidden="true"></i>
+                  {{ textoSolicitud(asig.id_asignacion) }}
+                </button>
               </th>
               <th class="text-center highlight-col">Promedio General</th>
               <th class="text-center">Historial</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="alumno in alumnos" :key="alumno.id_alumno">
+            <tr v-for="alumno in alumnosFiltrados" :key="alumno.id_alumno">
               <td class="sticky-col font-bold">
                 {{ alumno.apellido }}, {{ alumno.nombre }}
               </td>
-              <td v-for="asig in asignaciones" :key="asig.id_asignacion" class="text-center">
-                <span :class="['grade-badge', getGradeClass(getNotaAlumnoMateria(alumno.id_alumno, asig.id_asignacion))]">
+              <td v-for="asig in asignaciones" :key="asig.id_asignacion" class="text-center grade-cell">
+                <div v-if="permisoActivo(asig.id_asignacion)" class="grade-editor">
+                  <input
+                    v-model="notasBorrador[claveNota(alumno.id_alumno, asig.id_asignacion)]"
+                    type="number"
+                    min="0"
+                    max="10"
+                    step="0.1"
+                    :aria-label="`Calificación de ${alumno.apellido}, ${alumno.nombre} en ${asig.materiaAsignacion?.nombre_materia || 'Materia'}`"
+                  />
+                  <button
+                    type="button"
+                    class="btn-save-grade-preceptor"
+                    :disabled="guardandoClave === claveNota(alumno.id_alumno, asig.id_asignacion)"
+                    :aria-label="`Guardar calificación de ${alumno.nombre} ${alumno.apellido}`"
+                    @click="guardarNotaPreceptor(alumno, asig)"
+                  >
+                    <i :class="guardandoClave === claveNota(alumno.id_alumno, asig.id_asignacion) ? 'fas fa-spinner fa-spin' : 'fas fa-floppy-disk'" aria-hidden="true"></i>
+                  </button>
+                </div>
+                <span v-else :class="['grade-badge', getGradeClass(getNotaAlumnoMateria(alumno.id_alumno, asig.id_asignacion))]">
                   {{ getNotaAlumnoMateria(alumno.id_alumno, asig.id_asignacion) }}
                 </span>
               </td>
@@ -75,9 +130,9 @@
                 </button>
               </td>
             </tr>
-            <tr v-if="alumnos.length === 0">
+            <tr v-if="alumnosFiltrados.length === 0">
               <td :colspan="asignaciones.length + 3" class="text-center py-4 text-muted">
-                No hay alumnos registrados en este curso.
+                {{ alumnos.length === 0 ? 'No hay alumnos registrados en este curso.' : 'No encontramos alumnos con esa búsqueda.' }}
               </td>
             </tr>
           </tbody>
@@ -133,11 +188,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, reactive, onMounted } from "vue";
 import {
   obtenerCursosPreceptor,
   obtenerNotasPreceptorCurso,
   obtenerHistorialNotasAlumno,
+  guardarNota,
+  obtenerSolicitudesEdicionPreceptor,
+  solicitarEdicionPlanilla,
 } from "@/services/academico-service.js";
 
 const cursos = ref([]);
@@ -148,6 +206,13 @@ const cursoActual = ref(null);
 const alumnos = ref([]);
 const asignaciones = ref([]);
 const notas = ref([]);
+const solicitudes = ref([]);
+const notasBorrador = reactive({});
+const busquedaAlumno = ref("");
+const solicitandoId = ref(null);
+const guardandoClave = ref(null);
+const mensajeAccion = ref("");
+const errorAccion = ref(false);
 
 const cargandoPlanilla = ref(false);
 const errorPlanilla = ref("");
@@ -192,6 +257,18 @@ const cargarPlanillaCurso = async () => {
       alumnos.value = res.data.alumnos || [];
       asignaciones.value = res.data.asignaciones || [];
       notas.value = res.data.notas || [];
+      Object.keys(notasBorrador).forEach((clave) => delete notasBorrador[clave]);
+      for (const alumno of alumnos.value) {
+        for (const asignacion of asignaciones.value) {
+          const clave = claveNota(alumno.id_alumno, asignacion.id_asignacion);
+          const existente = notas.value.find((nota) =>
+            Number(nota.id_alumno) === Number(alumno.id_alumno)
+            && Number(nota.id_asignacion) === Number(asignacion.id_asignacion),
+          );
+          notasBorrador[clave] = existente?.calificacion ?? "";
+        }
+      }
+      await cargarSolicitudesEdicion();
     } else {
       errorPlanilla.value = res.message || "No se pudo obtener la planilla del curso.";
     }
@@ -200,6 +277,77 @@ const cargarPlanillaCurso = async () => {
   } finally {
     cargandoPlanilla.value = false;
   }
+};
+
+const cargarSolicitudesEdicion = async () => {
+  const res = await obtenerSolicitudesEdicionPreceptor(cursoSeleccionadoId.value);
+  solicitudes.value = res.success && Array.isArray(res.data) ? res.data : [];
+};
+
+const claveNota = (idAlumno, idAsignacion) => `${idAlumno}:${idAsignacion}`;
+
+const solicitudDe = (idAsignacion) => solicitudes.value.find(
+  (solicitud) => Number(solicitud.id_asignacion) === Number(idAsignacion),
+);
+
+const permisoActivo = (idAsignacion) => {
+  const solicitud = solicitudDe(idAsignacion);
+  return solicitud?.estado === "aprobada"
+    && new Date(solicitud.fecha_expiracion).getTime() > Date.now();
+};
+
+const textoSolicitud = (idAsignacion) => {
+  const solicitud = solicitudDe(idAsignacion);
+  if (solicitud?.estado === "pendiente") return "Solicitud enviada";
+  if (solicitud?.estado === "rechazada") return "Solicitar nuevamente";
+  if (solicitud?.estado === "aprobada") return "Solicitar nuevamente";
+  return "Solicitar edición";
+};
+
+const solicitarEdicion = async (asignacion) => {
+  solicitandoId.value = asignacion.id_asignacion;
+  mensajeAccion.value = "";
+  errorAccion.value = false;
+  const res = await solicitarEdicionPlanilla(asignacion.id_asignacion);
+  if (res.success) {
+    mensajeAccion.value = `Solicitud enviada al profesor de ${asignacion.materiaAsignacion?.nombre_materia || "la materia"}.`;
+    await cargarSolicitudesEdicion();
+  } else {
+    mensajeAccion.value = res.message || "No se pudo enviar la solicitud.";
+    errorAccion.value = true;
+  }
+  solicitandoId.value = null;
+};
+
+const guardarNotaPreceptor = async (alumno, asignacion) => {
+  const clave = claveNota(alumno.id_alumno, asignacion.id_asignacion);
+  const valor = Number(notasBorrador[clave]);
+  if (!Number.isFinite(valor) || valor < 0 || valor > 10) {
+    mensajeAccion.value = "Ingresá una calificación entre 0 y 10.";
+    errorAccion.value = true;
+    return;
+  }
+  guardandoClave.value = clave;
+  mensajeAccion.value = "";
+  errorAccion.value = false;
+  const res = await guardarNota({
+    id_alumno: alumno.id_alumno,
+    id_asignacion: asignacion.id_asignacion,
+    calificacion: valor,
+  });
+  if (res.success) {
+    const indice = notas.value.findIndex((nota) =>
+      Number(nota.id_alumno) === Number(alumno.id_alumno)
+      && Number(nota.id_asignacion) === Number(asignacion.id_asignacion),
+    );
+    if (indice < 0) notas.value.push(res.data);
+    else notas.value[indice] = res.data;
+    mensajeAccion.value = `Calificación de ${alumno.nombre} ${alumno.apellido} guardada.`;
+  } else {
+    mensajeAccion.value = res.message || "No se pudo guardar la calificación.";
+    errorAccion.value = true;
+  }
+  guardandoClave.value = null;
 };
 
 const getNotaAlumnoMateria = (idAlumno, idAsignacion) => {
@@ -223,6 +371,20 @@ const calcularPromedioAlumno = (idAlumno) => {
   const suma = notasAlumno.reduce((acc, curr) => acc + parseFloat(curr.calificacion), 0);
   return (suma / notasAlumno.length).toFixed(1);
 };
+
+const alumnosFiltrados = computed(() => {
+  const busqueda = busquedaAlumno.value.trim().toLocaleLowerCase("es-AR");
+  if (!busqueda) return alumnos.value;
+  return alumnos.value.filter((alumno) =>
+    `${alumno.nombre || ""} ${alumno.apellido || ""}`.toLocaleLowerCase("es-AR").includes(busqueda),
+  );
+});
+
+const cantidadNotas = computed(() => notas.value.filter((nota) => nota.calificacion !== null && nota.calificacion !== undefined).length);
+
+const fechaCorta = (fecha) => fecha
+  ? new Date(fecha).toLocaleString("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })
+  : "";
 
 const abrirHistorialModal = async (alumno) => {
   alumnoHistorialSeleccionado.value = alumno;
@@ -265,6 +427,25 @@ onMounted(() => {
   padding: 10px 0;
 }
 
+.libreta-intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 24px 28px;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  background: linear-gradient(125deg, #fff 35%, #fff7f7);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .05);
+}
+
+.libreta-eyebrow { display: block; margin-bottom: 5px; color: #9f1239; font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.libreta-intro h1 { margin: 0 0 5px; color: #172033; font-size: clamp(1.5rem, 2.6vw, 2rem); }
+.libreta-intro h1 i { margin-right: 8px; color: #b42335; }
+.libreta-intro p { max-width: 680px; margin: 0; color: #64748b; }
+.libreta-privacy { display: flex; align-items: center; gap: 10px; max-width: 265px; padding: 12px 14px; border: 1px solid #fecdd3; border-radius: 12px; background: #fff; color: #7f1d1d; font-size: .82rem; font-weight: 700; }
+.libreta-privacy i { font-size: 1.15rem; }
+
 .boletines-header h1 {
   font-size: 1.6rem;
   color: #1e293b;
@@ -286,6 +467,9 @@ onMounted(() => {
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
+
+.cursos-selector-wrap label { display: inline-flex; align-items: center; gap: 8px; color: #334155; }
+.cursos-selector-wrap label i { color: #b42335; }
 
 .select-curso {
   padding: 10px 14px;
@@ -329,10 +513,6 @@ onMounted(() => {
   margin: 0;
 }
 
-.planilla-header span {
-  color: #c0152a;
-}
-
 .read-only-badge {
   background: #f1f5f9;
   color: #475569;
@@ -342,15 +522,47 @@ onMounted(() => {
   font-weight: 700;
 }
 
+.editing-badge { background: #ecfdf5; color: #047857; }
+.resumen-libretas { display: grid; grid-template-columns: repeat(3, minmax(140px, 1fr)); gap: 12px; margin: 18px 0; }
+.resumen-card { display: flex; align-items: center; gap: 12px; min-height: 72px; padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fbfdff; }
+.resumen-card > i { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 11px; background: #fff1f2; color: #b42335; }
+.resumen-card span { display: grid; gap: 2px; }
+.resumen-card strong { color: #172033; font-size: 1.12rem; }
+.resumen-card small { color: #64748b; font-size: .75rem; }
+.libreta-table-tools { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 18px 0 12px; }
+.libreta-table-tools p { margin: 0; color: #64748b; font-size: .82rem; }
+.buscador-alumno { display: flex; align-items: center; gap: 9px; width: min(380px, 100%); padding: 0 12px; border: 1px solid #cbd5e1; border-radius: 9px; background: #fff; color: #64748b; }
+.buscador-alumno:focus-within { border-color: #b42335; box-shadow: 0 0 0 3px rgba(180,35,53,.12); }
+.buscador-alumno input { width: 100%; min-width: 0; padding: 10px 0; border: 0; outline: 0; background: transparent; color: #172033; font: inherit; }
+.feedback-edicion { margin: 0 0 12px; padding: 10px 13px; border: 1px solid #a7f3d0; border-radius: 9px; background: #ecfdf5; color: #047857; font-size: .88rem; }
+.feedback-edicion.error { border-color: #fecaca; background: #fef2f2; color: #b91c1c; }
+
 .table-responsive {
   overflow-x: auto;
 }
 
 .planilla-table {
   width: 100%;
+  min-width: 720px;
   border-collapse: collapse;
   font-size: 0.9rem;
 }
+
+.materia-heading { min-width: 160px; }
+.materia-heading > span:first-child { color: #334155; }
+.materia-heading .status-chip, .materia-heading .btn-request-edit { display: inline-flex; align-items: center; justify-content: center; gap: 5px; width: max-content; max-width: 100%; margin-top: 7px; white-space: normal; }
+.status-chip { padding: 5px 8px; border-radius: 999px; font-size: .68rem; font-weight: 750; }
+.status-approved { background: #dcfce7; color: #166534; }
+.btn-request-edit { padding: 6px 8px; border: 1px solid #fecdd3; border-radius: 7px; background: #fff; color: #9f1239; font: inherit; font-size: .7rem; font-weight: 750; cursor: pointer; }
+.btn-request-edit:hover:not(:disabled) { background: #fff1f2; }
+.btn-request-edit:disabled { border-color: #e2e8f0; background: #f1f5f9; color: #64748b; cursor: not-allowed; }
+.grade-editor { display: inline-flex; align-items: center; gap: 5px; }
+.grade-editor input { width: 66px; min-height: 34px; padding: 5px 7px; border: 1px solid #cbd5e1; border-radius: 7px; text-align: center; font: inherit; font-weight: 700; }
+.grade-editor input:focus-visible, .btn-save-grade-preceptor:focus-visible, .btn-request-edit:focus-visible, .btn-history-icon:focus-visible { outline: 2px solid #b42335; outline-offset: 2px; }
+.btn-save-grade-preceptor { display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 7px; background: #b42335; color: #fff; cursor: pointer; }
+.btn-save-grade-preceptor:hover:not(:disabled) { background: #8f1728; }
+.btn-save-grade-preceptor:disabled { opacity: .65; cursor: wait; }
+.grade-cell { min-width: 94px; }
 
 .planilla-table th {
   background: #f8fafc;
@@ -573,5 +785,19 @@ onMounted(() => {
   margin: 4px 0 0 0;
   font-size: 0.8rem;
   color: #475569;
+}
+
+@media (max-width: 760px) {
+  .libreta-intro { align-items: flex-start; flex-direction: column; padding: 20px; }
+  .libreta-privacy { max-width: none; }
+  .resumen-libretas { grid-template-columns: 1fr; }
+  .libreta-table-tools { align-items: stretch; flex-direction: column; }
+  .buscador-alumno { width: 100%; }
+  .planilla-container { padding: 14px; }
+  .planilla-header { align-items: flex-start; flex-direction: column; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-request-edit, .btn-save-grade-preceptor, .btn-history-icon { transition: none; }
 }
 </style>
