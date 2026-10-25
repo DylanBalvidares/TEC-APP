@@ -5,6 +5,17 @@
             <div class="tab-toolbar-left">
                 <h2 class="section-title">
                     <i class="fas fa-clipboard-check"></i> Registro de asistencias
+                    <HelpPopover
+                        tipo="popover"
+                        titulo="Asistencia por Materia"
+                        icono="fas fa-circle-question"
+                        icono-titulo="fas fa-check"
+                        posicion="bottom"
+                        aria-label="Ayuda sobre asistencias de profesor"
+                    >
+                        <p>Permite registrar la asistencia de tus alumnos durante tu bloque horario de clase.</p>
+                        <p style="margin-top: 6px;">Seleccioná el curso, fecha y presioná <strong>Tomar asistencia</strong> para marcar presentes, ausentes o llegadas tarde.</p>
+                    </HelpPopover>
                 </h2>
             </div>
             <div class="asist-toolbar-right">

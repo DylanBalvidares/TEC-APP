@@ -2,7 +2,20 @@
     <section class="tab-panel active profesor-cursos-section">
         <div class="tab-toolbar">
             <div class="tab-toolbar-left">
-                <h2 class="section-title"><i class="fas fa-graduation-cap"></i> Mis Cursos Asignados</h2>
+                <h2 class="section-title">
+                    <i class="fas fa-graduation-cap"></i> Mis Cursos Asignados
+                    <HelpPopover
+                        tipo="popover"
+                        titulo="Cursos y Asignaciones"
+                        icono="fas fa-circle-question"
+                        icono-titulo="fas fa-chalkboard-teacher"
+                        posicion="bottom"
+                        aria-label="Ayuda sobre cursos asignados"
+                    >
+                        <p>Listado de cursos y materias que tenés asignados para el ciclo lectivo actual.</p>
+                        <p style="margin-top: 6px;">Hacé clic en <strong>Detalles</strong> para visualizar la nómina completa de estudiantes y su información académica.</p>
+                    </HelpPopover>
+                </h2>
             </div>
         </div>
 

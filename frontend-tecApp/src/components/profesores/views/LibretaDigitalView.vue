@@ -5,6 +5,17 @@
       <div class="tab-toolbar-left">
         <h2 class="section-title">
           <i class="fas fa-book-open"></i> Libreta Digital — Calificaciones
+          <HelpPopover
+            tipo="popover"
+            titulo="Carga de Calificaciones"
+            icono="fas fa-circle-question"
+            icono-titulo="fas fa-edit"
+            posicion="bottom"
+            aria-label="Ayuda sobre libreta digital"
+          >
+            <p>Seleccioná el <strong>curso</strong> y la <strong>materia</strong> para cargar o modificar notas individuales.</p>
+            <p style="margin-top: 6px;">Podés agregar tipos de evaluación (parcial, TP, final) y las notas impactarán automáticamente en la libreta del alumno y en la vista de preceptoría.</p>
+          </HelpPopover>
         </h2>
       </div>
       <div class="libreta-toolbar-right" v-if="!cargando && asignaciones.length > 0">

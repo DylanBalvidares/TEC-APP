@@ -3,7 +3,20 @@
     <header class="boletines-hero">
       <div>
         <p class="boletines-eyebrow">Gestión académica</p>
-        <h1>Boletines cuatrimestrales</h1>
+        <h1>
+          Boletines cuatrimestrales
+          <HelpPopover
+            tipo="popover"
+            titulo="Gestión de Períodos de Cierre"
+            icono="fas fa-circle-question"
+            icono-titulo="fas fa-file-invoice"
+            posicion="bottom"
+            aria-label="Ayuda sobre boletines administrativos"
+          >
+            <p>Como administrador podés abrir o cerrar los períodos cuatrimestrales de carga para los docentes.</p>
+            <p style="margin-top: 6px;">Una vez cerradas todas las materias de un curso, podés emitir o consolidar los boletines oficiales para su impresión o consulta.</p>
+          </HelpPopover>
+        </h1>
         <p class="boletines-intro">Organizá los períodos, prepará las materias y seguí la carga de cada curso.</p>
       </div>
       <div class="hero-note"><i class="ti ti-shield-check" aria-hidden="true"></i><span>Las calificaciones de la libreta digital no se modifican.</span></div>

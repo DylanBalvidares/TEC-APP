@@ -7,7 +7,20 @@
           <i class="fas fa-graduation-cap"></i>
         </div>
         <div>
-          <h1 class="header-title">Mi Libreta Digital</h1>
+          <h1 class="header-title">
+            Mi Libreta Digital
+            <HelpPopover
+              tipo="popover"
+              titulo="Calificaciones y Promedios"
+              icono="fas fa-circle-question"
+              icono-titulo="fas fa-graduation-cap"
+              posicion="bottom"
+              aria-label="Ayuda sobre libreta digital"
+            >
+              <p>Aquí podés consultar tus notas por cada materia a medida que tus profesores las van cargando.</p>
+              <p style="margin-top: 6px;">El <strong>Promedio General</strong> se calcula automáticamente en base a las materias calificadas del año lectivo.</p>
+            </HelpPopover>
+          </h1>
           <p class="header-sub">
             Alumno: <strong>{{ infoAlumno?.nombre }} {{ infoAlumno?.apellido }}</strong> — Curso: <strong>{{ infoAlumno?.curso }}</strong>
           </p>
