@@ -44,20 +44,20 @@ defineEmits(["close"]);
 
 <style scoped>
 .role-sidebar-shell { display: contents; }
-.role-sidebar { position: sticky; top: 64px; align-self: flex-start; display: flex; flex: 0 0 250px; flex-direction: column; width: 250px; min-width: 250px; height: calc(100vh - 64px); overflow: hidden; background: #fff; border-right: 1px solid #e5e7eb; color: #374151; transition: width .2s ease, flex-basis .2s ease, min-width .2s ease; z-index: 20; }
+.role-sidebar { position: sticky; top: 64px; align-self: flex-start; display: flex; flex: 0 0 250px; flex-direction: column; width: 250px; min-width: 250px; height: calc(100vh - 64px); overflow: hidden; background: linear-gradient(180deg, #ca0d0d, #420101); border-right: 1px solid rgba(255,255,255,.18); color: #fff; transition: width .2s ease, flex-basis .2s ease, min-width .2s ease; z-index: 20; }
 .role-sidebar nav { min-height: 0; flex: 1; overflow-y: auto; padding: 10px 8px; scrollbar-width: thin; }
-.role-sidebar-group + .role-sidebar-group { margin-top: 12px; padding-top: 9px; border-top: 1px solid #e5e7eb; }
-.role-sidebar-group h2 { margin: 0; padding: 7px 10px 5px; color: #6b7280; font-size: .68rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
-.role-sidebar-link { display: flex; align-items: center; gap: 11px; min-height: 40px; margin: 2px 0; padding: 8px 11px; border-radius: 9px; color: #4b5563; font-size: .9rem; text-decoration: none; transition: color .15s ease, background .15s ease; }
+.role-sidebar-group + .role-sidebar-group { margin-top: 12px; padding-top: 9px; border-top: 1px solid rgba(255,255,255,.18); }
+.role-sidebar-group h2 { margin: 0; padding: 7px 10px 5px; color: rgba(255,255,255,.72); font-size: .68rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+.role-sidebar-link { display: flex; align-items: center; gap: 11px; min-height: 40px; margin: 2px 0; padding: 8px 11px; border-radius: 9px; color: rgba(255,255,255,.92); font-size: .9rem; text-decoration: none; transition: color .15s ease, background .15s ease; }
 .role-sidebar-link i { display: grid; place-items: center; flex: 0 0 20px; width: 20px; font-size: 1rem; }
-.role-sidebar-link:hover { background: #fef2f2; color: #991b1b; }
-.role-sidebar-link.active { background: #fee2e2; color: #991b1b; font-weight: 700; }
-.role-sidebar-link:focus-visible { outline: 2px solid #cd322c; outline-offset: 2px; }
-.role-sidebar-footer { flex: 0 0 auto; padding: 10px; border-top: 1px solid #e5e7eb; }
-.role-sidebar-footer :deep(.role-sidebar-help) { display: flex; align-items: center; gap: 10px; color: #374151; font-size: .8rem; }
-.role-sidebar-footer :deep(.role-sidebar-help i) { flex: 0 0 26px; color: #b42318; text-align: center; }
-.role-sidebar-footer :deep(.role-sidebar-help span) { display: grid; gap: 2px; }
-.role-sidebar-footer :deep(.role-sidebar-help small) { color: #6b7280; font-size: .7rem; }
+.role-sidebar-link:hover { background: rgba(255,255,255,.12); color: #fff; }
+.role-sidebar-link.active { background: rgba(255,255,255,.22); color: #fff; font-weight: 700; }
+.role-sidebar-link:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.role-sidebar-footer { flex: 0 0 auto; padding: 10px; border-top: 1px solid rgba(255,255,255,.18); }
+.role-sidebar-footer :deep(.role-sidebar-help), .role-sidebar-footer :deep(.sidebar-help) { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,.08); color: #fff; font-size: .8rem; }
+.role-sidebar-footer :deep(.role-sidebar-help i), .role-sidebar-footer :deep(.sidebar-help i) { flex: 0 0 26px; color: rgba(255,255,255,.9); text-align: center; }
+.role-sidebar-footer :deep(.role-sidebar-help span), .role-sidebar-footer :deep(.sidebar-help span) { display: grid; gap: 2px; }
+.role-sidebar-footer :deep(.role-sidebar-help small), .role-sidebar-footer :deep(.sidebar-help small) { color: rgba(255,255,255,.75); font-size: .7rem; }
 .role-sidebar.collapsed { flex-basis: 72px; width: 72px; min-width: 72px; }
 .role-sidebar.collapsed .role-sidebar-group h2 { font-size: 0; padding: 5px; text-align: center; }
 .role-sidebar.collapsed .role-sidebar-link { justify-content: center; padding: 8px 4px; }
