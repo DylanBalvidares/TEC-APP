@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { mount } from "@vue/test-utils";
 import { createMemoryHistory, createRouter } from "vue-router";
 import RoleSidebar from "../src/components/ui/RoleSidebar.vue";
@@ -7,6 +9,15 @@ import { navigationByRole } from "../src/config/role-navigation.js";
 const flatten = (groups) => groups.flatMap((group) => group.items);
 
 describe("RoleSidebar", () => {
+  it("usa el gradiente bordó de Preceptor y mantiene el texto legible", () => {
+    const archivo = path.resolve(process.cwd(), "src/components/ui/RoleSidebar.vue");
+    const css = readFileSync(archivo, "utf8");
+
+    expect(css).toContain("background: linear-gradient(180deg, #ca0d0d, #420101)");
+    expect(css).toContain("color: rgba(255,255,255,.92)");
+    expect(css).toContain(".role-sidebar-link.active { background: rgba(255,255,255,.22); color: #fff");
+  });
+
   it("renderiza secciones agrupadas y marca la ruta actual", async () => {
     const router = createRouter({
       history: createMemoryHistory(),
