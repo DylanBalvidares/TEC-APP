@@ -155,4 +155,3 @@ test("las rutas de solicitud de edición verifican los permisos y el profesor ti
   assert.equal(decision.status, 200);
   assert.equal(decision.data.estado, "aprobada");
 });
-
