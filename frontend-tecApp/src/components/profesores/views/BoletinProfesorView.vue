@@ -71,7 +71,7 @@
               <td>
                 <input
                   v-if="edicion(asig.id_asignacion, al.id_alumno).tipo === 'numerica'"
-                  type="number" min="0" max="10" step="0.5"
+                  type="number" min="0" max="10" step="1"
                   v-model.number="edicion(asig.id_asignacion, al.id_alumno).valor"
                   :disabled="!editable(asig.id_asignacion)"
                   placeholder="0 – 10"
@@ -228,6 +228,10 @@ const cargar = async () => {
 const guardar = async (idAsig, idAl) => {
   const k = clave(idAsig, idAl);
   const ed = edicion(idAsig, idAl);
+  if (ed.tipo === "numerica" && (!Number.isInteger(ed.valor) || ed.valor < 0 || ed.valor > 10)) {
+    toast.error("La calificación debe ser un número entero entre 0 y 10.");
+    return;
+  }
   guardando.value[k] = true;
   const res = await guardarCalificacionBoletin({
     id_periodo: periodoId.value,

@@ -374,9 +374,11 @@ function validarTipoCalificacion(tipo, valor, motivo) {
     if (valor === null || valor === undefined || valor === "") {
       throw new ErrorHandler(400, "La calificación numérica es obligatoria");
     }
-    const num = Math.round(parseFloat(valor) * 10) / 10;
-    if (isNaN(num) || num < 0.0 || num > 10.0) {
-      throw new ErrorHandler(400, "La calificación debe ser un número entre 0 y 10");
+    const num = typeof valor === "number"
+      ? valor
+      : typeof valor === "string" && valor.trim() !== "" ? Number(valor) : Number.NaN;
+    if (!Number.isInteger(num) || num < 0 || num > 10) {
+      throw new ErrorHandler(400, "La calificación debe ser un número entero entre 0 y 10");
     }
     return { valor: num, motivo: motivo || null };
   }

@@ -42,7 +42,7 @@ async function permisos(t, mapa) {
   });
 }
 
-const NOTA = { id_alumno: 1, id_asignacion: 2, calificacion: 8.5 };
+const NOTA = { id_alumno: 1, id_asignacion: 2, calificacion: 8 };
 
 test("obtenerNotasProfesor 404 sin perfil y arma planilla", async (t) => {
   t.mock.method(Profesor, "findOne", async () => null);
@@ -86,6 +86,7 @@ test("obtenerMisNotasAlumno 404 sin alumno", async (t) => {
 test("crearNota valida, autoriza profesor y crea historial", async (t) => {
   await assert.rejects(crearNota({}, 7, 3), /obligatorios/);
   await assert.rejects(crearNota({ ...NOTA, calificacion: 99 }, 7, 3), /no es válida/);
+  await assert.rejects(crearNota({ ...NOTA, calificacion: 8.5 }, 7, 3), /número entero/);
 
   t.mock.method(Asignacion, "findByPk", async () => null);
   await assert.rejects(crearNota({ ...NOTA }, 7, 3), /no existe/);
@@ -108,7 +109,7 @@ test("crearNota valida, autoriza profesor y crea historial", async (t) => {
     return fila(d);
   });
   const nota = await crearNota({ ...NOTA }, 7, 3);
-  assert.equal(nota.calificacion, 8.5);
+  assert.equal(nota.calificacion, 8);
   assert.equal(creadoHistorial[0].motivo, "Carga inicial de calificación");
 
   // Alumno de otro curso → 400.
@@ -131,6 +132,10 @@ test("modificarNota y eliminarNota autorizan por asignacion", async (t) => {
     destroy: async () => true,
   });
   t.mock.method(Nota, "findByPk", async () => notaViva());
+  await assert.rejects(
+    modificarNota({ id_nota: 9, calificacion: 7.5 }, 7, 3),
+    /entero entre 0 y 10/,
+  );
   t.mock.method(Profesor, "findOne", async () => fila({ id_profesor: 9 }));
   await assert.rejects(
     modificarNota({ id_nota: 9, calificacion: 7 }, 7, 3),
