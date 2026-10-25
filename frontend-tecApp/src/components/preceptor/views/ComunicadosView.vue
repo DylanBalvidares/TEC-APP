@@ -522,6 +522,12 @@
 
                         <label for="importancia">
                             Importancia
+                            <span class="preceptor-help-wrapper">
+                                <button type="button" class="preceptor-help-btn" aria-label="Ayuda sobre importancia">
+                                    <i class="fa-solid fa-question"></i>
+                                </button>
+                                <span class="preceptor-tooltip" role="tooltip">Alta resalta con distintivo rojo y prioridad de lectura.</span>
+                            </span>
                         </label>
 
                         <select
@@ -542,9 +548,6 @@
                             </option>
 
                         </select>
-                        <span class="preceptor-field-hint">
-                            <i class="fa-solid fa-circle-question"></i> Las alertas de importancia <strong>Alta</strong> resaltan con distintivo rojo y generan mayor prioridad en la bandeja de recepción.
-                        </span>
 
                     </div>
 
@@ -553,6 +556,20 @@
 
                         <label for="destino">
                             Destinatarios
+                            <span class="preceptor-help-wrapper">
+                                <button type="button" class="preceptor-help-btn" aria-label="Información de destinatarios">
+                                    <i class="fa-solid fa-circle-info"></i>
+                                </button>
+                                <div class="preceptor-popover" role="dialog">
+                                    <div class="preceptor-popover-title">
+                                        <i class="fa-solid fa-users"></i> Alcance de Envío
+                                    </div>
+                                    <div class="preceptor-popover-body">
+                                        <p><strong>Todos:</strong> Notifica a toda la comunidad educativa de la institución.</p>
+                                        <p style="margin-top: 5px;"><strong>Un curso:</strong> Restringe la lectura únicamente a los alumnos matriculados en la división y sus respectivos tutores.</p>
+                                    </div>
+                                </div>
+                            </span>
                         </label>
 
                         <select
@@ -581,9 +598,6 @@
                             </option>
 
                         </select>
-                        <span class="preceptor-field-hint">
-                            <i class="fa-solid fa-circle-question"></i> Elegí quiénes verán la publicación. Si seleccionás <em>Un curso</em>, sólo los alumnos y tutores de dicha división tendrán acceso.
-                        </span>
 
                     </div>
 

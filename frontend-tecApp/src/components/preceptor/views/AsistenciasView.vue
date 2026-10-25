@@ -294,18 +294,32 @@
     <div v-if="modalTomar" class="as-modal" @click.self="modalTomar = false">
       <div class="as-modal-box">
         <div class="as-modal-head">
-          <h2>Tomar asistencia</h2>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <h2>Tomar asistencia</h2>
+            <span class="preceptor-help-wrapper">
+              <button type="button" class="preceptor-help-btn" aria-label="Guía de estados de asistencia">
+                <i class="fas fa-circle-info"></i>
+              </button>
+              <div class="preceptor-popover" role="dialog">
+                <div class="preceptor-popover-title">
+                  <i class="fas fa-check-double"></i> Carga rápida y estados
+                </div>
+                <div class="preceptor-popover-body">
+                  <p>Presioná <em>Todos presentes</em> y modificá únicamente las inasistencias.</p>
+                  <ul style="margin: 6px 0 0 16px; padding: 0;">
+                    <li><strong>Presente (P):</strong> En horario.</li>
+                    <li><strong>Ausente (A):</strong> Sin concurrencia.</li>
+                    <li><strong>Tarde (T):</strong> Ingreso posterior.</li>
+                    <li><strong>Justificada (J):</strong> Certificado presentado.</li>
+                  </ul>
+                </div>
+              </div>
+            </span>
+          </div>
           <button class="as-close" @click="modalTomar = false">×</button>
         </div>
 
         <p class="as-muted">{{ nombreCurso }} · {{ fechaFormateada }}</p>
-
-        <div class="preceptor-info-banner subtle" style="margin-bottom: 12px; font-size: 13px;">
-          <i class="fas fa-circle-question"></i>
-          <div>
-            <strong>Consejo rápido:</strong> Podés presionar <em>Todos presentes</em> y luego cambiar manualmente sólo a los estudiantes ausentes o que llegaron tarde. Estados: <strong>P</strong> (Presente), <strong>A</strong> (Ausente), <strong>T</strong> (Tarde), <strong>J</strong> (Justificada).
-          </div>
-        </div>
 
         <div class="as-modal-tools">
           <button class="as-btn as-btn-outline" @click="marcarTodos('presente')">

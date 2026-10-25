@@ -369,7 +369,15 @@
             </div>
 
             <div class="form-grupo">
-              <label>DNI *</label>
+              <label>
+                DNI *
+                <span class="preceptor-help-wrapper">
+                  <button type="button" class="preceptor-help-btn" aria-label="Ayuda sobre DNI">
+                    <i class="fa-solid fa-question"></i>
+                  </button>
+                  <span class="preceptor-tooltip" role="tooltip">Ingresá 7 u 8 números sin puntos ni espacios.</span>
+                </span>
+              </label>
 
               <input
                 v-model="formulario.dni"
@@ -377,36 +385,43 @@
                 placeholder="Ej. 45123456"
                 required
               />
-              <span class="preceptor-field-hint">
-                <i class="fa-solid fa-circle-question"></i> Ingresá sólo números sin puntos ni espacios (7 u 8 dígitos).
-              </span>
             </div>
 
             <div class="form-grupo">
-              <label>Fecha de nacimiento *</label>
+              <label>
+                Fecha de nacimiento *
+                <span class="preceptor-help-wrapper">
+                  <button type="button" class="preceptor-help-btn" aria-label="Ayuda sobre fecha de nacimiento">
+                    <i class="fa-solid fa-question"></i>
+                  </button>
+                  <span class="preceptor-tooltip" role="tooltip">Requerida para la ficha de matriculación y legajo.</span>
+                </span>
+              </label>
 
               <input
                 v-model="formulario.fecha_nacimiento"
                 type="date"
                 required
               />
-              <span class="preceptor-field-hint">
-                <i class="fa-solid fa-circle-question"></i> Formato de fecha requerido para la ficha y legajo oficial.
-              </span>
             </div>
 
             <div class="form-grupo">
-                <label>Gmail *</label>
-
-                <input
-                  v-model="formulario.email"
-                  type="email"
-                  placeholder="Ej. juan.perez@gmail.com"
-                  required
-                />
-                <span class="preceptor-field-hint">
-                  <i class="fa-solid fa-circle-question"></i> Correo electrónico para acceso a la plataforma o contacto del alumno.
+              <label>
+                Gmail *
+                <span class="preceptor-help-wrapper">
+                  <button type="button" class="preceptor-help-btn" aria-label="Ayuda sobre correo">
+                    <i class="fa-solid fa-question"></i>
+                  </button>
+                  <span class="preceptor-tooltip" role="tooltip">Correo institucional o de contacto del estudiante.</span>
                 </span>
+              </label>
+
+              <input
+                v-model="formulario.email"
+                type="email"
+                placeholder="Ej. juan.perez@gmail.com"
+                required
+              />
             </div>
 
           </div>
@@ -435,7 +450,15 @@
             </div>
 
             <div class="form-grupo">
-              <label>Teléfono *</label>
+              <label>
+                Teléfono *
+                <span class="preceptor-help-wrapper">
+                  <button type="button" class="preceptor-help-btn" aria-label="Ayuda sobre teléfono">
+                    <i class="fa-solid fa-question"></i>
+                  </button>
+                  <span class="preceptor-tooltip" role="tooltip">Código de área sin 0 y número sin 15. Usado para WhatsApp.</span>
+                </span>
+              </label>
 
               <TelefonoInput
                 v-model="formulario.telefono_tutor"
@@ -444,13 +467,18 @@
                 :error-externo="errorTelefono"
               />
               <p v-if="errorTelefono" class="form-error">{{ errorTelefono }}</p>
-              <span class="preceptor-field-hint">
-                <i class="fa-solid fa-circle-question"></i> Código de área sin 0 y número sin 15. Utilizado para envíos automáticos de WhatsApp.
-              </span>
             </div>
 
             <div class="form-grupo">
-              <label>Domicilio *</label>
+              <label>
+                Domicilio *
+                <span class="preceptor-help-wrapper">
+                  <button type="button" class="preceptor-help-btn" aria-label="Ayuda sobre domicilio">
+                    <i class="fa-solid fa-question"></i>
+                  </button>
+                  <span class="preceptor-tooltip" role="tooltip">Calle, altura y localidad de residencia del alumno.</span>
+                </span>
+              </label>
 
               <input
                 v-model="formulario.domicilio"
@@ -458,9 +486,6 @@
                 placeholder="Ej. Av. Rivadavia 1234"
                 required
               />
-              <span class="preceptor-field-hint">
-                <i class="fa-solid fa-circle-question"></i> Calle, numeración y localidad de residencia actual del alumno.
-              </span>
             </div>
 
           </div>
@@ -488,16 +513,30 @@
             </div>
 
             <div class="form-grupo">
-              <label>Estado</label>
+              <label>
+                Estado
+                <span class="preceptor-help-wrapper">
+                  <button type="button" class="preceptor-help-btn" aria-label="Información detallada sobre estados">
+                    <i class="fa-solid fa-circle-info"></i>
+                  </button>
+                  <div class="preceptor-popover align-right" role="dialog">
+                    <div class="preceptor-popover-title">
+                      <i class="fa-solid fa-user-check"></i> Estados del Estudiante
+                    </div>
+                    <div class="preceptor-popover-body">
+                      <p><strong>Activo:</strong> Figura en listas de asistencia, calificaciones y libreta digital.</p>
+                      <p style="margin-top: 6px;"><strong>Condicional:</strong> Posee documentación pendiente o pase provisorio en trámite.</p>
+                      <p style="margin-top: 6px;"><strong>Inactivo:</strong> Baja o egreso; no computa para asistencia activa.</p>
+                    </div>
+                  </div>
+                </span>
+              </label>
 
               <select v-model="formulario.estado">
                 <option value="activo">Activo</option>
                 <option value="condicional">Condicional</option>
                 <option value="inactivo">Inactivo</option>
               </select>
-              <span class="preceptor-field-hint">
-                <i class="fa-solid fa-circle-question"></i> Los alumnos 'Activos' figuran normalmente en planillas de asistencia y libreta. 'Condicional' indica documentación o situación de pase pendiente.
-              </span>
             </div>
 
             <!-- CUENTA DE ACCESO (opcional / editable) -->
