@@ -142,6 +142,44 @@ test("preceptor publica a su curso y los alumnos reciben el aviso en sus notific
   assert.equal(Number(notificacionesAlumno.data.lista[0].id_comunicado), idComunicado);
 });
 
+test("comunicado global a 'todos' aparece como notificación para un alumno", async (t) => {
+  const creadas = mockearFanout(t);
+  mockearPermisosDeRol(t, { [ROLES.PRECEPTOR]: ["comunicado_crear"] });
+  t.mock.method(Usuario, "findAll", async (opciones) => {
+    const idsRoles = opciones.where.id_rol[Reflect.ownKeys(opciones.where.id_rol)[0]];
+    assert.ok(idsRoles.includes(ROLES.ALUMNO));
+    return [fila({ id_usuario: 31 }), fila({ id_usuario: 42 })];
+  });
+  t.mock.method(Notificacion, "findAndCountAll", async ({ where }) => {
+    const lista = creadas
+      .filter((notificacion) => Number(notificacion.id_usuario) === Number(where.id_usuario))
+      .map((notificacion, index) => fila({ id_notificacion: 300 + index, leida: false, ...notificacion }));
+    return { count: lista.length, rows: lista };
+  });
+
+  const srv = await obtenerServidor();
+  const publicado = await srv.request("POST", "/api/comunidad/comunicados", {
+    token: token({ id: 44, id_rol: ROLES.PRECEPTOR }),
+    body: {
+      titulo: "Aviso institucional",
+      mensaje: "El lunes no habrá clases",
+      destino: "todos",
+    },
+  });
+
+  assert.equal(publicado.status, 201);
+  const idComunicado = Number(publicado.data.id_comunicado);
+  assert.ok(creadas.some((notificacion) => Number(notificacion.id_usuario) === 31));
+
+  const respuestaAlumno = await srv.request("GET", "/api/comunidad/notificaciones/mias", {
+    token: token({ id: 31, id_rol: ROLES.ALUMNO }),
+  });
+  assert.equal(respuestaAlumno.status, 200);
+  assert.equal(respuestaAlumno.data.lista.length, 1);
+  assert.equal(Number(respuestaAlumno.data.lista[0].id_comunicado), idComunicado);
+  assert.equal(respuestaAlumno.data.lista[0].leida, false);
+});
+
 test("destinos de personal y 'todos' mapean a sus roles", async (t) => {
   mockearFanout(t);
   t.mock.method(Usuario, "findAll", async () => []);
