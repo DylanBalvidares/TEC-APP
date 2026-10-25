@@ -212,6 +212,7 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
+import HelpPopover from "@/components/ui/HelpPopover.vue";
 import {
     obtenerAsignacionesProfesor,
     obtenerAlumnosCurso,
