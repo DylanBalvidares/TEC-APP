@@ -227,6 +227,17 @@
 
                         </button>
 
+                        <button
+                            v-if="elemento.tipo === 'comunicado' && elemento.destino === 'curso'"
+                            type="button"
+                            class="view-btn delete-course-announcement"
+                            :disabled="eliminandoId === elemento.id_comunicado"
+                            @click="solicitarEliminacion(elemento)"
+                        >
+                            <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+                            {{ eliminandoId === elemento.id_comunicado ? "Eliminando…" : "Eliminar" }}
+                        </button>
+
                     </div>
 
                 </article>
@@ -256,6 +267,21 @@
 
         </section>
 
+
+<Modal
+    v-model="confirmacionEliminacionAbierta"
+    title="Eliminar comunicado de curso"
+    variante="danger"
+    :bloquear-cierre="eliminandoId !== null"
+>
+    <p v-if="comunicadoAEliminar">¿Querés eliminar “{{ comunicadoAEliminar.titulo }}”? Esta acción no se puede deshacer.</p>
+    <template #footer>
+        <button type="button" class="btn-secondary" :disabled="eliminandoId !== null" @click="cancelarEliminacion">Cancelar</button>
+        <button type="button" class="btn-danger" :disabled="eliminandoId !== null" @click="confirmarEliminacion">
+            {{ eliminandoId !== null ? "Eliminando…" : "Eliminar comunicado" }}
+        </button>
+    </template>
+</Modal>
 
 <!-- =====================================================
      MODAL DETALLE
@@ -681,7 +707,8 @@ import {
     obtenerComunicados,
     obtenerCorreosEnviados,
     crearComunicado,
-    modificarComunicado
+    modificarComunicado,
+    eliminarComunicado
 } from "@/services/academico-service.js";
 
 import {
@@ -690,6 +717,7 @@ import {
 } from "@/services/comunidad-service.js";
 
 import ConfirmacionesLectura from "../../ui/ConfirmacionesLectura.vue";
+import Modal from "../../ui/Modal.vue";
 
 import {
     useAuthStore
@@ -766,6 +794,9 @@ const cursoSeleccionado = ref("todos");
 const detalleAbierto = ref(null);
 
 const modalFormulario = ref(false);
+const confirmacionEliminacionAbierta = ref(false);
+const comunicadoAEliminar = ref(null);
+const eliminandoId = ref(null);
 
 
 /* =========================================================
@@ -1536,6 +1567,42 @@ const cerrarDetalle = () => {
     detalleAbierto.value =
         null;
 
+};
+
+const solicitarEliminacion = (elemento) => {
+    if (elemento?.tipo !== "comunicado" || elemento.destino !== "curso") return;
+    comunicadoAEliminar.value = elemento;
+    confirmacionEliminacionAbierta.value = true;
+};
+
+const cancelarEliminacion = () => {
+    if (eliminandoId.value !== null) return;
+    confirmacionEliminacionAbierta.value = false;
+    comunicadoAEliminar.value = null;
+};
+
+const confirmarEliminacion = async () => {
+    const comunicado = comunicadoAEliminar.value;
+    if (!comunicado || comunicado.tipo !== "comunicado" || comunicado.destino !== "curso" || eliminandoId.value !== null) return;
+
+    eliminandoId.value = comunicado.id_comunicado;
+    try {
+        const resultado = await eliminarComunicado(comunicado.id_comunicado);
+        if (!resultado?.success) {
+            mostrarToast(resultado?.message || resultado?.mensaje || "No se pudo eliminar el comunicado.", "error");
+            return;
+        }
+
+        confirmacionEliminacionAbierta.value = false;
+        comunicadoAEliminar.value = null;
+        if (detalleAbierto.value?.id_comunicado === comunicado.id_comunicado) cerrarDetalle();
+        mostrarToast("Comunicado eliminado correctamente.");
+        await cargarDatos();
+    } catch (error) {
+        mostrarToast("No se pudo eliminar el comunicado.", "error");
+    } finally {
+        eliminandoId.value = null;
+    }
 };
 
 

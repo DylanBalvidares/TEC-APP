@@ -308,6 +308,8 @@ describe("ComunicadosView (profesor) - creación", () => {
 
 describe("ComunicadosView (preceptor) - destino curso", () => {
   let crearComunicado;
+  let obtenerComunicados;
+  let eliminarComunicado;
 
   beforeEach(async () => {
     vi.resetModules();
@@ -323,7 +325,8 @@ describe("ComunicadosView (preceptor) - destino curso", () => {
       data: [{ id_curso: 55, nombre_curso: "2do 3ra" }],
     });
     vi.spyOn(academico, "obtenerAlumnosCurso").mockResolvedValue({ success: true, data: [] });
-    vi.spyOn(academico, "obtenerComunicados").mockResolvedValue({ success: true, data: [] });
+    obtenerComunicados = vi.spyOn(academico, "obtenerComunicados").mockResolvedValue({ success: true, data: [] });
+    eliminarComunicado = vi.spyOn(academico, "eliminarComunicado").mockResolvedValue({ success: true, data: {} });
     vi.spyOn(academico, "obtenerCorreosEnviados").mockResolvedValue({ success: true, data: [] });
     crearComunicado = vi.spyOn(academico, "crearComunicado").mockResolvedValue({
       success: true,
@@ -368,6 +371,71 @@ describe("ComunicadosView (preceptor) - destino curso", () => {
       curso_destino: "2do 3ra",
       autor_id: 44,
     });
+    wrapper.unmount();
+  });
+
+  it("confirma y elimina un comunicado dirigido a un curso, luego refresca el historial", async () => {
+    obtenerComunicados.mockResolvedValueOnce({
+      success: true,
+      data: [{
+        id_comunicado: 77,
+        titulo: "Reunión de curso",
+        mensaje: "El viernes a las 10 hs",
+        destino: "curso",
+        curso_destino: "2do 3ra",
+        importancia: "media",
+        fecha_publicacion: "2026-10-20T10:00:00.000Z",
+      }],
+    });
+    const { default: ComunicadosView } = await import(
+      "../src/components/preceptor/views/ComunicadosView.vue"
+    );
+    const wrapper = mount(ComunicadosView, { global: { plugins: [createPinia()] } });
+    await flushPromises();
+
+    expect(wrapper.findAll(".delete-course-announcement")).toHaveLength(1);
+    await wrapper.find(".delete-course-announcement").trigger("click");
+    const confirm = document.body.querySelector('[role="dialog"]');
+    expect(confirm.textContent).toContain("Reunión de curso");
+    confirm.querySelector(".btn-danger").click();
+    await flushPromises();
+
+    expect(eliminarComunicado).toHaveBeenCalledWith(77);
+    expect(obtenerComunicados).toHaveBeenCalledTimes(2);
+    expect(wrapper.text()).toContain("Comunicado eliminado correctamente.");
+    wrapper.unmount();
+  });
+
+  it("permite cancelar la eliminación y presenta el error de la API", async () => {
+    obtenerComunicados.mockResolvedValueOnce({
+      success: true,
+      data: [{
+        id_comunicado: 78,
+        titulo: "Aviso de curso",
+        mensaje: "Mensaje",
+        destino: "curso",
+        curso_destino: "2do 3ra",
+        importancia: "media",
+        fecha_publicacion: "2026-10-20T10:00:00.000Z",
+      }],
+    });
+    eliminarComunicado.mockResolvedValueOnce({ success: false, message: "Acceso denegado" });
+    const { default: ComunicadosView } = await import(
+      "../src/components/preceptor/views/ComunicadosView.vue"
+    );
+    const wrapper = mount(ComunicadosView, { global: { plugins: [createPinia()] } });
+    await flushPromises();
+
+    await wrapper.find(".delete-course-announcement").trigger("click");
+    document.body.querySelector('[role="dialog"] .btn-secondary').click();
+    await flushPromises();
+    expect(eliminarComunicado).not.toHaveBeenCalled();
+
+    await wrapper.find(".delete-course-announcement").trigger("click");
+    document.body.querySelector('[role="dialog"] .btn-danger').click();
+    await flushPromises();
+    expect(eliminarComunicado).toHaveBeenCalledWith(78);
+    expect(wrapper.text()).toContain("Acceso denegado");
     wrapper.unmount();
   });
 });
