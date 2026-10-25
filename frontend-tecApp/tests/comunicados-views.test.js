@@ -338,6 +338,22 @@ describe("ComunicadosView (preceptor) - destino curso", () => {
     vi.spyOn(comunidad, "obtenerTodosComunicados").mockResolvedValue({ success: true, data: [] });
   });
 
+  it("no ofrece profesores ni autoridades como destinatarios", async () => {
+    const { default: ComunicadosView } = await import(
+      "../src/components/preceptor/views/ComunicadosView.vue"
+    );
+    const wrapper = mount(ComunicadosView, { global: { plugins: [createPinia()] } });
+    await flushPromises();
+    await wrapper.find("button.primary-btn").trigger("click");
+    await flushPromises();
+
+    const destinos = [...document.body.querySelectorAll("#destino option")].map(
+      (opcion) => opcion.value,
+    );
+    expect(destinos).toEqual(["todos", "alumnos", "curso"]);
+    wrapper.unmount();
+  });
+
   it("envía el nombre exacto del curso seleccionado al crear el comunicado", async () => {
     const { default: ComunicadosView } = await import(
       "../src/components/preceptor/views/ComunicadosView.vue"

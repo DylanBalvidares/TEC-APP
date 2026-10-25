@@ -579,16 +579,8 @@
                                 Todos
                             </option>
 
-                            <option value="profesores">
-                                Profesores
-                            </option>
-
                             <option value="alumnos">
                                 Alumnos
-                            </option>
-
-                            <option value="autoridades">
-                                Autoridades
                             </option>
 
                             <option value="curso">
