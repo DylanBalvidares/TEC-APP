@@ -11,23 +11,7 @@
     <UserProfileDialog v-model="profileDialogOpen" :edit="profileDialogEdit" />
 
     <div class="container">
-      <div class="sidebar-overlay" :class="{ visible: isMobile && sidebarAbierto }" @click="closeSidebar"></div>
-      <aside id="sidebar-biblioteca-recursos" class="sidebar" :class="{ abierto: sidebarAbierto, colapsado: !isMobile && sidebarColapsado }">
-        <ul>
-          <RouterLink to="/inicio" @click="closeSidebar"><li><i class="fas fa-home"></i> Inicio</li></RouterLink>
-          <RouterLink to="/noticias" @click="closeSidebar"><li><i class="fas fa-newspaper"></i> Noticias</li></RouterLink>
-          <RouterLink to="/biblioteca" @click="closeSidebar"><li class="active"><i class="fas fa-book"></i> Biblioteca</li></RouterLink>
-          <RouterLink to="/objetos-perdidos" @click="closeSidebar"><li><i class="fas fa-box"></i> Objetos Perdidos</li></RouterLink>
-          <RouterLink to="/cursos" @click="closeSidebar"><li><i class="fas fa-graduation-cap"></i> Cursos</li></RouterLink>
-        </ul>
-        <div class="sidebar-help">
-          <i class="fas fa-question-circle"></i>
-          <div>
-            <p class="help-title">¿Necesitás ayuda?</p>
-            <p class="help-sub">Pixelina resolverá tu consulta.</p>
-          </div>
-        </div>               
-      </aside>
+      <RoleSidebar id="sidebar-biblioteca-recursos" label="Secciones de biblioteca" :groups="navigationByRole.bibliotecario" :open="sidebarAbierto" :collapsed="sidebarColapsado" @close="closeSidebar" />
 
       <main class="main-content">
         <header class="topbar">
@@ -95,10 +79,12 @@
 <script>
 import { useAuthStore } from '../../stores/auth.js';
 import AppTopbar from '../ui/AppTopbar.vue';
+import RoleSidebar from '../ui/RoleSidebar.vue';
+import { navigationByRole } from '../../config/role-navigation.js';
 import UserProfileDialog from '../ui/UserProfileDialog.vue';
 
 export default {
-  components: { AppTopbar, UserProfileDialog },
+  components: { AppTopbar, UserProfileDialog, RoleSidebar },
   name: 'BibliotecaRecursos',
   setup() {
     const authStore = useAuthStore();
@@ -137,8 +123,8 @@ export default {
 
       if (this.searchText) {
         const text = this.searchText.toLowerCase();
-        lista = lista.filter(r => 
-          r.nombre.toLowerCase().includes(text) || 
+        lista = lista.filter(r =>
+          r.nombre.toLowerCase().includes(text) ||
           r.categoria.toLowerCase().includes(text)
         );
       }
@@ -301,7 +287,7 @@ body {
 }
 
 .profile-menu {
-    display: none; 
+    display: none;
     position: absolute;
     right: 0;
     top: 55px;
@@ -353,10 +339,10 @@ hr { border: 0; border-top: 1px solid #eee; margin: 15px 0; }
     transition: 0.3s;
 }
 
-.sign-out-btn:hover { 
-    background: #fdf2f2; 
-    border-color: #d93025; 
-    color: #d93025; 
+.sign-out-btn:hover {
+    background: #fdf2f2;
+    border-color: #d93025;
+    color: #d93025;
 }
 
 .container {
@@ -369,7 +355,7 @@ hr { border: 0; border-top: 1px solid #eee; margin: 15px 0; }
     background: linear-gradient(180deg, #ca0d0d, #420101);
     color: white;
     padding: 20px;
-    flex-shrink: 0; 
+    flex-shrink: 0;
 }
 
 .sidebar ul { list-style: none; }
@@ -429,15 +415,15 @@ hr { border: 0; border-top: 1px solid #eee; margin: 15px 0; }
 
 .logo {
     display: flex;
-    align-items: center;      
-    gap: 15px;              
+    align-items: center;
+    gap: 15px;
     margin: 5px;
 }
 
 .logo-titulo {
     display: flex;
-    flex-direction: column; 
-    gap: 5px; 
+    flex-direction: column;
+    gap: 5px;
 }
 
 .logo h2, .logo p {
@@ -624,8 +610,7 @@ select {
 .sidebar-overlay { display:none; }
 @media (min-width: 901px) {
   .sidebar { transition: width .25s ease, min-width .25s ease, padding .25s ease; }
-  .sidebar.colapsado { width:0; min-width:0; padding:0; overflow:hidden; box-shadow:none; }
-  .sidebar.colapsado > * { visibility:hidden; }
+
 }
 @media (max-width: 900px) {
   .container { flex-direction:row; }

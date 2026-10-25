@@ -11,23 +11,7 @@
     <UserProfileDialog v-model="profileDialogOpen" :edit="profileDialogEdit" />
 
     <div class="container">
-      <div class="sidebar-overlay" :class="{ visible: isMobile && sidebarAbierto }" @click="closeSidebar"></div>
-      <aside id="sidebar-biblioteca-libros" class="sidebar" :class="{ abierto: sidebarAbierto, colapsado: !isMobile && sidebarColapsado }">
-        <ul>
-          <RouterLink to="/inicio" @click="closeSidebar"><li><i class="fas fa-home"></i> Inicio</li></RouterLink>
-          <RouterLink to="/noticias" @click="closeSidebar"><li><i class="fas fa-newspaper"></i> Noticias</li></RouterLink>
-          <RouterLink to="/biblioteca" @click="closeSidebar"><li class="active"><i class="fas fa-book"></i> Biblioteca</li></RouterLink>
-          <RouterLink to="/objetos-perdidos" @click="closeSidebar"><li><i class="fas fa-box"></i> Objetos Perdidos</li></RouterLink>
-          <RouterLink to="/cursos" @click="closeSidebar"><li><i class="fas fa-graduation-cap"></i> Cursos</li></RouterLink>
-        </ul>
-        <div class="sidebar-help">
-          <i class="fas fa-question-circle"></i>
-          <div>
-            <p class="help-title">¿Necesitás ayuda?</p>
-            <p class="help-sub">Pixelina resolverá tu consulta.</p>
-          </div>
-        </div>               
-      </aside>
+      <RoleSidebar id="sidebar-biblioteca-libros" label="Secciones de biblioteca" :groups="navigationByRole.bibliotecario" :open="sidebarAbierto" :collapsed="sidebarColapsado" @close="closeSidebar" />
 
       <main class="main-content">
         <header class="topbar">
@@ -45,9 +29,9 @@
         <section class="filters">
           <div class="search-box">
             <i class="fas fa-search"></i>
-            <input 
-              type="text" 
-              v-model="searchQuery" 
+            <input
+              type="text"
+              v-model="searchQuery"
               placeholder="Buscar por libro o autor..."
             >
           </div>
@@ -114,10 +98,12 @@
 <script>
 import { useAuthStore } from '../../stores/auth.js';
 import AppTopbar from '../ui/AppTopbar.vue';
+import RoleSidebar from '../ui/RoleSidebar.vue';
+import { navigationByRole } from '../../config/role-navigation.js';
 import UserProfileDialog from '../ui/UserProfileDialog.vue';
 
 export default {
-  components: { AppTopbar, UserProfileDialog },
+  components: { AppTopbar, UserProfileDialog, RoleSidebar },
   name: 'BibliotecaLibros',
   setup() {
     const authStore = useAuthStore();
@@ -156,8 +142,8 @@ export default {
       let filtrados = [...this.libros];
       const texto = this.searchQuery.toLowerCase();
 
-      filtrados = filtrados.filter(libro => 
-        libro.titulo.toLowerCase().includes(texto) || 
+      filtrados = filtrados.filter(libro =>
+        libro.titulo.toLowerCase().includes(texto) ||
         libro.autor.toLowerCase().includes(texto)
       );
 
@@ -447,8 +433,8 @@ hr { border: 0; border-top: 1px solid #eee; margin: 15px 0; }
 
 .logo {
     display: flex;
-    align-items: center;      
-    gap: 15px;              
+    align-items: center;
+    gap: 15px;
     margin: 5px;
 }
 
@@ -653,8 +639,7 @@ select {
 .sidebar-overlay { display:none; }
 @media (min-width: 901px) {
   .sidebar { transition: width .25s ease, min-width .25s ease, padding .25s ease; }
-  .sidebar.colapsado { width:0; min-width:0; padding:0; overflow:hidden; box-shadow:none; }
-  .sidebar.colapsado > * { visibility:hidden; }
+
 }
 @media (max-width: 900px) {
   .container { flex-direction:row; }

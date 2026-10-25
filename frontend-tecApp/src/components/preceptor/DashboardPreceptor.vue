@@ -23,242 +23,11 @@
     <div class="container">
 
 
-      <!-- OVERLAY -->
-
-      <div
-        class="sidebar-overlay"
-        :class="{ visible: sidebarAbierto }"
-        @click="closeSidebar"
-      ></div>
-
-
-      <!-- =================================================
-           SIDEBAR
-      ================================================== -->
-
-      <aside
-        id="sidebar-preceptor"
-        class="sidebar"
-        :class="{ abierto: sidebarAbierto, colapsado: sidebarColapsado }"
-      >
-
-        <ul>
-
-          <li class="sidebar-section" role="presentation">Inicio</li>
-
-
-          <!-- INICIO -->
-
-          <li @click="closeSidebar">
-
-            <RouterLink
-              to="/preceptor/inicio"
-              active-class="active"
-            >
-
-              <i class="fas fa-home"></i>
-
-              Inicio
-
-            </RouterLink>
-
-          </li>
-
-
-          <li class="sidebar-section" role="presentation">Académico · Cursos a cargo</li>
-
-          <!-- ASISTENCIAS -->
-
-          <li @click="closeSidebar">
-
-            <RouterLink
-              to="/preceptor/asistencias"
-              active-class="active"
-            >
-
-              <i class="fas fa-tasks"></i>
-
-              Asistencias
-
-            </RouterLink>
-
-          </li>
-
-
-          <!-- LIBRETA DIGITAL -->
-
-          <li @click="closeSidebar">
-
-            <RouterLink
-              to="/preceptor/libreta"
-              active-class="active"
-            >
-
-              <i class="fas fa-file-alt"></i>
-
-              Libreta Digital
-
-            </RouterLink>
-
-          </li>
-
-
-          <!-- BOLETINES CUATRIMESTRALES -->
-
-          <li @click="closeSidebar">
-
-            <RouterLink
-              to="/preceptor/boletines"
-              active-class="active"
-            >
-
-              <i class="fas fa-file-invoice"></i>
-
-              Boletines
-
-            </RouterLink>
-
-          </li>
-
-
-          <!-- PLAN DE ESTUDIOS -->
-
-          <li @click="closeSidebar">
-
-            <RouterLink
-              to="/preceptor/plan"
-              active-class="active"
-            >
-
-              <i class="fas fa-layer-group"></i>
-
-              Plan de Estudios
-
-            </RouterLink>
-
-          </li>
-
-
-          <!-- CURSOS -->
-
-          <li>
-              <RouterLink
-                  to="/preceptor/cursos"
-                  active-class="active"
-              >
-                  <i class="fas fa-user-friends"></i>
-                  Cursos a cargo
-              </RouterLink>
-          </li>
-
-
-          <li class="sidebar-section" role="presentation">Comunicación</li>
-
-          <!-- WHATSAPP -->
-
-          <li @click="closeSidebar">
-
-            <RouterLink
-              to="/preceptor/mensajes"
-              active-class="active"
-            >
-
-              <i class="fab fa-whatsapp"></i>
-
-              WhatsApp
-
-            </RouterLink>
-
-          </li>
-
-
-          <!-- COMUNICADOS -->
-
-          <li @click="closeSidebar">
-
-            <RouterLink
-              to="/preceptor/comunicados"
-              active-class="active"
-            >
-
-              <i class="fas fa-bullhorn"></i>
-
-              Comunicados
-
-            </RouterLink>
-
-          </li>
-
-
-          <li class="sidebar-section" role="presentation">Seguimiento</li>
-
-          <!-- REPORTES -->
-
-          <li @click="closeSidebar">
-
-            <RouterLink
-              to="/preceptor/reportes"
-              active-class="active"
-            >
-
-              <i class="fas fa-clipboard"></i>
-
-              Reportes
-
-            </RouterLink>
-
-          </li>
-
-
-          <!-- CALENDARIO -->
-
-          <li @click="closeSidebar">
-
-            <RouterLink
-              to="/preceptor/calendario"
-              active-class="active"
-            >
-
-              <i class="fas fa-calendar-alt"></i>
-
-              Calendario
-
-            </RouterLink>
-
-          </li>
-
-        </ul>
-
-
-        <!-- =================================================
-             AYUDA
-        ================================================== -->
-
-        <div class="sidebar-help">
-
-          <i class="fas fa-circle-question"></i>
-
-          <div>
-
-            <p class="help-title">
-              ¿Necesitás ayuda?
-            </p>
-
-            <p class="help-sub">
-              Pixelina resolverá tu consulta.
-            </p>
-
-          </div>
-
-        </div>
-
-      </aside>
-
-
-
-      <!-- =================================================
-           CONTENIDO
-      ================================================== -->
+      <RoleSidebar id="sidebar-preceptor" label="Secciones del preceptor" :groups="navigationByRole.preceptor" :open="sidebarAbierto" :collapsed="sidebarColapsado" @close="closeSidebar">
+        <template #footer>
+          <div class="role-sidebar-help"><i class="fas fa-circle-question" aria-hidden="true"></i><span><strong>¿Necesitás ayuda?</strong><small>Pixelina resolverá tu consulta.</small></span></div>
+        </template>
+      </RoleSidebar>
 
       <main class="main-content">
 
@@ -288,6 +57,8 @@ import {
 } from "vue";
 
 import AppTopbar from "../ui/AppTopbar.vue";
+import RoleSidebar from "../ui/RoleSidebar.vue";
+import { navigationByRole } from "../../config/role-navigation.js";
 import UserProfileDialog from "../ui/UserProfileDialog.vue";
 import { useResponsiveSidebar } from "../../composables/useResponsiveSidebar.js";
 
@@ -320,7 +91,6 @@ const { sidebarOpen: sidebarAbierto, desktopCollapsed: sidebarColapsado, toggleS
 <style src="./preceptores.css"></style>
 <style scoped>
 @media (min-width: 901px) {
-  .sidebar.colapsado { width: 0; min-width: 0; padding: 0; overflow: hidden; box-shadow: none; transition: width .25s ease, padding .25s ease; }
-  .sidebar.colapsado > * { visibility: hidden; }
+  .role-sidebar.collapsed { width: 72px; min-width: 72px; }
 }
 </style>
