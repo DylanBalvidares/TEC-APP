@@ -11,7 +11,6 @@
     <UserProfileDialog v-model="perfilAbierto" :edit="editarPerfil" />
     <div class="dashboard-body">
       <Sidebar :abierto="sidebarAbierto" :colapsado="sidebarColapsado" @close="closeSidebar" />
-      <div class="sidebar-overlay" :class="{ visible: sidebarAbierto }" @click="closeSidebar"></div>
       <main class="view-container">
         <router-view v-slot="{ Component }">
           <transition name="fade-slide" mode="out-in">
@@ -67,24 +66,7 @@ const irInicio = () => router.push('/alumno/inicio');
   flex-direction: column;
 }
 
-/* Overlay para mobile sidebar */
-.sidebar-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  z-index: 99;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  backdrop-filter: blur(2px);
-}
 
-@media (max-width: 900px) {
-  .sidebar-overlay.visible {
-    display: block;
-    opacity: 1;
-  }
-}
 
 /* Transiciones de router-view */
 .fade-slide-enter-active,
