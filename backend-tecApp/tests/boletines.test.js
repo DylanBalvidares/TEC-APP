@@ -221,6 +221,7 @@ test("guardarCalificacion valida tipos y acepta el 0", async (t) => {
   t.mock.method(BoletinFinalizacion, "findOne", async () =>
     fila({ estado: "en_progreso" }, { save: async () => true }),
   );
+  t.mock.method(BoletinReapertura, "findOne", async () => null);
   t.mock.method(BoletinCalificacion, "findOne", async () => null);
   t.mock.method(BoletinCalificacion, "create", async (d) => fila({ id_boletin_nota: 5, ...d }));
   const creadoHistorial = [];
@@ -271,6 +272,7 @@ test("finalizarMateria exige 0 pendientes y audita", async (t) => {
   t.mock.method(Profesor, "findOne", async () => fila({ id_profesor: 3 }));
   const fin = () => fila({ estado: "en_progreso" }, { save: async () => true });
   t.mock.method(BoletinFinalizacion, "findOne", async () => fin());
+  t.mock.method(BoletinReapertura, "findOne", async () => null);
   t.mock.method(Alumno, "findAll", async () =>
     filas([{ id_alumno: 1, apellido: "A", nombre: "B" }, { id_alumno: 2, apellido: "C", nombre: "D" }]),
   );
