@@ -48,6 +48,33 @@ async function validarPreceptorAsignado(idPreceptor) {
   return preceptor.id_personal;
 }
 
+async function obtenerCursosPreceptor(idUsuario) {
+  try {
+    const personal = await Personal.findOne({
+      where: { id_usuario: Number(idUsuario) },
+      attributes: ["id_personal"],
+      raw: true,
+    });
+
+    if (!personal) return [];
+
+    return await Curso.findAll({
+      where: { id_preceptor: personal.id_personal },
+      include: [
+        {
+          model: Profesor,
+          as: "profesorTitular",
+          attributes: ["nombre", "apellido"],
+        },
+      ],
+      order: [["id_curso", "ASC"]],
+    });
+  } catch (error) {
+    console.error("Error en obtenerCursosPreceptor:", error);
+    throw new ErrorHandler(500, "No se pudieron obtener los cursos asignados al preceptor");
+  }
+}
+
 async function obtenerTodosCursos(query = {}) {
   console.log("\x1b[1m\x1b[34m[CTRL]\x1b[0m Ejecutando controlador: obtenerTodosCursos");
   try {
@@ -281,6 +308,7 @@ async function cancelarCurso(id) {
 
 export {
   obtenerTodosCursos,
+  obtenerCursosPreceptor,
   obtenerCurso,
   crearCurso,
   eliminarCurso,

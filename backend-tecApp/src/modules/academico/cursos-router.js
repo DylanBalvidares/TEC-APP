@@ -3,6 +3,7 @@ import {
   crearCurso,
   obtenerCurso,
   obtenerTodosCursos,
+  obtenerCursosPreceptor,
   eliminarCurso,
   modificarCurso,
   cancelarCurso,
@@ -29,6 +30,19 @@ cursosRouter.get("/info-curso-alumno/:id", comprobarPermiso("alumno_ver_mi_curso
     const curso = await obtenerCurso(req.params.id);
 
     return res.status(200).json(curso);
+  } catch (error) {
+    return res.status(error.status || 500).json({ message: error.message });
+  }
+});
+
+cursosRouter.get("/preceptor/mis-cursos", comprobarPermiso("preceptor_ver_curso"), async (req, res) => {
+  if (Number(req.headers["id_rol"]) !== 4) {
+    return res.status(403).json({ message: "Esta ruta es exclusiva para preceptores" });
+  }
+
+  try {
+    const cursos = await obtenerCursosPreceptor(req.headers["id_usuario"]);
+    return res.status(200).json(cursos);
   } catch (error) {
     return res.status(error.status || 500).json({ message: error.message });
   }
