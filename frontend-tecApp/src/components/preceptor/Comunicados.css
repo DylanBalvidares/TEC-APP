@@ -1235,3 +1235,24 @@
 
     color: #16794a;
 }
+.delete-course-announcement {
+    color: #b42318;
+}
+
+.delete-course-announcement:disabled,
+.btn-danger:disabled {
+    opacity: .6;
+    cursor: wait;
+}
+
+.btn-danger {
+    border: 0;
+    border-radius: 9px;
+    padding: 10px 17px;
+    background: #b42318;
+    color: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
