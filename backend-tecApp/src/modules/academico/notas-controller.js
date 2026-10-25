@@ -10,6 +10,7 @@ import {
   Personal,
   Usuario,
 } from "../../db/models/index.js";
+import { exigirEdicionTemporalPreceptor } from "./notas-edicion-service.js";
 
 // Helper para formatear calificacion numérica
 const parseCalificacion = (val) => {
@@ -243,6 +244,8 @@ async function crearNota(notaData, idUsuarioAuth, idRolAuth) {
       if (!profesor || asignacion.id_profesor !== profesor.id_profesor) {
         throw new ErrorHandler(403, "Acceso denegado: No podés calificar en un curso/materia que no tenés asignado");
       }
+    } else if (parseInt(idRolAuth) === 4) {
+      await exigirEdicionTemporalPreceptor(idUsuarioAuth, id_asignacion);
     }
 
     // Validar que el alumno pertenezca al curso de la asignación
@@ -348,6 +351,8 @@ async function modificarNota(notaData, idUsuarioAuth, idRolAuth) {
       if (!profesor || notaExistente.asignacione.id_profesor !== profesor.id_profesor) {
         throw new ErrorHandler(403, "Acceso denegado: No tenés permiso para modificar esta calificación");
       }
+    } else if (parseInt(idRolAuth) === 4) {
+      await exigirEdicionTemporalPreceptor(idUsuarioAuth, notaExistente.id_asignacion);
     }
 
     const califAnterior = notaExistente.calificacion;

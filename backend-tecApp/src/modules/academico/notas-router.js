@@ -12,6 +12,12 @@ import {
 } from "./notas-controller.js";
 
 import comprobarPermiso from "../../middlewares/comprobarPermisos.js";
+import {
+  decidirSolicitudEdicion,
+  listarSolicitudesPendientesProfesor,
+  listarSolicitudesPreceptor,
+  solicitarEdicionPlanilla,
+} from "./notas-edicion-controller.js";
 
 const notasRouter = Router();
 
@@ -80,7 +86,7 @@ notasRouter.get(
 // 5. Cargar / Crear nota
 notasRouter.post(
   "/notas",
-  comprobarPermiso("profesor_crear_nota"),
+  comprobarPermiso(["profesor_crear_nota", "preceptor_ver_notas"]),
   async (req, res) => {
     try {
       const idUsuario = req.headers["id_usuario"];
@@ -96,7 +102,7 @@ notasRouter.post(
 // 6. Editar nota
 notasRouter.patch(
   "/notas",
-  comprobarPermiso("profesor_editar_nota"),
+  comprobarPermiso(["profesor_editar_nota", "preceptor_ver_notas"]),
   async (req, res) => {
     try {
       const idUsuario = req.headers["id_usuario"];
@@ -107,6 +113,63 @@ notasRouter.patch(
       return res.status(error.status || 500).json({ message: error.message });
     }
   }
+);
+
+// Solicitudes de edición temporal para planillas de notas.
+notasRouter.get(
+  "/notas/solicitudes-edicion/pendientes",
+  comprobarPermiso("profesor_ver_todos_notas"),
+  async (req, res) => {
+    try {
+      const data = await listarSolicitudesPendientesProfesor(req.headers["id_usuario"]);
+      return res.status(200).json(data);
+    } catch (error) {
+      return res.status(error.status || 500).json({ message: error.message });
+    }
+  },
+);
+
+notasRouter.get(
+  "/notas/solicitudes-edicion/mias/:id_curso",
+  comprobarPermiso("preceptor_ver_notas"),
+  async (req, res) => {
+    try {
+      const data = await listarSolicitudesPreceptor(req.headers["id_usuario"], req.params.id_curso);
+      return res.status(200).json(data);
+    } catch (error) {
+      return res.status(error.status || 500).json({ message: error.message });
+    }
+  },
+);
+
+notasRouter.post(
+  "/notas/solicitudes-edicion",
+  comprobarPermiso("preceptor_ver_notas"),
+  async (req, res) => {
+    try {
+      const data = await solicitarEdicionPlanilla(req.headers["id_usuario"], req.body?.id_asignacion);
+      return res.status(201).json(data);
+    } catch (error) {
+      return res.status(error.status || 500).json({ message: error.message });
+    }
+  },
+);
+
+notasRouter.patch(
+  "/notas/solicitudes-edicion/:id/decision",
+  comprobarPermiso("profesor_ver_todos_notas"),
+  async (req, res) => {
+    try {
+      const data = await decidirSolicitudEdicion(
+        req.headers["id_usuario"],
+        req.params.id,
+        req.body?.decision,
+      );
+      return res.status(200).json(data);
+    } catch (error) {
+      return res.status(error.status || 500).json({ message: error.message });
+    }
+  },
 );
 
 // 7. Eliminar nota
