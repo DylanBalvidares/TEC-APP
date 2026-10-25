@@ -138,7 +138,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from "vue";
-import { obtenerCursos } from "@/services/academico-service.js";
+import { obtenerCursosPreceptor } from "@/services/academico-service.js";
 import {
   obtenerPeriodosBoletin,
   obtenerPlanillaBoletin,
@@ -192,7 +192,7 @@ const cargarCatalogos = async () => {
   consolidadoError.value = null;
   try {
     const [respuestaCursos, respuestaPeriodos] = await Promise.all([
-      obtenerCursos(),
+      obtenerCursosPreceptor(),
       obtenerPeriodosBoletin(),
     ]);
     const errores = [];

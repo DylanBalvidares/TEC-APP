@@ -320,7 +320,7 @@ describe("ComunicadosView (preceptor) - destino curso", () => {
 
     const academico = await import("../src/services/academico-service.js");
     const comunidad = await import("../src/services/comunidad-service.js");
-    vi.spyOn(academico, "obtenerCursos").mockResolvedValue({
+    vi.spyOn(academico, "obtenerCursosPreceptor").mockResolvedValue({
       success: true,
       data: [{ id_curso: 55, nombre_curso: "2do 3ra" }],
     });

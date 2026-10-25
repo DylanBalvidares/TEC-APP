@@ -702,7 +702,7 @@ import {
 import "../Comunicados.css";
 
 import {
-    obtenerCursos,
+    obtenerCursosPreceptor,
     obtenerAlumnosCurso,
     obtenerComunicados,
     obtenerCorreosEnviados,
@@ -870,7 +870,7 @@ const cargarDatos = async () => {
 
         const [resultadoCursos, resultadoEmails] =
             await Promise.allSettled([
-                obtenerCursos(),
+                obtenerCursosPreceptor(),
                 obtenerCorreosEnviados()
             ]);
 

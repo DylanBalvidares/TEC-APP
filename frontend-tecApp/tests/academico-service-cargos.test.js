@@ -11,10 +11,23 @@ import {
   obtenerCargos,
   obtenerCargo,
   crearCargo,
+  obtenerCursosPreceptor,
 } from "../src/services/academico-service.js";
 
 describe("academico-service cargos", () => {
   beforeEach(() => vi.clearAllMocks());
+
+  it("obtiene cursos del preceptor desde la sesión autenticada", async () => {
+    axios.get.mockResolvedValue({ data: [{ id_curso: 7, nombre_curso: "3ro A" }] });
+    const r = await obtenerCursosPreceptor();
+    expect(axios.get).toHaveBeenCalledWith(
+      "/api/academico/preceptor/mis-cursos",
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: "Bearer fake-token" }),
+      }),
+    );
+    expect(r).toEqual({ success: true, data: [{ id_curso: 7, nombre_curso: "3ro A" }] });
+  });
 
   it("obtiene el listado con GET /cargos", async () => {
     axios.get.mockResolvedValue({ data: [{ id_cargo: 1 }] });

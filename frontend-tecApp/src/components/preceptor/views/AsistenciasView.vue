@@ -398,7 +398,7 @@
 import { ref, computed, onMounted, watch } from "vue";
 
 import {
-  obtenerCursos,
+  obtenerCursosPreceptor,
   obtenerAlumnosCurso,
   obtenerAsistencias,
   obtenerHistorialAsistenciasCurso,
@@ -768,7 +768,7 @@ function porcentajeEstado(estado) {
 // --------------------------------------------------
 
 async function cargarCursos() {
-  const resultado = await obtenerCursos();
+  const resultado = await obtenerCursosPreceptor();
 
   if (!resultado.success) {
     throw new Error(

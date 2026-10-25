@@ -135,7 +135,7 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import {
-  obtenerCursos,
+  obtenerCursosPreceptor,
   obtenerNotasPreceptorCurso,
   obtenerHistorialNotasAlumno,
 } from "@/services/academico-service.js";
@@ -161,7 +161,7 @@ const cargandoHistorial = ref(false);
 const cargarCursosPreceptor = async () => {
   cargandoCursos.value = true;
   try {
-    const res = await obtenerCursos();
+    const res = await obtenerCursosPreceptor();
     if (res.success && res.data) {
       cursos.value = res.data || [];
       if (cursos.value.length > 0) {
