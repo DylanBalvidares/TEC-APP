@@ -44,6 +44,8 @@
 
         <ul>
 
+          <li class="sidebar-section" role="presentation">Inicio</li>
+
 
           <!-- INICIO -->
 
@@ -62,6 +64,8 @@
 
           </li>
 
+
+          <li class="sidebar-section" role="presentation">Académico · Cursos a cargo</li>
 
           <!-- ASISTENCIAS -->
 
@@ -148,6 +152,8 @@
           </li>
 
 
+          <li class="sidebar-section" role="presentation">Comunicación</li>
+
           <!-- WHATSAPP -->
 
           <li @click="closeSidebar">
@@ -183,6 +189,8 @@
 
           </li>
 
+
+          <li class="sidebar-section" role="presentation">Seguimiento</li>
 
           <!-- REPORTES -->
 

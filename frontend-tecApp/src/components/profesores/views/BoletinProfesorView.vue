@@ -2,7 +2,7 @@
   <div class="boletin-profesor">
     <div class="boletines-header">
       <h1><i class="fas fa-file-signature"></i> Boletines Cuatrimestrales</h1>
-      <p>Cargá la calificación final de cada alumno. El 0 es válido; la ausencia de dato queda pendiente.</p>
+      <p>Cargá tu planilla personal. Administración habilita la recepción al abrir el período; al enviarla, el preceptor podrá consultarla. El 0 es válido y la ausencia de dato queda pendiente.</p>
     </div>
 
     <div class="cursos-selector-wrap" v-if="periodos.length > 0">
@@ -107,7 +107,7 @@
           :title="pendientes(asig) > 0 ? `Quedan ${pendientes(asig)} pendientes` : 'Finalizar carga'"
         >
           <i class="fas fa-check-double"></i>
-          Finalizar materia{{ pendientes(asig) > 0 ? ` (${pendientes(asig)} pendientes)` : "" }}
+          Enviar planilla al preceptor{{ pendientes(asig) > 0 ? ` (${pendientes(asig)} pendientes)` : "" }}
         </button>
         <div v-if="esFinalizada(asig.id_asignacion)" class="reapertura-form">
           <input type="text" v-model="motivosReapertura[asig.id_asignacion]" placeholder="Motivo de reapertura" />
@@ -181,7 +181,7 @@ const esFinalizada = (idAsig) => estadoDe(idAsig) === "finalizada";
 
 const estadoTexto = (idAsig) => {
   const e = estadoDe(idAsig);
-  return e === "finalizada" ? "Finalizada" : e === "en_progreso" ? "En progreso" : "Pendiente";
+  return e === "finalizada" ? "Enviada al preceptor" : e === "en_progreso" ? "En progreso" : "Pendiente";
 };
 
 const estadoClase = (idAsig) => {

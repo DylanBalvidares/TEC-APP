@@ -332,7 +332,14 @@ body {
 
     display: flex;
     flex-direction: column;
+    position: sticky;
+    top: 70px;
+    height: calc(100vh - 70px);
+    overflow-y: auto;
 }
+
+.sidebar li.sidebar-section { padding: 8px 12px 4px; color: rgba(255,255,255,.72); font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; cursor: default; }
+.sidebar li.sidebar-section:hover { background: transparent; }
 
 .sidebar ul {
     list-style: none;

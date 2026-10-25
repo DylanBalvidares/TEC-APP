@@ -77,6 +77,7 @@ const grupos = [
             { vista: "convivencia", nombre: "Convivencia", icono: "ti-alert-triangle" },
             { vista: "planes", nombre: "Planes de Estudio", icono: "ti-layers" },
             { vista: "libreta", nombre: "Libreta Digital", icono: "ti-book-open" },
+            { vista: "boletines", nombre: "Boletines", icono: "ti-file-text" },
         ],
     },
     {
@@ -85,7 +86,6 @@ const grupos = [
             { vista: "comunicacion", nombre: "Comunicación", icono: "ti-messages" },
             { vista: "notificaciones", nombre: "Notificaciones", icono: "ti-bell" },
             { vista: "certificados", nombre: "Certificados", icono: "ti-certificate" },
-            { vista: "boletines", nombre: "Boletines", icono: "ti-file-text" },
         ],
     },
     {
@@ -131,7 +131,10 @@ const seleccionarVista = (vista) => {
     max-width: 220px;
     flex-shrink: 0;
     box-sizing: border-box;
-    position: relative;
+    position: sticky;
+    top: 64px;
+    height: calc(100vh - 64px);
+    align-self: start;
     z-index: 20;
     overflow-y: auto;
     overflow-x: hidden;
